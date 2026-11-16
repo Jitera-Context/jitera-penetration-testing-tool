@@ -53,6 +53,48 @@ def _score_run(run_dir: Path, baseline: Baseline) -> Score:
     return score_findings(load_findings(run_dir), list(baseline.categories))
 
 
+Outcome = tuple[Score, dict[str, Any]] | int  # an int is an exit code
+
+
+def _score_existing(run_dir: Path, baseline: Baseline) -> Outcome:
+    """Score a finished run without scanning."""
+    try:
+        score = _score_run(run_dir, baseline)
+    except (FileNotFoundError, TypeError) as exc:
+        print(f"eval: {exc}", file=sys.stderr)
+        return EXIT_USAGE
+    return score, {"from_run": str(run_dir)}
+
+
+def _scan_and_score(
+    baseline: Baseline,
+    target: str,
+    scan_mode: str,
+    budget: float,
+    instruction_file: str | None,
+) -> Outcome:
+    """Run a fresh headless scan of the target, then score it."""
+    ok, detail = check_reachable(target)
+    if not ok:
+        print(f"eval: target not reachable ({detail}): {target}", file=sys.stderr)
+        print("The shared Juice Shop demo is often down; try again or use Docker.", file=sys.stderr)
+        return EXIT_UNREACHABLE
+    with tempfile.TemporaryDirectory(prefix="jitera-eval-") as tmp:
+        run = run_scan(
+            target=target,
+            scan_mode=scan_mode,
+            max_budget_usd=budget,
+            workdir=Path(tmp),
+            instruction_file=instruction_file,
+        )
+        if run.run_dir is None:
+            print("eval: the scan produced no run directory", file=sys.stderr)
+            print(run.stderr[-2000:], file=sys.stderr)
+            return EXIT_USAGE
+        score = _score_run(run.run_dir, baseline)
+    return score, {"scan_exit_code": run.exit_code, "scan_mode": scan_mode, "budget": budget}
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="eval.run_eval", description=__doc__)
     parser.add_argument("--baseline", default="juice-shop")
@@ -63,6 +105,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--min-categories", type=int, help="override the pass gate")
     parser.add_argument("--instruction-file", help="extra instructions for the agent")
     parser.add_argument("--json", action="store_true", help="print the result as JSON")
+    parser.add_argument("--check", action="store_true", help="only check the target is up; no scan")
     args = parser.parse_args(argv)
 
     try:
@@ -76,36 +119,19 @@ def main(argv: list[str] | None = None) -> int:
     budget = args.max_budget if args.max_budget is not None else baseline.max_budget_usd
     min_categories = args.min_categories or baseline.min_categories
 
-    if args.from_run:
-        try:
-            score = _score_run(args.from_run, baseline)
-        except (FileNotFoundError, TypeError) as exc:
-            print(f"eval: {exc}", file=sys.stderr)
-            return EXIT_USAGE
-        source: dict[str, Any] = {"from_run": str(args.from_run)}
-    else:
+    if args.check:
         ok, detail = check_reachable(target)
-        if not ok:
-            print(f"eval: target not reachable ({detail}): {target}", file=sys.stderr)
-            print(
-                "The shared Juice Shop demo is often down; try again or use Docker.",
-                file=sys.stderr,
-            )
-            return EXIT_UNREACHABLE
-        with tempfile.TemporaryDirectory(prefix="jitera-eval-") as tmp:
-            run = run_scan(
-                target=target,
-                scan_mode=scan_mode,
-                max_budget_usd=budget,
-                workdir=Path(tmp),
-                instruction_file=args.instruction_file,
-            )
-            if run.run_dir is None:
-                print("eval: the scan produced no run directory", file=sys.stderr)
-                print(run.stderr[-2000:], file=sys.stderr)
-                return EXIT_USAGE
-            score = _score_run(run.run_dir, baseline)
-        source = {"scan_exit_code": run.exit_code, "scan_mode": scan_mode, "budget": budget}
+        state = "up" if ok else "down"
+        print(f"{state} ({detail}): {target}")
+        return EXIT_OK if ok else EXIT_UNREACHABLE
+
+    if args.from_run:
+        outcome = _score_existing(args.from_run, baseline)
+    else:
+        outcome = _scan_and_score(baseline, target, scan_mode, budget, args.instruction_file)
+    if isinstance(outcome, int):
+        return outcome
+    score, source = outcome
 
     passed = score.passed(min_categories)
     record = {

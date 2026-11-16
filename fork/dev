@@ -21,6 +21,8 @@ CHECKPOINT_FILE="fork/CHECKPOINT"
 TOOLING_RE='^(fork/|\.claude/)'
 # Generated files: never patched, rebuilt instead (make viewer, uv lock).
 GENERATED_RE='^(strix/interface/viewer/static/|uv\.lock$)'
+# GEPA is not a product dependency: layered on per run, so uv.lock never changes.
+GEPA_SPEC="gepa==0.1.4"
 TODO_HEADER='Title: TODO one line: what this patch changes
 Why: TODO why Jitera needs it
 Upstream-PR: none'
@@ -269,6 +271,37 @@ cmd_build() {
   esac
 }
 
+# Eval (OWASP Juice Shop): see eval/README.md.
+cmd_eval() {
+  uv run --frozen python -m eval.run_eval "$@"
+}
+
+cmd_eval_history() {
+  local history="eval/results/history.jsonl"
+  if [[ ! -s "$history" ]]; then
+    echo "No eval runs recorded yet. Run: fork/dev eval"
+    return 0
+  fi
+  python3 -I - "$history" "${1:-10}" <<'PY'
+import json
+import sys
+
+path, limit = sys.argv[1], int(sys.argv[2])
+rows = [json.loads(line) for line in open(path) if line.strip()][-limit:]
+print(f"{'when (UTC)':<18} {'result':<11} {'coverage':<9} {'gate':<6} {'findings':<9} source")
+for r in rows:
+    coverage = f"{r.get('categories_covered')}/{r.get('categories_total')}"
+    source = r.get("from_run") or r.get("target", "")
+    result = "PASS" if r.get("passed") else "REGRESSION"
+    print(f"{r.get('timestamp', ''):<18} {result:<11} {coverage:<9} >={r.get('min_categories')!s:<4} "
+          f"{r.get('total_findings')!s:<9} {source}")
+PY
+}
+
+cmd_gepa() {
+  uv run --frozen --with "$GEPA_SPEC" python -m eval.gepa.optimize "$@"
+}
+
 cmd_help() {
   cat <<'EOF'
 Daily work
@@ -288,6 +321,15 @@ Checks and build
   fork/dev audit [--list]  report Strix brand left in network calls and visible text
   fork/dev build [binary]  verify, then build the wheel (default) or the binary
 
+Eval (OWASP Juice Shop, see eval/README.md)
+  fork/dev eval [args]     scan, score against the baseline, gate; exit 0 pass, 1 regression,
+                           3 target down. Args: --from-run DIR, --target URL, --scan-mode quick,
+                           --max-budget USD, --instruction-file FILE, --min-categories N,
+                           --check (only test the target is up; no scan)
+  fork/dev eval-history [N] last N recorded eval runs (default 10)
+  fork/dev gepa [args]     optimize the agent instructions with GEPA. Start with --dry-run
+                           (no scans, no cost); a real run makes one full scan per metric call
+
 Low level (used by sync)
   fork/dev unapply         back to the checkpoint: remove all patched changes
   fork/dev apply           re-apply all patches (3-way)
@@ -305,6 +347,9 @@ case "${1:-help}" in
   build) shift; cmd_build "${1:-wheel}" ;;
   unapply) shift; cmd_unapply "${1:-}" ;;
   apply) cmd_apply ;;
+  eval) shift; cmd_eval "$@" ;;
+  eval-history) shift; cmd_eval_history "${1:-10}" ;;
+  gepa) shift; cmd_gepa "$@" ;;
   help|-h|--help) cmd_help ;;
   *) echo "unknown command: $1" >&2; cmd_help >&2; exit 2 ;;
 esac

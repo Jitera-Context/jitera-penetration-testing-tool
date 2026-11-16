@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/eval/_lib.py b/eval/_lib.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..8cb52816eadf948205866b587298ab4c02308ee7
+index 0000000000000000000000000000000000000000..685a3d828f1eb97781c46bfc8467c9121521180c
 --- /dev/null
 +++ b/eval/_lib.py
-@@ -0,0 +1,78 @@
+@@ -0,0 +1,82 @@
 +"""Shared helpers: load the baseline, locate paths, record run results."""
 +
 +from __future__ import annotations
@@ -81,6 +81,10 @@ index 0000000000000000000000000000000000000000..8cb52816eadf948205866b587298ab4c
 +    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 +    stamp = record.get("timestamp") or utc_stamp()
 +    out = RESULTS_DIR / f"{stamp}.json"
++    suffix = 1
++    while out.exists():  # two runs in the same second must not overwrite each other
++        out = RESULTS_DIR / f"{stamp}-{suffix}.json"
++        suffix += 1
 +    out.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
 +    (RESULTS_DIR / "latest.json").write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
 +    with (RESULTS_DIR / "history.jsonl").open("a") as history:
