@@ -3,10 +3,10 @@ Why: Upstream's README is Strix's product page. Listed in fork/OWNED, so sync ke
 Upstream-PR: none
 
 diff --git a/README.md b/README.md
-index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..5659fadc16962ff5d766d1a8692e48b514c4e031 100644
+index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..6331d2b09faab8d86f6d6a62c890ec3adf327285 100644
 --- a/README.md
 +++ b/README.md
-@@ -1,393 +1,232 @@
+@@ -1,393 +1,234 @@
  <p align="center">
 -  <a href="https://strix.ai/">
 -    <img src="https://github.com/usestrix/.github/raw/main/imgs/cover.png" alt="Strix Banner" width="100%">
@@ -299,15 +299,17 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..5659fadc16962ff5d766d1a8692e48b5
 -strix --target ./openapi.yaml --target https://api.your-app.com
 -strix --target postman://<collection-uuid> --target https://api.your-app.com
 -```
-+Each scan writes to `strix_runs/<run-name>/`:
++Each scan writes to `jitera_pentest_runs/<run-name>/`:
  
 +| File | Contents |
 +|---|---|
 +| `penetration_test_report.md` | The full report |
 +| `vulnerabilities/*.md` | One file per finding |
 +| `vulnerabilities.json` | All findings, machine-readable |
++| `vulnerabilities.csv` | All findings, for spreadsheets |
 +| `findings.sarif` | SARIF 2.1.0 for code-scanning tools |
 +| `run.json` | Status, timing and LLM cost |
++| `jitera_pentest.log` | The scan log |
  
 -### Advanced Testing Scenarios
 +Open them in the local viewer:
@@ -375,7 +377,7 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..5659fadc16962ff5d766d1a8692e48b5
  
 -      - name: Install Strix
 -        run: curl -sSL https://strix.ai/install | bash
-+The tool also remembers settings in `~/.strix/cli-config.json`; your shell and `.env` win over it. To give the agents extra tools, list MCP servers in `~/.strix/mcp-servers.json`. The [upstream documentation](https://docs.strix.ai/) describes every option.
++The tool also remembers settings in `~/.jitera-pentest/cli-config.json`; your shell and `.env` win over it. To give the agents extra tools, list MCP servers in `~/.jitera-pentest/mcp-servers.json`. On first run, settings and MCP servers saved by an earlier version in `~/.strix` are copied there once; sign in again where needed. The [upstream documentation](https://docs.strix.ai/) describes every option.
  
 -      - name: Run Strix
 -        env:

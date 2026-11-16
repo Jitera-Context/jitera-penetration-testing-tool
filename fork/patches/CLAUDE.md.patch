@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/CLAUDE.md b/CLAUDE.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..c8052df76c32ca98ce0227b6d391df907228c20b
+index 0000000000000000000000000000000000000000..e8eb9f8eff5202cdf224501536392dcbb02c6380
 --- /dev/null
 +++ b/CLAUDE.md
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,44 @@
 +# jitera-pentest: instructions for coding agents
 +
 +You own this project's day-to-day development, and you prove every change.
@@ -50,4 +50,5 @@ index 0000000000000000000000000000000000000000..c8052df76c32ca98ce0227b6d391df90
 +  merge with a merge commit, never a squash.
 +- Run uv with `--frozen`.
 +- `AGENTS.md` is upstream's Strix guide. In this fork, the command is
-+  `jitera-pentest`, settings use `JITERA_PENTEST_*`, and `cloud` is blocked.
++  `jitera-pentest`, settings use `JITERA_PENTEST_*`, `cloud` is blocked, scans
++  write to `jitera_pentest_runs/`, and saved settings live in `~/.jitera-pentest/`.

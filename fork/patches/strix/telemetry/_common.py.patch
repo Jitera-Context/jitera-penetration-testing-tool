@@ -1,0 +1,24 @@
+Title: First-run marker lives in the brand's home folder (~/.jitera-pentest)
+Why: Jitera kept its settings and sign-ins in upstream's ~/.strix, shared with any Strix install.
+Upstream-PR: none
+
+diff --git a/strix/telemetry/_common.py b/strix/telemetry/_common.py
+index f7f2866ce9562e3aee7d9ff90aea11079cf1bcfa..34ee77fe2c847e22f4321e2d314e585230d6f84b 100644
+--- a/strix/telemetry/_common.py
++++ b/strix/telemetry/_common.py
+@@ -30,11 +30,14 @@ def get_version() -> str:
+         return "unknown"
+ 
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ def is_first_run() -> bool:
+     global _FIRST_RUN_CACHED  # noqa: PLW0603
+     if _FIRST_RUN_CACHED is not None:
+         return _FIRST_RUN_CACHED
+-    marker = Path.home() / ".strix" / ".seen"
++    marker = Path.home() / brand.current().home_dir_name / ".seen"
+     if marker.exists():
+         _FIRST_RUN_CACHED = False
+         return False

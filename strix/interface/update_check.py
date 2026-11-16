@@ -40,7 +40,10 @@ PYPI_PACKAGE = "strix-agent"
 CHECK_INTERVAL_SECONDS = 24 * 60 * 60
 REQUEST_TIMEOUT_SECONDS = 5
 
-_CACHE_PATH = Path.home() / ".strix" / "update-check.json"
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
+_CACHE_PATH = Path.home() / brand.current().home_dir_name / "update-check.json"
 
 _background_thread: threading.Thread | None = None
 

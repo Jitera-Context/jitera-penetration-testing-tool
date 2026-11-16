@@ -63,6 +63,32 @@ def prepare_environment(env: MutableMapping[str, str], profile: brand.Brand | No
         env.setdefault(key, value)
 
 
+# Copied once from upstream's ~/.strix. Sign-in tokens are not: Jitera signs in on its own.
+UPSTREAM_SETTINGS = ("cli-config.json", "mcp-servers.json")
+
+
+def copy_upstream_settings(home: Path | None = None) -> list[str]:
+    """Start ~/.jitera-pentest from the settings saved in ~/.strix, once.
+
+    Does nothing when our folder already exists or there is nothing to copy.
+    Copies are private (0600), like the originals. Returns the copied names.
+    """
+    home = home or Path.home()
+    ours = home / brand.JITERA.home_dir_name
+    theirs = home / brand.UPSTREAM.home_dir_name
+    if ours.exists():
+        return []
+    names = [name for name in UPSTREAM_SETTINGS if (theirs / name).is_file()]
+    if not names:
+        return []
+    ours.mkdir(mode=0o700, parents=True)
+    for name in names:
+        fd = os.open(ours / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "wb") as out:
+            out.write((theirs / name).read_bytes())
+    return names
+
+
 def blocked_reason(argv: Sequence[str]) -> str | None:
     if argv and argv[0] in BLOCKED:
         return BLOCKED[argv[0]]
@@ -112,6 +138,13 @@ def main(argv: Sequence[str] | None = None) -> None:
     brand.activate(brand.JITERA)  # before any upstream module is imported
     load_env_file()
     prepare_environment(os.environ)
+    copied = copy_upstream_settings()
+    if copied:
+        print(  # noqa: T201
+            f"Copied {', '.join(copied)} from ~/{brand.UPSTREAM.home_dir_name} "
+            f"to ~/{brand.JITERA.home_dir_name}.",
+            file=sys.stderr,
+        )
 
     reason = blocked_reason(args)
     if reason:

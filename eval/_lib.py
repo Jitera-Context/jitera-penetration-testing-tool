@@ -13,6 +13,7 @@ import yaml
 
 from eval.score import Category
 from strix.config import load_settings
+from strix.config.loader import apply_config_override
 from strix.jitera import bootstrap, brand
 
 
@@ -97,9 +98,12 @@ def prepare_settings() -> None:
     """
     bootstrap.load_env_file()
     bootstrap.prepare_environment(os.environ, brand.JITERA)
+    # The scans run as Jitera, so read the settings file they read.
+    bootstrap.copy_upstream_settings()
+    apply_config_override(Path.home() / brand.JITERA.home_dir_name / "cli-config.json")
 
 
 def configured_model() -> str | None:
-    """The model a scan will use: shell, then .env, then ~/.strix/cli-config.json."""
+    """The model a scan will use: shell, then .env, then ~/.jitera-pentest/cli-config.json."""
     model = (load_settings().llm.model or "").strip()
     return model or None

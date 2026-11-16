@@ -24,7 +24,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-_DEFAULT_PATH: Path = Path.home() / ".strix" / "cli-config.json"
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
+_DEFAULT_PATH: Path = Path.home() / brand.current().home_dir_name / "cli-config.json"
 _override: Path | None = None
 _cached: Settings | None = None
 

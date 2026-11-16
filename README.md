@@ -92,15 +92,17 @@ Scan modes are `quick`, `standard` and `deep` (the default). In headless mode th
 
 ### Results
 
-Each scan writes to `strix_runs/<run-name>/`:
+Each scan writes to `jitera_pentest_runs/<run-name>/`:
 
 | File | Contents |
 |---|---|
 | `penetration_test_report.md` | The full report |
 | `vulnerabilities/*.md` | One file per finding |
 | `vulnerabilities.json` | All findings, machine-readable |
+| `vulnerabilities.csv` | All findings, for spreadsheets |
 | `findings.sarif` | SARIF 2.1.0 for code-scanning tools |
 | `run.json` | Status, timing and LLM cost |
+| `jitera_pentest.log` | The scan log |
 
 Open them in the local viewer:
 
@@ -138,7 +140,7 @@ Every upstream `STRIX_*` setting works. You can also write it as `JITERA_PENTEST
 | `PERPLEXITY_API_KEY` or `EXA_API_KEY` | Optional web search for the agents |
 | `JITERA_PENTEST_IMAGE` | Sandbox image. Default: upstream's `ghcr.io/usestrix/strix-sandbox:1.4.1` |
 
-The tool also remembers settings in `~/.strix/cli-config.json`; your shell and `.env` win over it. To give the agents extra tools, list MCP servers in `~/.strix/mcp-servers.json`. The [upstream documentation](https://docs.strix.ai/) describes every option.
+The tool also remembers settings in `~/.jitera-pentest/cli-config.json`; your shell and `.env` win over it. To give the agents extra tools, list MCP servers in `~/.jitera-pentest/mcp-servers.json`. On first run, settings and MCP servers saved by an earlier version in `~/.strix` are copied there once; sign in again where needed. The [upstream documentation](https://docs.strix.ai/) describes every option.
 
 ## What's different from Strix
 

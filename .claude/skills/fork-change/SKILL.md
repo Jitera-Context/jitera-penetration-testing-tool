@@ -49,7 +49,9 @@ If a patch file conflicts while merging branches, resolve the code, then run `fo
 
 - To use brand values in an upstream file, put `from strix.jitera import brand  # noqa: E402  (Jitera fork)` on its own line right above the first use. Then read `brand.current().name` etc.
 - Upstream tests run with the `UPSTREAM` profile; only the `jitera-pentest` command activates `JITERA`. Keep upstream tests green without editing them.
-- Never rename the `strix` package, `STRIX_*` env vars, `~/.strix`, the Go module path or class names.
+  The one exception is `tests/test_install_script.py`: `scripts/install.sh` is a shell script with no brand profile, so that test is patched to expect the Jitera names.
+- Never rename the `strix` package, `STRIX_*` env vars, the Go module path or class names.
+- Folders and files written to the user's disk are named from the brand, never `strix`: `RUNS_DIR_NAME` for the run folder, `Path.home() / brand.current().home_dir_name` for saved settings, `brand.current().temp_dir_name(kind)` for temp folders. `tests/jitera/test_output_names.py` fails on a new Strix-named path.
 - Traffic sent to scan targets identifies as Jitera: use `brand.current().scan_user_agent(<upstream default>)`.
   The agent prompt tells the agent to send it too. Never add any other identifying marker.
 - Always run uv with `--frozen`. An old uv rewrites `uv.lock`; never commit an unexpected `uv.lock` change.

@@ -158,6 +158,9 @@ def setup_console_logging(*, debug: bool | None = None) -> None:
             tracked.addHandler(_stream_handler(_debug_enabled(debug)))
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def setup_scan_logging(run_dir: Path, *, debug: bool | None = None) -> Callable[[], None]:
     """Attach scan-scoped handlers; return a teardown callable.
 
@@ -179,7 +182,7 @@ def setup_scan_logging(run_dir: Path, *, debug: bool | None = None) -> Callable[
     debug = _debug_enabled(debug)
 
     run_dir.mkdir(parents=True, exist_ok=True)
-    log_path = run_dir / "strix.log"
+    log_path = run_dir / brand.current().log_file_name
 
     file_handler = logging.FileHandler(log_path, mode="a", encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)

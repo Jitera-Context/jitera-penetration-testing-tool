@@ -27,6 +27,22 @@ class Brand:
     links: tuple[str, ...]  # shown under the CLI's end-of-scan panel
     promo: tuple[tuple[str, str], ...]  # (label, url) upsell lines; empty hides them
     identify_scan_traffic: bool  # send our User-Agent to scan targets too
+    file_prefix: str  # names the folders and files a scan writes
+    home_dir_name: str  # saved settings and sign-ins, under the home directory
+
+    @property
+    def runs_dir_name(self) -> str:
+        """Folder under the working directory that holds every scan's output."""
+        return f"{self.file_prefix}_runs"
+
+    @property
+    def log_file_name(self) -> str:
+        """The scan log inside each run folder."""
+        return f"{self.file_prefix}.log"
+
+    def temp_dir_name(self, kind: str) -> str:
+        """Staging folder under the system temp dir, such as cloned repos."""
+        return f"{self.file_prefix}_{kind}"
 
     @property
     def user_agent_token(self) -> str:
@@ -73,6 +89,8 @@ UPSTREAM = Brand(
     links=("strix.ai", "docs.strix.ai", "discord.gg/strix-ai"),
     promo=(("Run a pentest in Strix Cloud", "app.strix.ai"), ("Enterprise", "strix.ai/demo")),
     identify_scan_traffic=False,
+    file_prefix="strix",
+    home_dir_name=".strix",
 )
 
 JITERA = Brand(
@@ -86,6 +104,8 @@ JITERA = Brand(
     links=("jitera.com",),
     promo=(),
     identify_scan_traffic=True,
+    file_prefix="jitera_pentest",  # not bare `jitera`, which the Jitera Gateway uses
+    home_dir_name=".jitera-pentest",
 )
 
 _state: dict[str, Brand] = {"active": UPSTREAM}

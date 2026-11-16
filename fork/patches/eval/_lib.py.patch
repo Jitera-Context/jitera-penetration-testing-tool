@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/eval/_lib.py b/eval/_lib.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..a94bfd9215fd20a6231f5c1cf7e1b593cda0b09b
+index 0000000000000000000000000000000000000000..7d9c1889b8d2db3efda973fca3017d50742f41c2
 --- /dev/null
 +++ b/eval/_lib.py
-@@ -0,0 +1,105 @@
+@@ -0,0 +1,109 @@
 +"""Shared helpers: load the baseline, locate paths, record run results."""
 +
 +from __future__ import annotations
@@ -23,6 +23,7 @@ index 0000000000000000000000000000000000000000..a94bfd9215fd20a6231f5c1cf7e1b593
 +
 +from eval.score import Category
 +from strix.config import load_settings
++from strix.config.loader import apply_config_override
 +from strix.jitera import bootstrap, brand
 +
 +
@@ -107,9 +108,12 @@ index 0000000000000000000000000000000000000000..a94bfd9215fd20a6231f5c1cf7e1b593
 +    """
 +    bootstrap.load_env_file()
 +    bootstrap.prepare_environment(os.environ, brand.JITERA)
++    # The scans run as Jitera, so read the settings file they read.
++    bootstrap.copy_upstream_settings()
++    apply_config_override(Path.home() / brand.JITERA.home_dir_name / "cli-config.json")
 +
 +
 +def configured_model() -> str | None:
-+    """The model a scan will use: shell, then .env, then ~/.strix/cli-config.json."""
++    """The model a scan will use: shell, then .env, then ~/.jitera-pentest/cli-config.json."""
 +    model = (load_settings().llm.model or "").strip()
 +    return model or None

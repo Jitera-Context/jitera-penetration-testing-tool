@@ -1,0 +1,21 @@
+Title: Platform sign-in token lives in the brand's home folder (~/.jitera-pentest)
+Why: Jitera kept its settings and sign-ins in upstream's ~/.strix, shared with any Strix install.
+Upstream-PR: none
+
+diff --git a/strix/interface/platform_cli.py b/strix/interface/platform_cli.py
+index bf57e9cc85c9cde1e45f251c72c8d4cab0023b19..37c3b71780906e29456edfbb364414bb50c03ace 100644
+--- a/strix/interface/platform_cli.py
++++ b/strix/interface/platform_cli.py
+@@ -28,10 +28,11 @@ from strix.config import load_settings
+ from strix.interface.platform_identity import read_or_create_identity
+ from strix.interface.terminal_text import sanitize_terminal_text
+ from strix.interface.url_safety import is_safe_web_url
++from strix.jitera import brand  # (Jitera fork)
+ from strix.utils.secret_files import write_secret_text
+ 
+ 
+-AUTH_PATH = Path.home() / ".strix" / "platform-auth.json"
++AUTH_PATH = Path.home() / brand.current().home_dir_name / "platform-auth.json"
+ 
+ _HTTP_TIMEOUT_S = 30
+ _DEFAULT_POLL_INTERVAL_S = 5

@@ -101,8 +101,8 @@ def test_scan_command_is_headless_and_uses_our_entry_point() -> None:
 def test_find_run_dir_picks_the_run(tmp_path: Path) -> None:
     root = tmp_path
     assert find_run_dir(root) is None
-    (root / "strix_runs" / "run-a").mkdir(parents=True)
-    assert find_run_dir(root) == root / "strix_runs" / "run-a"
+    (root / "jitera_pentest_runs" / "run-a").mkdir(parents=True)
+    assert find_run_dir(root) == root / "jitera_pentest_runs" / "run-a"
 
 
 def test_runs_in_the_same_second_keep_separate_result_files(

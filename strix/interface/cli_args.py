@@ -128,7 +128,7 @@ Examples:
         "-v",
         "--version",
         action="version",
-        version=f"strix {get_version()}",
+        version=f"{brand.current().command} {get_version()}",
     )
 
     parser.add_argument(
@@ -257,14 +257,20 @@ Examples:
     parser.add_argument(
         "--config",
         type=str,
-        help="Path to a custom config file (JSON) to use instead of ~/.strix/cli-config.json",
+        help=(
+            "Path to a custom config file (JSON) to use instead of "
+            f"~/{brand.current().home_dir_name}/cli-config.json"
+        ),
     )
 
     parser.add_argument(
         "--mcp-config",
         type=str,
         metavar="PATH",
-        help="Path to an MCP servers JSON file to use instead of ~/.strix/mcp-servers.json.",
+        help=(
+            "Path to an MCP servers JSON file to use instead of "
+            f"~/{brand.current().home_dir_name}/mcp-servers.json."
+        ),
     )
 
     parser.add_argument(
@@ -317,7 +323,7 @@ Examples:
         const="",
         metavar="RUN_NAME",
         help=(
-            "Resume a prior scan by its run name (the dir under ./strix_runs/). "
+            f"Resume a prior scan by its run name (the dir under ./{RUNS_DIR_NAME}/). "
             "Picks up the root + every non-terminal subagent's full LLM history "
             "and agent topology. Skips fresh run-name generation. Without a "
             "name, opens a picker of the prior runs."

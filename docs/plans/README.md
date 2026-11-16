@@ -34,6 +34,7 @@ that finishes or adds an item.
 | 7 | **GEPA optimization run** | Better agent instructions, measured | A GEPA result validated by repeated evals and adopted in a PR | Required |
 | 8 | **Make `fork/dev test` finish** | `tests/test_tool_call_ids_providers.py` hangs on a live HTTPS call, on untouched upstream too, so the full run never ends. PRs #13 and #14 ran the suite without that file | `fork/dev test` completes without network access (a per-test timeout, or the file skipped with a reason); the hang reported upstream | — |
 | 9 | **Stop the viewer's PDF export from reaching the upstream vendor** | "Export report to PDF" builds an encrypted PDF locally, then emails it through `app.strix.ai` (`STRIX_APP_URL`). That breaks "no data to the upstream vendor" | The export is disabled, or replaced by a local download; the README lists PDF again only if it works locally | — |
+| 10 | **Keep upstream tests out of the real home and working folder** | Every suite run leaves two fake runs (no target, status `running`) in `./strix_runs` and rewrites `~/.strix/cli-config.json` and `cli-identity.json` plus a wallet cache, in the developer's real home (seen on `main`; not yet checked at the checkpoint). Our own tests use a throwaway home | A full test run leaves the working folder and home unchanged; if upstream does it too, reported upstream | — |
 
 ## Later
 

@@ -115,7 +115,8 @@ jobs:
         run: |
           uv venv --python 3.12 /tmp/strix-smoke
           uv pip install --python /tmp/strix-smoke/bin/python dist/*.whl
-          /tmp/strix-smoke/bin/strix --version
-          /tmp/strix-smoke/bin/strix --help >/dev/null
+          /tmp/strix-smoke/bin/jitera-pentest --version
+          /tmp/strix-smoke/bin/jitera-pentest --help >/dev/null
+          test ! -e /tmp/strix-smoke/bin/strix
       - name: Vertex AI and Bedrock dependencies install with the wheel
         run: /tmp/strix-smoke/bin/python -c "import google.auth.transport.requests, boto3"

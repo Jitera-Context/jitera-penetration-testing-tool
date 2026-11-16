@@ -1,0 +1,74 @@
+Title: Add tests/jitera/test_installer.py
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/tests/jitera/test_installer.py b/tests/jitera/test_installer.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..a055357add5fa67ff7e5072d30b168a7d2602357
+--- /dev/null
++++ b/tests/jitera/test_installer.py
+@@ -0,0 +1,64 @@
++"""The installer puts `jitera-pentest` in ~/.jitera-pentest/bin and leaves upstream Strix alone."""
++
++from __future__ import annotations
++
++import re
++import stat
++import sys
++from pathlib import Path
++
++import pytest
++
++from tests.test_install_script import (
++    RELEASE_VERSION,
++    _create_installer_environment,
++    _create_mock_commands,
++    _create_release_archive,
++    _run_installer,
++)
++
++
++pytestmark = pytest.mark.skipif(
++    sys.platform == "win32",
++    reason="scripts/install.sh is a POSIX shell installer",
++)
++
++ROOT = Path(__file__).resolve().parents[2]
++
++
++def _install(tmp_path: Path) -> tuple[Path, Path, str]:
++    archive = _create_release_archive(tmp_path)
++    mock_bin = _create_mock_commands(tmp_path, machine="aarch64")
++    # An upstream Strix install the user already has, found on PATH.
++    upstream = mock_bin / "strix"
++    upstream.write_text("#!/bin/sh\nprintf 'strix 1.0.0\\n'\n", encoding="utf-8")
++    upstream.chmod(upstream.stat().st_mode | stat.S_IXUSR)
++    environment, home, _ = _create_installer_environment(tmp_path, archive, mock_bin)
++    (home / ".bashrc").write_text("# existing\n", encoding="utf-8")  # so PATH setup runs
++    result = _run_installer(ROOT, environment)
++    assert result.returncode == 0, result.stderr
++    return home, upstream, result.stdout
++
++
++def test_installs_jitera_pentest_under_its_own_home_folder(tmp_path: Path) -> None:
++    home, _, output = _install(tmp_path)
++    assert [p.name for p in (home / ".jitera-pentest" / "bin").iterdir()] == ["jitera-pentest"]
++    assert not (home / ".strix").exists()
++    assert f"Jitera {RELEASE_VERSION} ready" in re.sub(r"\x1b\[[0-9;]*m", "", output)
++    assert "JITERA_PENTEST_LLM" in output
++    assert "jitera-pentest --target" in output
++    assert "STRIX_LLM" not in output
++
++
++def test_never_removes_an_upstream_strix_install(tmp_path: Path) -> None:
++    _, upstream, output = _install(tmp_path)
++    assert upstream.exists()
++    assert "strix at" not in output
++
++
++def test_shell_config_adds_the_jitera_folder_to_path(tmp_path: Path) -> None:
++    home, _, _ = _install(tmp_path)
++    text = (home / ".bashrc").read_text(encoding="utf-8")
++    assert "# jitera-pentest\n" in text
++    assert f"export PATH={home}/.jitera-pentest/bin:$PATH" in text
++    assert "strix" not in text

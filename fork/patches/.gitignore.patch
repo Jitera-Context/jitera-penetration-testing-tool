@@ -1,0 +1,16 @@
+Title: Ignore jitera_pentest_runs/ like strix_runs/
+Why: Scan output can hold sensitive findings and must never be committed.
+Upstream-PR: none
+
+diff --git a/.gitignore b/.gitignore
+index 89db2d7edd94927014bd74af79ec6ab6fd199261..41aa872b267ecda5baaf0ec6e382cc509c5d9e56 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -76,6 +76,7 @@ tensorboard/
+ 
+ # Agent execution traces
+ strix_runs/
++jitera_pentest_runs/
+ agent_runs/
+ 
+ # Misc
