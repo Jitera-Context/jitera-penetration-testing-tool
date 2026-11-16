@@ -23,7 +23,8 @@ covered. Details: `eval/README.md`.
 ## Steps
 
 1. `fork/dev eval-history` to see earlier runs and the usual coverage, and
-   `fork/dev eval --check` to see whether the target is up (no scan, no cost).
+   `fork/dev eval --check` to see whether the target is up and a model is set
+   (no scan, no cost). `model NOT SET`: have the user fill in `.env`.
 2. Run one of:
    - `fork/dev eval` (the baseline's target and settings)
    - `fork/dev eval --scan-mode quick --max-budget 5` (cheaper check)
@@ -34,7 +35,8 @@ covered. Details: `eval/README.md`.
      `run.json`: if the scan stopped early (budget, rate limit, error), it's a
      run problem, not the agent. Compare the missed categories with
      `eval/results/latest.json` and earlier history.
-   - `2` setup problem: read the error (bad baseline, no run directory).
+   - `2` setup problem: read the error (no model configured, bad baseline, no
+     run directory).
    - `3` target unreachable. Not a regression. Start a local Juice Shop and rerun:
      `docker run --rm -p 3000:3000 bkimminich/juice-shop:v20.4.0`, then
      `fork/dev eval --target http://localhost:3000`.

@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/eval/README.md b/eval/README.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..b58c367062230239948edab6f0921d80649c83a8
+index 0000000000000000000000000000000000000000..32a4131ad1b4f820fdffbc77533a0eb765c2ddf0
 --- /dev/null
 +++ b/eval/README.md
 @@ -0,0 +1,87 @@
@@ -29,7 +29,7 @@ index 0000000000000000000000000000000000000000..b58c367062230239948edab6f0921d80
 +Set your model and key in the checkout's `.env` first (`cp .env.example .env`). The eval and GEPA read it too.
 +
 +```bash
-+fork/dev eval --check                         # is the target up? (no scan, no cost)
++fork/dev eval --check                         # target up and model set? (no scan, no cost)
 +fork/dev eval                                 # scan, score, gate
 +fork/dev eval --from-run DIR                  # score a finished run, no scan
 +fork/dev eval --scan-mode quick --max-budget 5
@@ -46,7 +46,7 @@ index 0000000000000000000000000000000000000000..b58c367062230239948edab6f0921d80
 +|---|---|
 +| 0 | Pass: coverage at or above the gate |
 +| 1 | Regression: coverage below the gate |
-+| 2 | Setup problem (bad baseline, the scan produced no output) |
++| 2 | Setup problem: no model configured, a bad baseline, or the scan produced no output |
 +| 3 | Target unreachable. Not a regression: the public demo is often down |
 +
 +If the demo is down, run Juice Shop locally and pass `--target`:

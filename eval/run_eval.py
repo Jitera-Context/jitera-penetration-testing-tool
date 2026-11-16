@@ -20,7 +20,15 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from eval._lib import Baseline, load_findings, record_result, utc_stamp
+from eval._lib import (
+    MISSING_MODEL_HELP,
+    Baseline,
+    configured_model,
+    load_findings,
+    prepare_settings,
+    record_result,
+    utc_stamp,
+)
 from eval.harness import check_reachable, run_scan
 from eval.score import Score, score_findings
 
@@ -49,6 +57,18 @@ def _render(baseline: Baseline, score: Score, min_categories: int) -> str:
     return "\n".join(lines)
 
 
+def _check(target: str) -> int:
+    """Report whether a scan could start: target reachable and a model configured."""
+    ok, detail = check_reachable(target)
+    model = configured_model()
+    print(f"target  {'up' if ok else 'DOWN'} ({detail}): {target}")
+    print(f"model   {model or 'NOT SET'}")
+    if not model:
+        print(f"\n{MISSING_MODEL_HELP}")
+        return EXIT_USAGE
+    return EXIT_OK if ok else EXIT_UNREACHABLE
+
+
 def _score_run(run_dir: Path, baseline: Baseline) -> Score:
     return score_findings(load_findings(run_dir), list(baseline.categories))
 
@@ -74,6 +94,9 @@ def _scan_and_score(
     instruction_file: str | None,
 ) -> Outcome:
     """Run a fresh headless scan of the target, then score it."""
+    if not configured_model():
+        print(f"eval: {MISSING_MODEL_HELP}", file=sys.stderr)
+        return EXIT_USAGE
     ok, detail = check_reachable(target)
     if not ok:
         print(f"eval: target not reachable ({detail}): {target}", file=sys.stderr)
@@ -107,6 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="print the result as JSON")
     parser.add_argument("--check", action="store_true", help="only check the target is up; no scan")
     args = parser.parse_args(argv)
+    prepare_settings()
 
     try:
         baseline = Baseline.load(args.baseline)
@@ -120,10 +144,7 @@ def main(argv: list[str] | None = None) -> int:
     min_categories = args.min_categories or baseline.min_categories
 
     if args.check:
-        ok, detail = check_reachable(target)
-        state = "up" if ok else "down"
-        print(f"{state} ({detail}): {target}")
-        return EXIT_OK if ok else EXIT_UNREACHABLE
+        return _check(target)
 
     if args.from_run:
         outcome = _score_existing(args.from_run, baseline)

@@ -12,7 +12,8 @@
 # Run `fork/dev help` for every command.
 set -euo pipefail
 
-ROOT="$(git rev-parse --show-toplevel)"
+# Resolve the checkout from this script, so fork/dev works from any folder.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 PATCH_DIR="fork/patches"

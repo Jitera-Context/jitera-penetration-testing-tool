@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -11,7 +12,14 @@ from typing import Any
 import yaml
 
 from eval.score import Category
+from strix.config import load_settings
+from strix.jitera import bootstrap, brand
 
+
+MISSING_MODEL_HELP = (
+    "No LLM model configured. Copy .env.example to .env and set JITERA_PENTEST_LLM "
+    "and LLM_API_KEY (or export them in your shell)."
+)
 
 EVAL_DIR = Path(__file__).resolve().parent
 BASELINE_DIR = EVAL_DIR / "baseline"
@@ -80,3 +88,18 @@ def record_result(record: dict[str, Any]) -> Path:
     with (RESULTS_DIR / "history.jsonl").open("a") as history:
         history.write(json.dumps(record, sort_keys=True) + "\n")
     return out
+
+
+def prepare_settings() -> None:
+    """Use the same settings as the scans: our .env, then JITERA_PENTEST_* -> STRIX_*.
+
+    Call once, before reading any setting: ``load_settings`` is memoized.
+    """
+    bootstrap.load_env_file()
+    bootstrap.prepare_environment(os.environ, brand.JITERA)
+
+
+def configured_model() -> str | None:
+    """The model a scan will use: shell, then .env, then ~/.strix/cli-config.json."""
+    model = (load_settings().llm.model or "").strip()
+    return model or None

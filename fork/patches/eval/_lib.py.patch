@@ -4,15 +4,16 @@ Upstream-PR: none
 
 diff --git a/eval/_lib.py b/eval/_lib.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..685a3d828f1eb97781c46bfc8467c9121521180c
+index 0000000000000000000000000000000000000000..a94bfd9215fd20a6231f5c1cf7e1b593cda0b09b
 --- /dev/null
 +++ b/eval/_lib.py
-@@ -0,0 +1,82 @@
+@@ -0,0 +1,105 @@
 +"""Shared helpers: load the baseline, locate paths, record run results."""
 +
 +from __future__ import annotations
 +
 +import json
++import os
 +from dataclasses import dataclass
 +from datetime import UTC, datetime
 +from pathlib import Path
@@ -21,7 +22,14 @@ index 0000000000000000000000000000000000000000..685a3d828f1eb97781c46bfc8467c912
 +import yaml
 +
 +from eval.score import Category
++from strix.config import load_settings
++from strix.jitera import bootstrap, brand
 +
++
++MISSING_MODEL_HELP = (
++    "No LLM model configured. Copy .env.example to .env and set JITERA_PENTEST_LLM "
++    "and LLM_API_KEY (or export them in your shell)."
++)
 +
 +EVAL_DIR = Path(__file__).resolve().parent
 +BASELINE_DIR = EVAL_DIR / "baseline"
@@ -90,3 +98,18 @@ index 0000000000000000000000000000000000000000..685a3d828f1eb97781c46bfc8467c912
 +    with (RESULTS_DIR / "history.jsonl").open("a") as history:
 +        history.write(json.dumps(record, sort_keys=True) + "\n")
 +    return out
++
++
++def prepare_settings() -> None:
++    """Use the same settings as the scans: our .env, then JITERA_PENTEST_* -> STRIX_*.
++
++    Call once, before reading any setting: ``load_settings`` is memoized.
++    """
++    bootstrap.load_env_file()
++    bootstrap.prepare_environment(os.environ, brand.JITERA)
++
++
++def configured_model() -> str | None:
++    """The model a scan will use: shell, then .env, then ~/.strix/cli-config.json."""
++    model = (load_settings().llm.model or "").strip()
++    return model or None

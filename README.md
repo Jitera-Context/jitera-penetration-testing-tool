@@ -140,6 +140,43 @@ The tool also remembers settings in `~/.strix/cli-config.json`; your shell and `
 
 Customers can recognize our authorized scan traffic by its User-Agent.
 
+## Eval: OWASP Juice Shop
+
+Checks that the scanner still finds what it should, on [OWASP Juice Shop](https://owasp.org/www-project-juice-shop/), a deliberately vulnerable app OWASP publishes for this purpose. The eval uses the same `.env` as the tool.
+
+```bash
+cp .env.example .env                              # once: set JITERA_PENTEST_LLM and LLM_API_KEY
+fork/dev eval --check                             # target up and model set? No scan, no cost
+fork/dev eval                                     # scan, score, pass or fail (takes a while, costs LLM credit)
+fork/dev eval --scan-mode quick --max-budget 5    # a cheaper run
+fork/dev eval-history                             # recent runs: coverage, gate, result
+```
+
+A run passes when its findings cover at least 6 of the 12 vulnerability categories in [`eval/baseline/juice-shop.yaml`](eval/baseline/juice-shop.yaml). Each run is recorded in `eval/results/`.
+
+| Exit code | Meaning |
+|---|---|
+| `0` | Pass |
+| `1` | Regression: below the gate |
+| `2` | Setup problem, for example no model configured |
+| `3` | Target down |
+
+If the public demo is down, run Juice Shop locally and point the eval at it:
+
+```bash
+docker run --rm -p 3000:3000 bkimminich/juice-shop:v20.4.0
+fork/dev eval --target http://localhost:3000
+```
+
+To improve the agent's instructions with [GEPA](https://pypi.org/project/gepa/), start with a dry run. A real run does a full scan for every step, so it's slow and costs LLM credit.
+
+```bash
+fork/dev gepa --dry-run                 # check the setup: no scans, no cost
+fork/dev gepa --max-metric-calls 6      # real optimization
+```
+
+[`eval/README.md`](eval/README.md) has the details. In Claude Code, `/eval-run` and `/eval-gepa` run these for you and ask before anything that costs money.
+
 ## Developing
 
 This repository is a fork kept easy to sync with upstream:
@@ -152,11 +189,9 @@ This repository is a fork kept easy to sync with upstream:
 fork/dev help       # every command
 fork/dev status     # checkpoint, how far upstream moved, patches out of date
 fork/dev test       # brand audit, lint, type check, tests
-fork/dev eval       # OWASP Juice Shop eval: did the scanner regress?
-fork/dev gepa       # optimize the agent's instructions with GEPA
 ```
 
-The eval and GEPA are described in [`eval/README.md`](eval/README.md).
+`fork/dev` works from any folder. For the eval commands, see [Eval: OWASP Juice Shop](#eval-owasp-juice-shop).
 
 The full guide with diagrams is [`fork/architecture.html`](fork/architecture.html). In Claude Code, use `/fork-change`, `/fork-sync`, `/eval-run` and `/eval-gepa`.
 
