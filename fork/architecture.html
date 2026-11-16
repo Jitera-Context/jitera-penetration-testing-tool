@@ -205,7 +205,7 @@ footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--lin
 │   ├── <span class="p">dev</span>                            <span class="n">all commands</span>                         <span class="ok">✓</span>
 │   ├── <span class="p">scripts/</span>                       <span class="n">sync, brand audit, diagrams</span>          <span class="ok">✓</span>
 │   └── <span class="p">architecture.html</span>              <span class="n">this page</span>                            <span class="ok">✓</span>
-└── <span class="p">.claude/skills/</span>                    <span class="n">/fork-change, /fork-sync</span>             <span class="ok">✓</span></code></pre>
+└── <span class="p">.claude/skills/</span>                    <span class="n">/fork-change, /fork-sync, /eval-run, /eval-gepa</span> <span class="ok">✓</span></code></pre>
     <div class="rules">
       <div class="rule f"><strong>Code: edit in place</strong><span>Edited, new and deleted files all live in the normal source tree.</span></div>
       <div class="rule p"><strong>Patches: everything since the checkpoint</strong><span>New files too. <code>fork/dev save</code> writes them. Never edit a patch by hand.</span></div>
@@ -542,6 +542,10 @@ diff --git a/strix/report/sarif.py b/strix/report/sarif.py
           <tr><td><code>fork/dev verify</code></td><td>CI guard: patches match the code, checkpoint in history</td></tr>
           <tr><td><code>fork/dev audit</code></td><td>Find Strix brand left in network calls and visible text</td></tr>
           <tr><td><code>fork/dev build [binary]</code></td><td>Verify, then build the wheel or binary</td></tr>
+          <tr class="group"><td colspan="2">Eval (OWASP Juice Shop)</td></tr>
+          <tr><td><code>fork/dev eval [--check]</code></td><td>Scan, score against the baseline categories, gate. <code>--check</code> only tests the target is up</td></tr>
+          <tr><td><code>fork/dev eval-history</code></td><td>Recent recorded eval runs: coverage, gate, result</td></tr>
+          <tr><td><code>fork/dev gepa [--dry-run]</code></td><td>Optimize the agent instructions with GEPA. Dry run first; a real run is one scan per metric call</td></tr>
         </tbody>
       </table>
     </div>
@@ -551,6 +555,8 @@ diff --git a/strix/report/sarif.py b/strix/report/sarif.py
         <tbody>
           <tr><td><code>/fork-change</code></td><td>Write code: where it goes, test, save patches, commit</td><td><span class="chip ok">ready</span></td></tr>
           <tr><td><code>/fork-sync</code></td><td>Take an upstream release: sync, fix failed patches, open the PR</td><td><span class="chip ok">ready</span></td></tr>
+          <tr><td><code>/eval-run</code></td><td>Run the Juice Shop eval, read the gate, track and calibrate it</td><td><span class="chip ok">ready</span></td></tr>
+          <tr><td><code>/eval-gepa</code></td><td>Dry run, confirm cost, optimize with GEPA, validate before adopting</td><td><span class="chip ok">ready</span></td></tr>
           <tr><td><code>/fork-release</code></td><td>Tag, build, publish to our releases</td><td><span class="chip up">later</span></td></tr>
         </tbody>
       </table>

@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/eval/gepa/adapter.py b/eval/gepa/adapter.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..c0c0bc20197c32a15847134a683a162902d89a52
+index 0000000000000000000000000000000000000000..af5e62596c715c51054a225fe096279c53b7f5cc
 --- /dev/null
 +++ b/eval/gepa/adapter.py
 @@ -0,0 +1,138 @@
@@ -41,11 +41,11 @@ index 0000000000000000000000000000000000000000..c0c0bc20197c32a15847134a683a1629
 +Rollout = Callable[[str, dict[str, Any]], "tuple[float, dict[str, Any]]"]
 +
 +
-+def make_tasks(baseline: Baseline) -> list[dict[str, Any]]:
++def make_tasks(baseline: Baseline, target: str | None = None) -> list[dict[str, Any]]:
 +    """The eval instances GEPA trains on. One per target for now."""
 +    return [
 +        {
-+            "target": baseline.target,
++            "target": target or baseline.target,
 +            "scan_mode": baseline.scan_mode,
 +            "max_budget_usd": baseline.max_budget_usd,
 +            "baseline": baseline.name,

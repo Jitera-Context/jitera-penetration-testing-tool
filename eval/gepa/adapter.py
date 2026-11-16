@@ -31,11 +31,11 @@ COMPONENT = "instructions"
 Rollout = Callable[[str, dict[str, Any]], "tuple[float, dict[str, Any]]"]
 
 
-def make_tasks(baseline: Baseline) -> list[dict[str, Any]]:
+def make_tasks(baseline: Baseline, target: str | None = None) -> list[dict[str, Any]]:
     """The eval instances GEPA trains on. One per target for now."""
     return [
         {
-            "target": baseline.target,
+            "target": target or baseline.target,
             "scan_mode": baseline.scan_mode,
             "max_budget_usd": baseline.max_budget_usd,
             "baseline": baseline.name,

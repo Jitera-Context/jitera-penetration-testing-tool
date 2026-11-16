@@ -137,9 +137,13 @@ This repository is a fork kept easy to sync with upstream:
 fork/dev help       # every command
 fork/dev status     # checkpoint, how far upstream moved, patches out of date
 fork/dev test       # brand audit, lint, type check, tests
+fork/dev eval       # OWASP Juice Shop eval: did the scanner regress?
+fork/dev gepa       # optimize the agent's instructions with GEPA
 ```
 
-The full guide with diagrams is [`fork/architecture.html`](fork/architecture.html). In Claude Code, use `/fork-change` and `/fork-sync`.
+The eval and GEPA are described in [`eval/README.md`](eval/README.md).
+
+The full guide with diagrams is [`fork/architecture.html`](fork/architecture.html). In Claude Code, use `/fork-change`, `/fork-sync`, `/eval-run` and `/eval-gepa`.
 
 ## License
 

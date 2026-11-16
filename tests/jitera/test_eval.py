@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import eval._lib as lib
 from eval._lib import Baseline
 from eval.harness import build_command, find_run_dir
 from eval.score import Category, parse_cwe, score_findings
@@ -11,6 +12,8 @@ from eval.score import Category, parse_cwe, score_findings
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    import pytest
 
 
 def test_parse_cwe_handles_strix_format() -> None:
@@ -100,3 +103,15 @@ def test_find_run_dir_picks_the_run(tmp_path: Path) -> None:
     assert find_run_dir(root) is None
     (root / "strix_runs" / "run-a").mkdir(parents=True)
     assert find_run_dir(root) == root / "strix_runs" / "run-a"
+
+
+def test_runs_in_the_same_second_keep_separate_result_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(lib, "RESULTS_DIR", tmp_path)
+    first = lib.record_result({"timestamp": "20260101T000000Z", "passed": True})
+    second = lib.record_result({"timestamp": "20260101T000000Z", "passed": False})
+    assert first != second
+    assert first.exists()
+    assert second.exists()
+    assert len((tmp_path / "history.jsonl").read_text().splitlines()) == 2

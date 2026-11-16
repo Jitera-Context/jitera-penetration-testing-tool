@@ -71,6 +71,10 @@ def record_result(record: dict[str, Any]) -> Path:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     stamp = record.get("timestamp") or utc_stamp()
     out = RESULTS_DIR / f"{stamp}.json"
+    suffix = 1
+    while out.exists():  # two runs in the same second must not overwrite each other
+        out = RESULTS_DIR / f"{stamp}-{suffix}.json"
+        suffix += 1
     out.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
     (RESULTS_DIR / "latest.json").write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
     with (RESULTS_DIR / "history.jsonl").open("a") as history:

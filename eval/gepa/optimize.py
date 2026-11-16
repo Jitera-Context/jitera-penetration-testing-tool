@@ -39,6 +39,8 @@ SEED = (
 )
 
 DEFAULT_OUT = EVAL_DIR / "gepa" / "optimized_instructions.txt"
+# Dry runs only prove the loop works; keep their stub output out of git.
+DRY_RUN_OUT = EVAL_DIR / "results" / "gepa-dry-run-instructions.txt"
 
 
 def _covered(instructions: str, baseline: Baseline) -> dict[str, Any]:
@@ -95,15 +97,17 @@ def litellm_reflection(model: str) -> ReflectionLM:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="eval.gepa.optimize", description=__doc__)
     parser.add_argument("--baseline", default="juice-shop")
+    parser.add_argument("--target", help="override the baseline target, e.g. a local Juice Shop")
     parser.add_argument("--dry-run", action="store_true", help="stub scorer + stub LM, no scans")
     parser.add_argument("--max-metric-calls", type=int, default=6)
     parser.add_argument("--reflection-model", default=os.environ.get("STRIX_LLM", ""))
     parser.add_argument("--seed-file", type=Path, help="start from this instruction file")
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--out", type=Path, help=f"default: {DEFAULT_OUT}")
     args = parser.parse_args(argv)
 
+    out: Path = args.out or (DRY_RUN_OUT if args.dry_run else DEFAULT_OUT)
     baseline = Baseline.load(args.baseline)
-    tasks = make_tasks(baseline)
+    tasks = make_tasks(baseline, args.target)
     seed_text = args.seed_file.read_text() if args.seed_file else SEED
 
     rollout: Rollout
@@ -137,11 +141,11 @@ def main(argv: list[str] | None = None) -> int:
 
     best = result.best_candidate[COMPONENT]
     scores = result.val_aggregate_scores
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(best.rstrip() + "\n")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(best.rstrip() + "\n")
     print(f"seed score: {scores[0]:.3f}   best score: {max(scores):.3f}")
     print(f"candidates tried: {len(scores)}   metric calls: {result.total_metric_calls}")
-    print(f"wrote optimized instruction: {args.out}")
+    print(f"wrote optimized instruction: {out}")
     return 0
 
 

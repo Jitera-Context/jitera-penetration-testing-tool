@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/eval/README.md b/eval/README.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..dcb8cc86cea47362523216776e7a187566d76ccf
+index 0000000000000000000000000000000000000000..4c57fccc153b135a7e5abab0aa3784de8e3144f1
 --- /dev/null
 +++ b/eval/README.md
-@@ -0,0 +1,74 @@
+@@ -0,0 +1,88 @@
 +# Eval: OWASP Juice Shop
 +
 +Runs `jitera-pentest` against [OWASP Juice Shop](https://owasp.org/www-project-juice-shop/), a deliberately vulnerable app OWASP publishes for security training and tool benchmarking, and checks that the scan still finds what it should.
@@ -30,11 +30,18 @@ index 0000000000000000000000000000000000000000..dcb8cc86cea47362523216776e7a1875
 +export JITERA_PENTEST_LLM="openrouter/z-ai/glm-5.3"
 +export LLM_API_KEY="your-api-key"
 +
-+uv run --frozen python -m eval.run_eval                       # scan, score, gate
-+uv run --frozen python -m eval.run_eval --from-run DIR         # score a finished run
-+uv run --frozen python -m eval.run_eval --scan-mode quick --max-budget 5
-+uv run --frozen python -m eval.run_eval --target http://localhost:3000
++fork/dev eval --check                         # is the target up? (no scan, no cost)
++fork/dev eval                                 # scan, score, gate
++fork/dev eval --from-run DIR                  # score a finished run, no scan
++fork/dev eval --scan-mode quick --max-budget 5
++fork/dev eval --target http://localhost:3000
++fork/dev eval-history                         # the last 10 recorded runs
 +```
++
++`fork/dev eval` is a shortcut for `uv run --frozen python -m eval.run_eval`.
++
++In Claude Code, `/eval-run` runs the eval for you: it checks the target, asks before
++a paid scan, reads the exit code, and reports coverage and misses.
 +
 +| Exit code | Meaning |
 +|---|---|
@@ -59,11 +66,18 @@ index 0000000000000000000000000000000000000000..dcb8cc86cea47362523216776e7a1875
 +
 +```bash
 +# Check the loop works: stub scoring and stub reflection, no scans, no LLM spend
-+uv run --frozen --with gepa==0.1.4 python -m eval.gepa.optimize --dry-run
++fork/dev gepa --dry-run
 +
 +# Real run: every metric call is a full scan (minutes to hours, real LLM cost)
-+uv run --frozen --with gepa==0.1.4 python -m eval.gepa.optimize --max-metric-calls 6
++fork/dev gepa --max-metric-calls 6
++fork/dev gepa --max-metric-calls 6 --target http://localhost:3000
 +```
++
++`fork/dev gepa` is a shortcut for `uv run --frozen --with gepa==0.1.4 python -m eval.gepa.optimize`.
++Dry-run output goes to `results/`, so it never gets committed.
++
++In Claude Code, `/eval-gepa` walks through it: dry run, cost estimate and your go-ahead,
++the real run, then validating the result with the eval before adopting it.
 +
 +- The best instruction is written to `gepa/optimized_instructions.txt`. Try it with `run_eval --instruction-file eval/gepa/optimized_instructions.txt` before adopting it.
 +- GEPA checks its budget between iterations, so it can make a few more calls than `--max-metric-calls` (the dry run made 8 against a cap of 6). Size the cap and the per-scan budget with that in mind.

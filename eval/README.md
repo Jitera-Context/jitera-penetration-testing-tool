@@ -20,11 +20,18 @@ Each run is recorded in `results/` (`<timestamp>.json`, `latest.json`, and an ap
 export JITERA_PENTEST_LLM="openrouter/z-ai/glm-5.3"
 export LLM_API_KEY="your-api-key"
 
-uv run --frozen python -m eval.run_eval                       # scan, score, gate
-uv run --frozen python -m eval.run_eval --from-run DIR         # score a finished run
-uv run --frozen python -m eval.run_eval --scan-mode quick --max-budget 5
-uv run --frozen python -m eval.run_eval --target http://localhost:3000
+fork/dev eval --check                         # is the target up? (no scan, no cost)
+fork/dev eval                                 # scan, score, gate
+fork/dev eval --from-run DIR                  # score a finished run, no scan
+fork/dev eval --scan-mode quick --max-budget 5
+fork/dev eval --target http://localhost:3000
+fork/dev eval-history                         # the last 10 recorded runs
 ```
+
+`fork/dev eval` is a shortcut for `uv run --frozen python -m eval.run_eval`.
+
+In Claude Code, `/eval-run` runs the eval for you: it checks the target, asks before
+a paid scan, reads the exit code, and reports coverage and misses.
 
 | Exit code | Meaning |
 |---|---|
@@ -49,11 +56,18 @@ To change what's expected, edit `baseline/juice-shop.yaml`: the target, `min_cat
 
 ```bash
 # Check the loop works: stub scoring and stub reflection, no scans, no LLM spend
-uv run --frozen --with gepa==0.1.4 python -m eval.gepa.optimize --dry-run
+fork/dev gepa --dry-run
 
 # Real run: every metric call is a full scan (minutes to hours, real LLM cost)
-uv run --frozen --with gepa==0.1.4 python -m eval.gepa.optimize --max-metric-calls 6
+fork/dev gepa --max-metric-calls 6
+fork/dev gepa --max-metric-calls 6 --target http://localhost:3000
 ```
+
+`fork/dev gepa` is a shortcut for `uv run --frozen --with gepa==0.1.4 python -m eval.gepa.optimize`.
+Dry-run output goes to `results/`, so it never gets committed.
+
+In Claude Code, `/eval-gepa` walks through it: dry run, cost estimate and your go-ahead,
+the real run, then validating the result with the eval before adopting it.
 
 - The best instruction is written to `gepa/optimized_instructions.txt`. Try it with `run_eval --instruction-file eval/gepa/optimized_instructions.txt` before adopting it.
 - GEPA checks its budget between iterations, so it can make a few more calls than `--max-metric-calls` (the dry run made 8 against a cap of 6). Size the cap and the per-scan budget with that in mind.
