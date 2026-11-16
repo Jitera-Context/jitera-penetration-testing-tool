@@ -7,7 +7,8 @@
 #
 # 1. back to the checkpoint (fork/CHECKPOINT): remove all patched changes
 # 2. take the latest upstream (a clean merge, because step 1 left pure upstream)
-# 3. re-apply fork/patches with a 3-way merge; you fix any that fail
+# 3. re-apply fork/patches with a 3-way merge; you fix any that fail.
+#    Files listed in fork/OWNED are fully ours: sync keeps our version instead.
 # 4. move the checkpoint, refresh the patches, and squash it all into ONE merge
 #    commit (parents: main, new upstream) on a sync/ branch for PR review
 set -euo pipefail
@@ -76,6 +77,23 @@ abort() {
   echo "Sync aborted. $BRANCH is back at $(git rev-parse --short "$BASE_SHA"); delete it with: git switch main && git branch -D $BRANCH"
 }
 
+# Files in fork/OWNED are fully ours: restore our version from main instead of
+# re-applying a patch. Say when upstream changed theirs, so it can be reviewed.
+keep_owned() {
+  local base_sha="$1" old="$2" new="$3" f
+  [[ -f fork/OWNED ]] || return 0
+  while IFS= read -r f; do
+    [[ -z "$f" || "$f" == \#* ]] && continue
+    git cat-file -e "$base_sha:$f" 2>/dev/null || continue
+    git checkout -q "$base_sha" -- "$f"
+    if git diff --quiet "$old" "$new" -- "$f"; then
+      echo "  = kept ours  $f"
+    else
+      echo "  = kept ours  $f (upstream changed it; review: git diff $(git rev-parse --short "$old") $(git rev-parse --short "$new") -- $f)"
+    fi
+  done <fork/OWNED
+}
+
 start() {
   local ref="$1" target target_sha old behind short branch base_sha f
   [[ ! -f "$STATE" ]] || die "a sync is already in progress. Fix it and run fork/dev sync --continue, or fork/dev sync --abort."
@@ -125,6 +143,7 @@ start() {
   printf '%s %s\n' "$target_sha" "$ref" >fork/CHECKPOINT
 
   echo "3/3 Re-applying patches"
+  keep_owned "$base_sha" "$old" "$target_sha"
   if fork/dev apply; then
     finish
   else

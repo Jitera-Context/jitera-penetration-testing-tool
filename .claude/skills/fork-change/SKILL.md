@@ -21,6 +21,7 @@ description: Write or change code in the Jitera fork of Strix (branding, User-Ag
 | Default for a `STRIX_*` setting | `ENV_DEFAULTS` in `strix/jitera/bootstrap.py` |
 | Brand value (name, URL, User-Agent) | `strix/jitera/brand.py` |
 | Behaviour upstream has no hook for | edit the upstream file in place, as small as possible |
+| An upstream file we replace entirely (e.g. `README.md`) | edit it, and list it in `fork/OWNED` so sync keeps ours |
 | Our tests | `tests/jitera/` |
 
 Prefer `strix/jitera/` plus upstream's hooks. Small edits to upstream files mean fewer sync conflicts.
