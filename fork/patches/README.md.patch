@@ -3,51 +3,45 @@ Why: Upstream's README is Strix's product page. Listed in fork/OWNED, so sync ke
 Upstream-PR: none
 
 diff --git a/README.md b/README.md
-index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..807889a7df1021c9952710b771c585d5bf6a2a50 100644
+index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..93c11bc674db770e3fcd4f7af8f2d3206ac64879 100644
 --- a/README.md
 +++ b/README.md
-@@ -1,393 +1,208 @@
--<p align="center">
+@@ -1,393 +1,232 @@
+ <p align="center">
 -  <a href="https://strix.ai/">
 -    <img src="https://github.com/usestrix/.github/raw/main/imgs/cover.png" alt="Strix Banner" width="100%">
 -  </a>
--</p>
-+# Jitera
++  <img alt="jitera-pentest: AI penetration testing that finds attacks before they happen, and tests how your team detects and responds" src="docs/images/architecture/hero.svg" width="100%">
+ </p>
  
 -<div align="center">
-+AI penetration testing for your apps. Autonomous AI agents test your code and running applications the way an attacker would, and back each finding with a working proof of concept.
++# Jitera
  
 -# Strix
-+Jitera is built on [Strix](https://github.com/usestrix/strix) (Apache-2.0). It adds our brand and network identity, and turns off the upstream vendor's cloud services and telemetry. See [What's different from Strix](#whats-different-from-strix).
++AI penetration testing that finds attacks before they happen, and tests how your team detects and responds. Autonomous AI agents attack your code and running applications the way a real attacker would, through real browsers, and back each finding with a working proof of concept.
  
 -### The open-source AI pentesting tool. Autonomous AI hackers that find and fix your app’s vulnerabilities.
-+## What it does
++Jitera is built on [Strix](https://github.com/usestrix/strix) (Apache-2.0). It adds our brand and network identity, and turns off the upstream vendor's cloud services and telemetry. See [What's different from Strix](#whats-different-from-strix).
  
 -<br/>
++## What it does
+ 
 +- **Full pentesting toolkit** inside a Docker sandbox: HTTP interception proxy (Caido), browser automation, shell, Python exploit runtime, reconnaissance, static and dynamic analysis.
 +- **A team of agents**: specialised agents for recon, exploitation and validation work in parallel and share what they find.
 +- **Validated findings**: each comes with a proof of concept, a CVSS score and fix guidance.
 +- **Reports** in Markdown, PDF, JSON and SARIF.
  
-+It covers the OWASP Top 10 and beyond: access control and IDOR, injection, SSRF, XXE and RCE, XSS and CSRF, business logic and race conditions, authentication and sessions, cloud misconfiguration, and API security.
- 
 -<a href="https://docs.strix.ai"><img src="https://img.shields.io/badge/Docs-docs.strix.ai-2b9246?style=for-the-badge&logo=gitbook&logoColor=white" alt="Docs"></a>
 -<a href="https://strix.ai"><img src="https://img.shields.io/badge/Website-strix.ai-f0f0f0?style=for-the-badge&logoColor=000000" alt="Website"></a>
 -[![](https://dcbadge.limes.pink/api/server/strix-ai)](https://discord.gg/strix-ai)
-+Only test systems you are authorized to test.
- 
+-
 -<a href="https://app.strix.ai?utm_source=github&utm_medium=readme&utm_content=badge_cloud"><img src="https://img.shields.io/badge/Strix%20Cloud-app.strix.ai-2b9246?style=for-the-badge&logoColor=white" alt="Strix Cloud"></a>
 -<a href="https://strix.ai/demo?utm_source=github&utm_medium=readme&utm_content=badge_demo"><img src="https://img.shields.io/badge/Try%20Strix%20Enterprise-555555?style=for-the-badge&logoColor=white" alt="Try Strix Enterprise"></a>
-+## Requirements
- 
+-
 -<a href="https://github.com/usestrix/strix"><img src="https://img.shields.io/github/stars/usestrix/strix?style=flat-square" alt="GitHub Stars"></a>
 -<a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-3b82f6?style=flat-square" alt="License"></a>
 -<a href="https://pypi.org/project/strix-agent/"><img src="https://img.shields.io/pypi/v/strix-agent?style=flat-square" alt="PyPI Version"></a>
-+- Docker, running
-+- Python 3.12+ and a recent [uv](https://docs.astral.sh/uv/). Older uv versions rewrite `uv.lock`, so always pass `--frozen`.
-+- Go 1.24+ for the interactive terminal UI. Headless mode (`-n`) works without it.
-+- An LLM: an API key for any [LiteLLM](https://docs.litellm.ai/docs/providers) provider, or a ChatGPT subscription
- 
+-
 -
 -<a href="https://discord.gg/strix-ai"><img src="https://github.com/usestrix/.github/raw/main/imgs/Discord.png" height="40" alt="Join Discord"></a>
 -<a href="https://x.com/strix_ai"><img src="https://github.com/usestrix/.github/raw/main/imgs/X.png" height="40" alt="Follow on X"></a>
@@ -94,27 +88,54 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..807889a7df1021c9952710b771c585d5
 -- **Rapid Penetration Testing** - Get penetration tests done in hours, not weeks, with compliance reports
 -- **Bug Bounty Automation** - Automate bug bounty research and generate PoCs for faster reporting
 -- **CI/CD Integration** - Run tests in CI/CD to block vulnerabilities before reaching production
--
++<p align="center">
++  <img alt="How a scan runs: jitera-pentest starts a bootstrap that loads the Jitera brand and settings, then AI agents in a Docker sandbox, with a real browser, an HTTP proxy and tools, run a simulated attack against your authorized app. Findings become reports and a local viewer." src="docs/images/architecture/scan-flow.svg" width="100%">
++</p>
+ 
 -## 🚀 Quick Start
--
++Inside a scan, a team of AI agents does the work:
+ 
 -**Prerequisites:**
 -- Docker (running)
 -- An LLM API key from any [supported provider](https://docs.strix.ai/llm-providers/overview) (OpenAI, Anthropic, Google, etc.)
--
--### Installation & First Scan
-+## Install
++<p align="center">
++  <img alt="Inside a scan: targets and instructions go to a lead agent, which plans the work and creates specialist agents for recon, exploitation and verification. They share memory (threat model, coverage, notes) and think with any LLM through LiteLLM. Their tools run in a Docker sandbox: a shell, a real Chromium browser, an HTTP proxy and a workspace with your code. Findings need a proof of concept and evidence, get a CVSS score and a duplicate check, and become reports." src="docs/images/architecture/engine.svg" width="100%">
++</p>
  
- ```bash
+-### Installation & First Scan
++It covers the OWASP Top 10 and beyond: access control and IDOR, injection, SSRF, XXE and RCE, XSS and CSRF, business logic and race conditions, authentication and sessions, cloud misconfiguration, and API security.
+ 
+-```bash
 -# Install Strix
 -curl -sSL https://strix.ai/install | bash
--
++Only test systems you are authorized to test.
+ 
 -# Configure your AI provider
 -export STRIX_LLM="vercel_ai_gateway/zai/glm-5.3"   # Vercel AI Gateway
 -# export STRIX_LLM="openrouter/z-ai/glm-5.3"       # OpenRouter
 -export LLM_API_KEY="your-api-key"
--
++## Requirements
+ 
 -# Run your first security assessment
 -strix --target ./app-directory
+-```
++- Docker, running
++- Python 3.12+ and a recent [uv](https://docs.astral.sh/uv/). Older uv versions rewrite `uv.lock`, so always pass `--frozen`.
++- Go 1.24+ for the interactive terminal UI. Headless mode (`-n`) works without it.
++- An LLM: an API key for any [LiteLLM](https://docs.litellm.ai/docs/providers) provider, or a ChatGPT subscription
+ 
+-> [!NOTE]
+-> First run automatically pulls the sandbox Docker image. Results are saved to `strix_runs/<run-name>`
+-
+-### Updating
++## Install
+ 
+ ```bash
+-# Self-update the standalone binary to the latest release
+-strix --update
+-
+-# ...or re-run the installer
+-curl -sSL https://strix.ai/install | bash
 +git clone git@github.com:Jitera-Context/jitera-penetration-testing-tool.git
 +cd jitera-penetration-testing-tool
 +uv sync --frozen
@@ -123,19 +144,6 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..807889a7df1021c9952710b771c585d5
 +jitera-pentest about
  ```
  
--> [!NOTE]
--> First run automatically pulls the sandbox Docker image. Results are saved to `strix_runs/<run-name>`
--
--### Updating
--
--```bash
--# Self-update the standalone binary to the latest release
--strix --update
--
--# ...or re-run the installer
--curl -sSL https://strix.ai/install | bash
--```
--
 -Installed with pipx, uv, or pip? `strix --update` prints the matching upgrade command instead (`pipx upgrade strix-agent`, `uv tool upgrade strix-agent`, `pip install --upgrade strix-agent`). Strix also shows a notice with the right command when a new version is available.
 -
 ----
@@ -242,36 +250,36 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..807889a7df1021c9952710b771c585d5
  ```
  
 -The dashboard shows the findings, a live map of the agent team, and past runs. Nothing leaves your machine, and the UI ships prebuilt. `strix view` binds to `127.0.0.1` and prints a tokened link that grants access to the run, so share it carefully.
--
--See the [viewer documentation](https://docs.strix.ai/usage/viewer) for the options and for reaching the viewer from another machine.
 +The command is `jitera-pentest` because `jitera` is the Jitera Gateway CLI. Use `jitera-pentest`, not `strix`: the `strix` command is still installed, but it runs upstream's branding and telemetry.
  
-----
+-See the [viewer documentation](https://docs.strix.ai/usage/viewer) for the options and for reaching the viewer from another machine.
 +## Usage
  
--## Usage Examples
+----
 +```bash
 +# Local code, a GitHub repository, or a live app
 +jitera-pentest --target ./app-directory
 +jitera-pentest --target https://github.com/org/repo
 +jitera-pentest --target https://your-app.com
  
--### Basic Usage
+-## Usage Examples
 +# An API contract plus the live base URL
 +jitera-pentest --target ./openapi.yaml --target https://api.your-app.com
+ 
+-### Basic Usage
++# Authenticated (grey-box) testing
++jitera-pentest --target https://your-app.com --instruction "Log in as user:pass before testing"
  
 -```bash
 -# Scan a local codebase
 -strix --target ./app-directory
-+# Authenticated (grey-box) testing
-+jitera-pentest --target https://your-app.com --instruction "Log in as user:pass before testing"
- 
--# Security review of a GitHub repository
--strix --target https://github.com/org/repo
 +# Several targets, or a file of targets
 +jitera-pentest -t https://github.com/org/app -t https://your-app.com
 +jitera-pentest --target-list ./targets.txt
  
+-# Security review of a GitHub repository
+-strix --target https://github.com/org/repo
+-
 -# Black-box web application assessment
 -strix --target https://your-app.com
 +# Headless, for CI and servers: quick scan, capped spend, fail on high or worse
@@ -507,11 +515,18 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..807889a7df1021c9952710b771c585d5
 +- `fork/dev sync` takes a new upstream: back to the checkpoint, remove our changes, take the latest upstream, re-apply the patches.
  
 -Have questions? Found a bug? Want to contribute? **[Join our Discord!](https://discord.gg/strix-ai)**
--
++<p align="center">
++  <img alt="How we stay in sync with upstream: upstream code is edited in place, our code lives in strix/jitera, and fork/ records a checkpoint and one patch per changed file. A sync fetches the upstream release, returns to the checkpoint, takes upstream, re-applies our patches, then moves the checkpoint and opens a PR." src="docs/images/architecture/fork-sync.svg" width="100%">
++</p>
+ 
 -## Support the Project
--
++Development is led by AI agents and gated by the eval: agents build and prove each change, people approve.
+ 
 -**Love Strix?** Give us a ⭐ on GitHub!
--
++<p align="center">
++  <img alt="How a change ships: people set direction; an agent picks a plan item, implements it and proves it with verify, tests and the eval; the proof goes into a PR; people approve; it merges with a merge commit; the agent updates the plans and picks the next item." src="docs/images/architecture/dev-loop.svg" width="100%">
++</p>
+ 
 -## Acknowledgements
 +```bash
 +fork/dev help       # every command

@@ -1,6 +1,10 @@
+<p align="center">
+  <img alt="jitera-pentest: AI penetration testing that finds attacks before they happen, and tests how your team detects and responds" src="docs/images/architecture/hero.svg" width="100%">
+</p>
+
 # Jitera
 
-AI penetration testing for your apps. Autonomous AI agents test your code and running applications the way an attacker would, and back each finding with a working proof of concept.
+AI penetration testing that finds attacks before they happen, and tests how your team detects and responds. Autonomous AI agents attack your code and running applications the way a real attacker would, through real browsers, and back each finding with a working proof of concept.
 
 Jitera is built on [Strix](https://github.com/usestrix/strix) (Apache-2.0). It adds our brand and network identity, and turns off the upstream vendor's cloud services and telemetry. See [What's different from Strix](#whats-different-from-strix).
 
@@ -10,6 +14,16 @@ Jitera is built on [Strix](https://github.com/usestrix/strix) (Apache-2.0). It a
 - **A team of agents**: specialised agents for recon, exploitation and validation work in parallel and share what they find.
 - **Validated findings**: each comes with a proof of concept, a CVSS score and fix guidance.
 - **Reports** in Markdown, PDF, JSON and SARIF.
+
+<p align="center">
+  <img alt="How a scan runs: jitera-pentest starts a bootstrap that loads the Jitera brand and settings, then AI agents in a Docker sandbox, with a real browser, an HTTP proxy and tools, run a simulated attack against your authorized app. Findings become reports and a local viewer." src="docs/images/architecture/scan-flow.svg" width="100%">
+</p>
+
+Inside a scan, a team of AI agents does the work:
+
+<p align="center">
+  <img alt="Inside a scan: targets and instructions go to a lead agent, which plans the work and creates specialist agents for recon, exploitation and verification. They share memory (threat model, coverage, notes) and think with any LLM through LiteLLM. Their tools run in a Docker sandbox: a shell, a real Chromium browser, an HTTP proxy and a workspace with your code. Findings need a proof of concept and evidence, get a CVSS score and a duplicate check, and become reports." src="docs/images/architecture/engine.svg" width="100%">
+</p>
 
 It covers the OWASP Top 10 and beyond: access control and IDOR, injection, SSRF, XXE and RCE, XSS and CSRF, business logic and race conditions, authentication and sessions, cloud misconfiguration, and API security.
 
@@ -192,6 +206,16 @@ This repository is a fork kept easy to sync with upstream:
 - Edit the source directly. Our own code lives in `strix/jitera/`, our tests in `tests/jitera/`.
 - `fork/dev save` records every change since the upstream checkpoint (`fork/CHECKPOINT`) as patches in `fork/patches/`. Commit the code and its patches together.
 - `fork/dev sync` takes a new upstream: back to the checkpoint, remove our changes, take the latest upstream, re-apply the patches.
+
+<p align="center">
+  <img alt="How we stay in sync with upstream: upstream code is edited in place, our code lives in strix/jitera, and fork/ records a checkpoint and one patch per changed file. A sync fetches the upstream release, returns to the checkpoint, takes upstream, re-applies our patches, then moves the checkpoint and opens a PR." src="docs/images/architecture/fork-sync.svg" width="100%">
+</p>
+
+Development is led by AI agents and gated by the eval: agents build and prove each change, people approve.
+
+<p align="center">
+  <img alt="How a change ships: people set direction; an agent picks a plan item, implements it and proves it with verify, tests and the eval; the proof goes into a PR; people approve; it merges with a merge commit; the agent updates the plans and picks the next item." src="docs/images/architecture/dev-loop.svg" width="100%">
+</p>
 
 ```bash
 fork/dev help       # every command
