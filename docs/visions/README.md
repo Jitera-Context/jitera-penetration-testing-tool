@@ -21,7 +21,7 @@ each one with a working proof of concept. You see what an attacker could do
 before anyone does it, and you act on it:
 
 - validated findings, not guesses, each with severity and fix guidance;
-- reports for people (Markdown, PDF) and for pipelines (JSON, SARIF);
+- reports for people (Markdown) and for pipelines (JSON, CSV, SARIF);
 - runs on demand or in CI, so new weaknesses are caught as code changes.
 
 ### 2. Rehearse the defense

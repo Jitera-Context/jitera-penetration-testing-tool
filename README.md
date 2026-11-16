@@ -13,7 +13,7 @@ Jitera is built on [Strix](https://github.com/usestrix/strix) (Apache-2.0). It a
 - **Full pentesting toolkit** inside a Docker sandbox: HTTP interception proxy (Caido), browser automation, shell, Python exploit runtime, reconnaissance, static and dynamic analysis.
 - **A team of agents**: specialised agents for recon, exploitation and validation work in parallel and share what they find.
 - **Validated findings**: each comes with a proof of concept, a CVSS score and fix guidance.
-- **Reports** in Markdown, PDF, JSON and SARIF.
+- **Reports** in Markdown, JSON, CSV and SARIF.
 
 <p align="center">
   <img alt="How a scan runs: jitera-pentest starts a bootstrap that loads the Jitera brand and settings, then AI agents in a Docker sandbox, with a real browser, an HTTP proxy and tools, run a simulated attack against your authorized app. Findings become reports and a local viewer." src="docs/images/architecture/scan-flow.svg" width="100%">

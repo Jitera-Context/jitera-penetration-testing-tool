@@ -16,6 +16,10 @@ that finishes or adds an item.
 | #9 | `.env.example`, and loading `.env` safely |
 | #10 | The eval reads `.env` and checks the model before scanning; README eval guide |
 | #11 | Docs: visions, architecture, plans; the rule that every feature must pass the eval |
+| #12 | Vision: find attacks before they happen and rehearse the defense; agent-led development |
+| #13 | Cartoon-style README images, drawn by `fork/scripts/render-architecture-images.py` |
+| #14 | A security-focused README banner |
+| #1, #2 | Dependency updates (pillow 13.0.0, pypdf 6.21.4), each tested on `main` before merge |
 
 ## Next, in priority order
 
@@ -25,9 +29,11 @@ that finishes or adds an item.
 | 2 | **First real upstream sync** | We're behind upstream; its newer commits fix 12 of our failing upstream tests | Sync PR merged with a merge commit; tests and eval pass | Required |
 | 3 | **Turn on CI** | No checks run on PRs: upstream's workflows aren't active in this repo | Lint, types, tests and `fork/dev verify` run on every PR and block merges | — |
 | 4 | **Eval in CI** | "Every feature passes the eval" should be enforced, not just checked by reviewers | A quick eval runs on PRs that touch agent behavior; a full one runs nightly on `main` | — |
-| 5 | **Update uv; handle Dependabot** | uv 0.8.8 can't update this repo's `uv.lock` safely, so dependency PRs #1 and #2 are blocked | A current uv; dependency bumps land through a reviewed lock update | Required |
+| 5 | **Update uv** | The local uv 0.8.8 can't parse `exclude-newer = "5 days"` and rewrites `uv.lock` unless run with `--frozen`. Dependabot #1 and #2 were merged after testing with uv 0.13.8 through `uvx` | A current uv locally and in CI; every dependency bump tested on `main` before merge | Required |
 | 6 | **Release pipeline** | The binary is still named `strix`, and we publish no releases | `jitera-pentest` binaries on our releases; installer and self-update use them | Required |
 | 7 | **GEPA optimization run** | Better agent instructions, measured | A GEPA result validated by repeated evals and adopted in a PR | Required |
+| 8 | **Make `fork/dev test` finish** | `tests/test_tool_call_ids_providers.py` hangs on a live HTTPS call, on untouched upstream too, so the full run never ends. PRs #13 and #14 ran the suite without that file | `fork/dev test` completes without network access (a per-test timeout, or the file skipped with a reason); the hang reported upstream | — |
+| 9 | **Stop the viewer's PDF export from reaching the upstream vendor** | "Export report to PDF" builds an encrypted PDF locally, then emails it through `app.strix.ai` (`STRIX_APP_URL`). That breaks "no data to the upstream vendor" | The export is disabled, or replaced by a local download; the README lists PDF again only if it works locally | — |
 
 ## Later
 

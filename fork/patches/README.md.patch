@@ -3,7 +3,7 @@ Why: Upstream's README is Strix's product page. Listed in fork/OWNED, so sync ke
 Upstream-PR: none
 
 diff --git a/README.md b/README.md
-index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..93c11bc674db770e3fcd4f7af8f2d3206ac64879 100644
+index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..5659fadc16962ff5d766d1a8692e48b514c4e031 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,393 +1,232 @@
@@ -29,7 +29,7 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..93c11bc674db770e3fcd4f7af8f2d320
 +- **Full pentesting toolkit** inside a Docker sandbox: HTTP interception proxy (Caido), browser automation, shell, Python exploit runtime, reconnaissance, static and dynamic analysis.
 +- **A team of agents**: specialised agents for recon, exploitation and validation work in parallel and share what they find.
 +- **Validated findings**: each comes with a proof of concept, a CVSS score and fix guidance.
-+- **Reports** in Markdown, PDF, JSON and SARIF.
++- **Reports** in Markdown, JSON, CSV and SARIF.
  
 -<a href="https://docs.strix.ai"><img src="https://img.shields.io/badge/Docs-docs.strix.ai-2b9246?style=for-the-badge&logo=gitbook&logoColor=white" alt="Docs"></a>
 -<a href="https://strix.ai"><img src="https://img.shields.io/badge/Website-strix.ai-f0f0f0?style=for-the-badge&logoColor=000000" alt="Website"></a>
