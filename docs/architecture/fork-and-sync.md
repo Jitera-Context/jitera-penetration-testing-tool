@@ -1,0 +1,114 @@
+# Fork and sync
+
+Upstream Strix moves fast: 258 commits in the 90 days before we forked. This
+document explains how we stay in sync with it at that pace, and how our fixes
+flow back to it.
+
+## How our changes are recorded
+
+- **Engineers edit the source directly.** GitHub shows the real code, so review
+  works as usual.
+- **`fork/CHECKPOINT`** holds the upstream commit our changes are based on.
+- **`fork/patches/<path>.patch`** records how each file differs from that
+  checkpoint: edited upstream files, new files and deleted files alike.
+  `fork/dev patches` lists them; when this was written, 30 were edits to
+  upstream files and the rest were new files.
+- **`fork/dev save`** regenerates the patches from the code. Engineers commit
+  the code and its patches together, and CI's `fork/dev verify` fails a PR when
+  they don't match.
+- **`fork/OWNED`** lists upstream files we've fully replaced (today:
+  `README.md`). Sync keeps our version of those instead of re-applying a patch.
+- **`fork/` and `.claude/` are never patched.** They are the mechanism itself.
+
+## Sync with upstream
+
+`fork/dev sync [vX.Y.Z]` takes a new upstream release onto a `sync/` branch:
+
+```mermaid
+sequenceDiagram
+    actor M as Maintainer
+    participant S as fork/dev sync
+    participant U as Upstream (usestrix/strix)
+    participant B as sync/ branch
+    participant W as Working tree
+    M->>S: fork/dev sync v1.7.2
+    S->>U: fetch main and tags
+    S->>B: branch from origin/main
+    S->>W: back to the checkpoint: remove all our changes
+    S->>B: merge v1.7.2 (clean: the tree is pure upstream)
+    S->>W: keep our version of fork/OWNED files
+    S->>W: re-apply every patch (3-way merge)
+    alt a patch fails
+        W-->>M: CONFLICT or FAILED in <file>
+        M->>W: fix the code
+        M->>S: fork/dev sync --continue
+    end
+    S->>B: move the checkpoint, refresh patches, one merge commit
+    M->>M: fork/dev test, then fork/dev eval
+    M->>B: PR into main, merged with a merge commit
+```
+
+| Sync reports | Meaning | Action |
+|---|---|---|
+| `✓ applied` | Upstream didn't touch our lines | Nothing |
+| `= kept ours` | A `fork/OWNED` file | If upstream changed it, review the printed `git diff` |
+| `✗ CONFLICT` | Upstream changed the same lines, or added a file we also added | Keep upstream's new code, re-apply our change, `--continue` |
+| `✗ FAILED` | The file moved or was deleted upstream | Redo our change where the code lives now, `--continue` |
+
+Rules that keep this reliable:
+
+- **Merge sync PRs with a merge commit, never squash or rebase.** The
+  checkpoint commit must stay in our history, or `fork/dev verify` fails.
+- **Git remembers each conflict fix** (`rerere`), so the same conflict resolves
+  itself next time.
+- **Sync weekly or on each upstream release.** Small, frequent syncs mean small
+  conflicts.
+- **A sync is a feature change too.** Run the eval on the sync branch before
+  merging (see [eval-driven development](eval-driven-development.md)).
+
+## Why it scales
+
+The cost of a sync depends mainly on **how many of our edited lines upstream
+also touched.** The merge itself is always clean, because sync first returns to
+pure upstream. Adding new files, features in `strix/jitera/` or engineers doesn't
+add to the cost. Fewer, smaller edits to upstream files, and syncing often,
+keep it low.
+
+So the architecture pushes work away from editing upstream files:
+
+| Growth | Where it lands | Sync cost |
+|---|---|---|
+| A new agent tool, skill or CLI command | `strix/jitera/`, via hooks | None: upstream has no such file |
+| A new default setting | `ENV_DEFAULTS` in `strix/jitera/bootstrap.py` | None |
+| A new brand value | `strix/jitera/brand.py` | None |
+| A whole replaced upstream file | Listed in `fork/OWNED` | None: sync keeps ours |
+| A behavior upstream has no hook for | A small in-place edit | Only if upstream edits the same lines |
+
+Signals to watch: the edited-file count in `fork/dev patches` (30 today), and
+how often those files change upstream. A file upstream rewrites often is a
+candidate for a new hook, or for an upstream contribution.
+
+## Sync back: contributing upstream
+
+Every generic fix we carry is a patch we maintain forever. Sending it upstream
+removes that cost:
+
+1. Make the fix in our fork as usual, and pass the eval.
+2. Open the same change as a PR on `usestrix/strix`, and note the PR link in
+   the patch's `Upstream-PR:` header.
+3. Once upstream merges it, the next `fork/dev sync` brings their version in.
+   Our file now matches upstream, and `fork/dev save` deletes the patch
+   automatically ("file is back to upstream").
+
+Good candidates: bug fixes, new settings or hooks that remove a need to edit
+upstream code, test fixes. Never upstream: our brand, our User-Agent, or
+anything specific to Jitera.
+
+## Guardrails
+
+| Check | Catches |
+|---|---|
+| `fork/dev verify` (CI) | Code and patches out of step; a squashed sync PR |
+| `fork/dev test` | Lint, types, our tests and upstream's tests |
+| `fork/dev audit` | Strix brand or endpoints coming back |
+| `fork/dev eval` | Capability regressions (see the next document) |

@@ -3,10 +3,10 @@ Why: Upstream's README is Strix's product page. Listed in fork/OWNED, so sync ke
 Upstream-PR: none
 
 diff --git a/README.md b/README.md
-index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..46f1f1e32f9c19064805c7c5699f9defeb71be59 100644
+index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..d2ac7ff3bde75ea24df8a314d5dabaa09a11fd04 100644
 --- a/README.md
 +++ b/README.md
-@@ -1,393 +1,200 @@
+@@ -1,393 +1,208 @@
 -<p align="center">
 -  <a href="https://strix.ai/">
 -    <img src="https://github.com/usestrix/.github/raw/main/imgs/cover.png" alt="Strix Banner" width="100%">
@@ -451,19 +451,13 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..46f1f1e32f9c19064805c7c5699f9def
  ```
  
 -Every [REST API](https://docs.app.strix.ai) operation has a matching `strix cloud <resource> <verb>` command. Run `strix cloud` to list the resources, and add `help` to a resource to list its verbs. Output is JSON when stdout is not a terminal or when you pass `--json`. Binary downloads are the exception: redirect the raw bytes, or combine `--output FILE --json` for download metadata.
-+[`eval/README.md`](eval/README.md) has the details. In Claude Code, `/eval-run` and `/eval-gepa` run these for you and ask before anything that costs money.
- 
+-
 -See the [cloud CLI documentation](https://docs.strix.ai/cloud/cli) for scopes, workspaces, billing, and source-upload options.
-+## Developing
- 
+-
 -#### Connect your own MCP servers
-+This repository is a fork kept easy to sync with upstream:
- 
+-
 -Strix can connect to Model Context Protocol (MCP) servers you list and expose their tools to the agent during a run. Create `~/.strix/mcp-servers.json` with a JSON list of local `stdio` servers or remote `http` servers:
-+- Edit the source directly. Our own code lives in `strix/jitera/`, our tests in `tests/jitera/`.
-+- `fork/dev save` records every change since the upstream checkpoint (`fork/CHECKPOINT`) as patches in `fork/patches/`. Commit the code and its patches together.
-+- `fork/dev sync` takes a new upstream: back to the checkpoint, remove our changes, take the latest upstream, re-apply the patches.
- 
+-
 -```json
 -[
 -  {
@@ -474,12 +468,8 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..46f1f1e32f9c19064805c7c5699f9def
 -    "allowed_tools": ["list_issues"]
 -  }
 -]
-+```bash
-+fork/dev help       # every command
-+fork/dev status     # checkpoint, how far upstream moved, patches out of date
-+fork/dev test       # brand audit, lint, type check, tests
- ```
- 
+-```
+-
 -Each server's tools are namespaced by `name`, for example `github_list_issues`. See the [MCP documentation](https://docs.strix.ai/integrations/mcp) for the full schema, tool filtering, and `stdio` servers.
 -
 -**Recommended models for best results:**
@@ -494,17 +484,28 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..46f1f1e32f9c19064805c7c5699f9def
 -- [Moonshot Kimi K3.1 Pro](https://platform.kimi.ai) - `moonshot/kimi-k3.1-pro`
 -
 -See the [LLM Providers documentation](https://docs.strix.ai/llm-providers/overview) for all supported providers including Vertex AI, Bedrock, Azure, and local models.
--
--## Documentation
--
++[`eval/README.md`](eval/README.md) has the details. In Claude Code, `/eval-run` and `/eval-gepa` run these for you and ask before anything that costs money.
+ 
+ ## Documentation
+ 
 -Full documentation is available at **[docs.strix.ai](https://docs.strix.ai)** - including detailed guides for usage, CI/CD integrations, skills, and advanced configuration.
--
++| Folder | What's in it |
++|---|---|
++| [`docs/visions/`](docs/visions/README.md) | What we're building and why: goals, principles, open questions |
++| [`docs/architecture/`](docs/architecture/README.md) | How it's built to scale and stay in sync with upstream, and why every feature must pass the eval |
++| [`docs/plans/`](docs/plans/README.md) | What's done, what's next, and open decisions |
+ 
 -## Contributing
--
++## Developing
+ 
 -We welcome contributions of code, docs, and new skills - check out our [Contributing Guide](https://docs.strix.ai/contributing) to get started or open a [pull request](https://github.com/usestrix/strix/pulls)/[issue](https://github.com/usestrix/strix/issues).
--
++This repository is a fork kept easy to sync with upstream:
+ 
 -## Join Our Community
--
++- Edit the source directly. Our own code lives in `strix/jitera/`, our tests in `tests/jitera/`.
++- `fork/dev save` records every change since the upstream checkpoint (`fork/CHECKPOINT`) as patches in `fork/patches/`. Commit the code and its patches together.
++- `fork/dev sync` takes a new upstream: back to the checkpoint, remove our changes, take the latest upstream, re-apply the patches.
+ 
 -Have questions? Found a bug? Want to contribute? **[Join our Discord!](https://discord.gg/strix-ai)**
 -
 -## Support the Project
@@ -512,7 +513,12 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..46f1f1e32f9c19064805c7c5699f9def
 -**Love Strix?** Give us a ⭐ on GitHub!
 -
 -## Acknowledgements
--
++```bash
++fork/dev help       # every command
++fork/dev status     # checkpoint, how far upstream moved, patches out of date
++fork/dev test       # brand audit, lint, type check, tests
++```
+ 
 -Strix builds on the incredible work of open-source projects like [LiteLLM](https://github.com/BerriAI/litellm), [Caido](https://github.com/caido/caido), [Nuclei](https://github.com/projectdiscovery/nuclei), [Playwright](https://github.com/microsoft/playwright), and [Bubble Tea](https://github.com/charmbracelet/bubbletea). Huge thanks to their maintainers!
 +`fork/dev` works from any folder. For the eval commands, see [Eval: OWASP Juice Shop](#eval-owasp-juice-shop).
  

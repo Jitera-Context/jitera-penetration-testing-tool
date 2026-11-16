@@ -1,0 +1,62 @@
+# Architecture
+
+How `jitera-pentest` is built so that it scales, stays in sync with upstream
+Strix, and is developed under the eval. The why is in the [vision](../visions/README.md).
+
+| Document | Covers |
+|---|---|
+| [Fork and sync](fork-and-sync.md) | How our changes are recorded, how upstream releases come in, how fixes go back upstream |
+| [Extending](extending.md) | Where new code goes, the hooks it plugs into, and the rules that keep sync cheap as we grow |
+| [Eval-driven development](eval-driven-development.md) | Why every feature must pass the eval, and how a change goes from idea to merge |
+
+A visual walkthrough with sequence diagrams is in
+[`fork/architecture.html`](../../fork/architecture.html) (open it in a browser).
+
+## The system at a glance
+
+```mermaid
+flowchart TB
+    subgraph upstream["Upstream Strix: strix/, tests/, docs/ ... (edited in place)"]
+        core["Agents, tools, sandbox, CLI, TUI, viewer, reports"]
+    end
+    subgraph ours["Our code (new files)"]
+        jitera["strix/jitera/<br/>brand, bootstrap, tools, skills, commands"]
+        tests["tests/jitera/"]
+        evaldir["eval/<br/>Juice Shop baseline, scorer, GEPA"]
+    end
+    subgraph tooling["Tooling (never patched)"]
+        fork["fork/<br/>dev, CHECKPOINT, patches/, OWNED, scripts"]
+        skills[".claude/skills/"]
+    end
+    jitera -- "hooks: register_agent_tools,<br/>register_skill_dir, env defaults" --> core
+    core -. "~30 small edits read the brand<br/>(e.g. brand.current().name)" .-> jitera
+    evaldir -- "runs headless scans" --> jitera
+    fork -- "records every change vs CHECKPOINT;<br/>replays them on sync" --> upstream
+    fork --> ours
+```
+
+## Four rules
+
+1. **Upstream stays at the root and is edited in place.** Merges and patches
+   match files by path, and upstream's build, CI and tests expect this layout.
+2. **Every change is recorded.** `fork/CHECKPOINT` is the upstream commit we're
+   based on; `fork/patches/` holds one patch per changed file. `fork/dev verify`
+   fails a PR whose patches don't match its code.
+3. **New behavior plugs in; it doesn't rewrite.** Features live in
+   `strix/jitera/` and attach through upstream's own hooks. Edits to upstream
+   files stay as small as possible.
+4. **Every feature must pass the eval.** A behavior change isn't done until
+   `fork/dev eval` passes its gate. See
+   [eval-driven development](eval-driven-development.md).
+
+## Where things are
+
+| Path | What | Patched? |
+|---|---|---|
+| `strix/`, `tests/`, `scripts/`, … | Upstream code, plus our in-place edits | Edits recorded as patches |
+| `strix/jitera/` | Our product code | Yes, as new files |
+| `tests/jitera/` | Our tests | Yes |
+| `eval/` | The eval and GEPA | Yes |
+| `docs/visions/`, `docs/architecture/`, `docs/plans/` | These docs | Yes |
+| `fork/` | Sync tooling and the patches themselves | No: it's the mechanism |
+| `.claude/skills/` | Claude Code skills for this workflow | No |

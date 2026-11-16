@@ -177,6 +177,14 @@ fork/dev gepa --max-metric-calls 6      # real optimization
 
 [`eval/README.md`](eval/README.md) has the details. In Claude Code, `/eval-run` and `/eval-gepa` run these for you and ask before anything that costs money.
 
+## Documentation
+
+| Folder | What's in it |
+|---|---|
+| [`docs/visions/`](docs/visions/README.md) | What we're building and why: goals, principles, open questions |
+| [`docs/architecture/`](docs/architecture/README.md) | How it's built to scale and stay in sync with upstream, and why every feature must pass the eval |
+| [`docs/plans/`](docs/plans/README.md) | What's done, what's next, and open decisions |
+
 ## Developing
 
 This repository is a fork kept easy to sync with upstream:
