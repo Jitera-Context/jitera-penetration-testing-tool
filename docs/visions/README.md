@@ -33,8 +33,51 @@ against your own systems and ask:
 - How long did it take, and who was told?
 - Did the security and infrastructure teams respond the way the playbook says?
 
-Every request the tool sends carries a Jitera User-Agent, so defenders can tell
-an exercise apart from a real attack and trace it in their logs.
+By default the tool identifies itself (a Jitera User-Agent on every request), so
+an exercise can be told apart from a real attack and traced. Making the
+simulation realistic enough to truly test detection, while keeping it
+accountable, is our edge — see below.
+
+## Our advantage: realistic, human-like simulation
+
+A detection test is only real if the simulated attacker is realistic. Tools
+that announce themselves as scanners — predictable requests, obvious
+signatures — tell you whether your systems catch crude automation. They don't
+tell you whether your team would catch a capable attacker.
+
+Our edge is that the tool works through real browsers and a team of agents that
+behave like people: navigating, signing in, filling forms and chaining actions
+across many concurrent sessions, the way real users — and real attackers — do.
+That realism is what makes the defense rehearsal meaningful: it exercises
+detection and response against an adversary that looks like the ones that
+matter, not a checklist scanner.
+
+This matters more over time. Attackers increasingly use AI to blend into normal
+activity and slip past simple detection. A team can't wait for a real breach to
+learn whether it would notice. A realistic, AI-driven adversary you run
+yourself — on your own systems, scope and schedule — is how you rehearse for
+that now.
+
+### Realistic, and still accountable
+
+Realism and authorization sit on different channels, so one never weakens the
+other:
+
+- **Scope and permission come first.** Only authorized targets, within an
+  agreed scope and time window. Realism never widens the scope.
+- **Attribution stays available.** Even when the on-the-wire traffic is
+  deliberately unremarkable — so it genuinely tests detection — the exercise is
+  attributable out of band: a known source, a deconfliction contact, markers an
+  investigator can confirm. A simulated attack is always traceable to an
+  authorized exercise; just not necessarily in a way that tips off the very
+  detection you're testing.
+
+This refines our branding decision. By default the tool identifies itself in
+its traffic, which suits the first purpose (find and fix vulnerabilities) and
+lets defenders allowlist it. A detection exercise is the exception, where a
+loud marker would give the game away; that mode, with its out-of-band
+attribution, is a **planned capability** — see the [plans](../plans/README.md).
+Today the tool always sends a Jitera User-Agent.
 
 ## Who it's for
 
@@ -64,8 +107,10 @@ an exercise apart from a real attack and trace it in their logs.
 - **Authorized testing only.** Attack only systems you own or have written
   permission to test, within the agreed scope. Simulation must never become
   a real attack.
-- **Identify ourselves honestly.** Our traffic says who it is. We send no usage
-  data to the upstream vendor and don't route users to its paid cloud.
+- **Accountable, always.** Every exercise is traceable to an authorized test:
+  by default in the traffic itself, and out of band when a detection exercise
+  needs the traffic to stay realistic. We send no usage data to the upstream
+  vendor and don't route users to its paid cloud.
 - **Proof over claims.** Findings come with a proof of concept; changes to the
   tool come with verify and eval results.
 - **Upstream is our base.** We change as little upstream code as we can and
@@ -96,5 +141,7 @@ an exercise apart from a real attack and trace it in their logs.
 - How is the tool distributed: source checkout, binaries, a container?
 - How should a defense rehearsal be run and scored: which signals from
   monitoring and response count as "detected"?
+- When should the tool stay identified, and when (and how) should a detection
+  exercise run realistically with out-of-band attribution instead?
 - Which targets besides OWASP Juice Shop define "good"?
 - What coverage do we commit to, once the eval gate is calibrated?

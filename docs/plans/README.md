@@ -33,8 +33,14 @@ that finishes or adds an item.
 
 - **Rehearse the defense (vision, part 2).** Run a simulated attack against a
   team's own systems and record whether, and how fast, their monitoring
-  detected it. First step: decide which signals count as "detected" (see the
-  vision's open questions).
+  detected it. First step: decide which signals count as "detected".
+- **Realistic adversary mode, with out-of-band attribution.** For detection
+  exercises, let the tool's browser-driven, multi-agent simulation run without
+  the loud Jitera User-Agent, while staying attributable to an authorized test
+  another way (known source, deconfliction contact, confirmable markers). Today
+  scan traffic always carries the User-Agent. This is the "our advantage"
+  capability from the vision; design it so realism can never widen the
+  authorized scope.
 - **The same agent rules for every coding agent.** `CLAUDE.md` covers Claude
   Code; other agents read `AGENTS.md`, which is upstream's file. Decide whether
   to add our rules there or list it in `fork/OWNED`.
