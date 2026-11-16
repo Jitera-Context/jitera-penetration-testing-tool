@@ -1,9 +1,9 @@
-Title: Add the `jitera-pentest` command
-Why: Engineers and the wheel start Jitera through strix.jitera.bootstrap. Not `jitera`: that is the Jitera Gateway CLI.
+Title: Add the `jitera-pentest` command; make eval/ importable in tests
+Why: Engineers and the wheel start Jitera through strix.jitera.bootstrap. Not `jitera`: that is the Jitera Gateway CLI. pytest pythonpath lets tests/jitera import the eval/ harness.
 Upstream-PR: none
 
 diff --git a/pyproject.toml b/pyproject.toml
-index 731da7791bc80090f65861d10dc495f4dbf31ac9..dfc05808e4bb8ced62d7090882ddbb431428d882 100644
+index 731da7791bc80090f65861d10dc495f4dbf31ac9..065d250ac800f850ae53cb646439e0d8c145b4da 100644
 --- a/pyproject.toml
 +++ b/pyproject.toml
 @@ -56,6 +56,7 @@ dependencies = [
@@ -14,3 +14,12 @@ index 731da7791bc80090f65861d10dc495f4dbf31ac9..dfc05808e4bb8ced62d7090882ddbb43
  
  [dependency-groups]
  dev = [
+@@ -72,6 +73,8 @@ dev = [
+ 
+ [tool.pytest.ini_options]
+ asyncio_mode = "auto"
++# Jitera fork: make the top-level eval/ package importable from tests/jitera.
++pythonpath = ["."]
+ 
+ [tool.uv]
+ # Supply-chain cooldown: resolve only distributions that have been on the index for

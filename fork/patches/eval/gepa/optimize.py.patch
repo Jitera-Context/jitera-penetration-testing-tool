@@ -1,0 +1,159 @@
+Title: Add eval/gepa/optimize.py
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/eval/gepa/optimize.py b/eval/gepa/optimize.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..0fae6ed2fb6aba972758f4091824c5e270446d7a
+--- /dev/null
++++ b/eval/gepa/optimize.py
+@@ -0,0 +1,149 @@
++"""Optimize the agent's eval instructions with GEPA.
++
++    # Verify the loop with no scans and no LLM (deterministic stubs):
++    uv run --frozen --with gepa==0.1.4 python -m eval.gepa.optimize --dry-run
++
++    # Real optimization (each metric call is a full scan — minutes to hours, $$):
++    export STRIX_LLM=... LLM_API_KEY=...
++    uv run --frozen --with gepa==0.1.4 python -m eval.gepa.optimize --max-metric-calls 8
++
++Writes the best instruction found to eval/gepa/optimized_instructions.txt.
++"""
++
++# CLI: printing results is this module's job.
++# ruff: noqa: T201
++
++from __future__ import annotations
++
++import argparse
++import os
++import sys
++from collections.abc import Callable
++from pathlib import Path
++from typing import Any
++
++import gepa
++import litellm
++
++from eval._lib import EVAL_DIR, Baseline
++from eval.gepa.adapter import COMPONENT, JiteraGEPAAdapter, Rollout, make_tasks, scan_rollout
++
++
++ReflectionLM = Callable[[Any], str]
++
++SEED = (
++    "You are testing a web application for security vulnerabilities. Work "
++    "methodically across the OWASP Top 10: map the attack surface, then probe "
++    "authentication, access control, injection, and client-side flaws, and "
++    "validate each issue with a proof of concept."
++)
++
++DEFAULT_OUT = EVAL_DIR / "gepa" / "optimized_instructions.txt"
++
++
++def _covered(instructions: str, baseline: Baseline) -> dict[str, Any]:
++    text = instructions.lower()
++    covered, missed = [], []
++    for category in baseline.categories:
++        hit = category.id in text or any(k in text for k in category.keywords)
++        (covered if hit else missed).append(category.id)
++    return {
++        "covered": covered,
++        "missed": missed,
++        "categories_covered": len(covered),
++        "categories_total": len(baseline.categories),
++    }
++
++
++def stub_rollout(baseline: Baseline) -> Rollout:
++    """Deterministic rollout: reward instructions that name more categories.
++
++    No scan, no LLM. Only for verifying the GEPA loop end to end.
++    """
++
++    def rollout(instructions: str, _task: dict[str, Any]) -> tuple[float, dict[str, Any]]:
++        breakdown = _covered(instructions, baseline)
++        total = breakdown["categories_total"] or 1
++        return breakdown["categories_covered"] / total, breakdown
++
++    return rollout
++
++
++def stub_reflection(baseline: Baseline) -> ReflectionLM:
++    """Stand-in reflection LM: proposes an instruction that names every category."""
++    ideal = "Test this web application for: " + "; ".join(
++        f"{c.title} ({c.id})" for c in baseline.categories
++    )
++
++    def reflect(_prompt: Any) -> str:
++        return f"Here is an improved instruction:\n```\n{ideal}\n```"
++
++    return reflect
++
++
++def litellm_reflection(model: str) -> ReflectionLM:
++    """Real reflection LM: the configured model via litellm."""
++
++    def reflect(prompt: Any) -> str:
++        messages = prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]
++        response = litellm.completion(model=model, messages=messages)
++        return str(response.choices[0].message.content)
++
++    return reflect
++
++
++def main(argv: list[str] | None = None) -> int:
++    parser = argparse.ArgumentParser(prog="eval.gepa.optimize", description=__doc__)
++    parser.add_argument("--baseline", default="juice-shop")
++    parser.add_argument("--dry-run", action="store_true", help="stub scorer + stub LM, no scans")
++    parser.add_argument("--max-metric-calls", type=int, default=6)
++    parser.add_argument("--reflection-model", default=os.environ.get("STRIX_LLM", ""))
++    parser.add_argument("--seed-file", type=Path, help="start from this instruction file")
++    parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
++    args = parser.parse_args(argv)
++
++    baseline = Baseline.load(args.baseline)
++    tasks = make_tasks(baseline)
++    seed_text = args.seed_file.read_text() if args.seed_file else SEED
++
++    rollout: Rollout
++    reflection: ReflectionLM
++    if args.dry_run:
++        rollout = stub_rollout(baseline)
++        reflection = stub_reflection(baseline)
++    else:
++        if not args.reflection_model:
++            print("eval.gepa: set STRIX_LLM or --reflection-model for a real run", file=sys.stderr)
++            return 2
++        print(
++            f"WARNING: each of up to {args.max_metric_calls} metric calls runs a full scan "
++            f"({baseline.scan_mode} mode, up to ${baseline.max_budget_usd} each). Ctrl-C to abort.",
++            file=sys.stderr,
++        )
++        rollout = scan_rollout(baseline)
++        reflection = litellm_reflection(args.reflection_model)
++
++    adapter = JiteraGEPAAdapter(rollout)
++    result = gepa.optimize(
++        seed_candidate={COMPONENT: seed_text},
++        trainset=tasks,
++        valset=tasks,
++        adapter=adapter,
++        reflection_lm=reflection,
++        max_metric_calls=args.max_metric_calls,
++        display_progress_bar=False,
++        raise_on_exception=True,
++    )
++
++    best = result.best_candidate[COMPONENT]
++    scores = result.val_aggregate_scores
++    args.out.parent.mkdir(parents=True, exist_ok=True)
++    args.out.write_text(best.rstrip() + "\n")
++    print(f"seed score: {scores[0]:.3f}   best score: {max(scores):.3f}")
++    print(f"candidates tried: {len(scores)}   metric calls: {result.total_metric_calls}")
++    print(f"wrote optimized instruction: {args.out}")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())

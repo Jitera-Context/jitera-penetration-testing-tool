@@ -1,0 +1,129 @@
+"""Score a scan's findings against a baseline of expected categories.
+
+Pure and deterministic: given the same findings and baseline, the score never
+changes. This is what makes the eval stable despite an LLM's run-to-run variance
+— the agent may word findings differently or find them in a different order, but
+the set of *categories* it covers is what the gate measures.
+"""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass, field
+from typing import Any
+
+
+_CWE_RE = re.compile(r"CWE[-_ ]?(\d+)", re.IGNORECASE)
+
+
+def parse_cwe(value: Any) -> int | None:
+    """Pull the integer out of a CWE field, which Strix stores as ``"CWE-89"``."""
+    if value is None:
+        return None
+    match = _CWE_RE.search(str(value))
+    return int(match.group(1)) if match else None
+
+
+@dataclass(frozen=True)
+class Category:
+    id: str
+    title: str
+    cwe: tuple[int, ...] = ()
+    keywords: tuple[str, ...] = ()
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Category:
+        return cls(
+            id=str(data["id"]),
+            title=str(data.get("title", data["id"])),
+            cwe=tuple(int(c) for c in data.get("cwe", [])),
+            keywords=tuple(str(k).lower() for k in data.get("keywords", [])),
+        )
+
+
+@dataclass(frozen=True)
+class Finding:
+    title: str
+    severity: str
+    cwe: int | None
+    text: str  # title + description + impact, lowercased, for keyword matching
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Finding:
+        parts = [str(data.get(k, "")) for k in ("title", "description", "impact")]
+        return cls(
+            title=str(data.get("title", "")).strip() or "(untitled)",
+            severity=str(data.get("severity", "")).strip().lower(),
+            cwe=parse_cwe(data.get("cwe")),
+            text=" ".join(parts).lower(),
+        )
+
+    def matches(self, category: Category) -> bool:
+        if self.cwe is not None and self.cwe in category.cwe:
+            return True
+        return any(keyword in self.text for keyword in category.keywords)
+
+
+@dataclass(frozen=True)
+class CategoryResult:
+    category: Category
+    matched: tuple[str, ...]  # titles of findings that mapped here
+
+    @property
+    def found(self) -> bool:
+        return len(self.matched) > 0
+
+
+@dataclass(frozen=True)
+class Score:
+    results: tuple[CategoryResult, ...]
+    total_findings: int
+    unmapped: tuple[str, ...] = field(default=())  # findings that matched no category
+
+    @property
+    def covered(self) -> int:
+        return sum(1 for r in self.results if r.found)
+
+    @property
+    def total(self) -> int:
+        return len(self.results)
+
+    @property
+    def fraction(self) -> float:
+        return self.covered / self.total if self.total else 0.0
+
+    @property
+    def covered_ids(self) -> tuple[str, ...]:
+        return tuple(r.category.id for r in self.results if r.found)
+
+    @property
+    def missed_ids(self) -> tuple[str, ...]:
+        return tuple(r.category.id for r in self.results if not r.found)
+
+    def passed(self, min_categories: int) -> bool:
+        return self.covered >= min_categories
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "total_findings": self.total_findings,
+            "categories_total": self.total,
+            "categories_covered": self.covered,
+            "fraction": round(self.fraction, 4),
+            "covered": list(self.covered_ids),
+            "missed": list(self.missed_ids),
+            "unmapped_findings": list(self.unmapped),
+        }
+
+
+def score_findings(findings: list[dict[str, Any]], categories: list[Category]) -> Score:
+    """Map each finding onto the categories it satisfies and tally coverage."""
+    parsed = [Finding.from_dict(f) for f in findings]
+    results = []
+    mapped_titles: set[str] = set()
+    for category in categories:
+        matched = tuple(f.title for f in parsed if f.matches(category))
+        for title in matched:
+            mapped_titles.add(title)
+        results.append(CategoryResult(category=category, matched=matched))
+    unmapped = tuple(f.title for f in parsed if f.title not in mapped_titles)
+    return Score(results=tuple(results), total_findings=len(parsed), unmapped=unmapped)

@@ -1,0 +1,56 @@
+"""GEPA adapter tests. Skipped unless gepa is installed (it is not a runtime dep).
+
+uv run --frozen --with gepa==0.1.4 pytest -q tests/jitera/test_eval_gepa.py
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import pytest
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+
+pytest.importorskip("gepa")
+
+from eval._lib import Baseline
+from eval.gepa import optimize
+from eval.gepa.adapter import COMPONENT, JiteraGEPAAdapter, feedback, make_tasks
+
+
+def test_adapter_scores_candidates_with_the_rollout() -> None:
+    baseline = Baseline.load("juice-shop")
+    adapter = JiteraGEPAAdapter(optimize.stub_rollout(baseline))
+    weak = adapter.evaluate(make_tasks(baseline), {COMPONENT: "test sql injection"})
+    strong = adapter.evaluate(make_tasks(baseline), {COMPONENT: "test sql injection and xss"})
+    assert strong.scores[0] > weak.scores[0]
+
+
+def test_reflective_dataset_names_the_missed_categories() -> None:
+    baseline = Baseline.load("juice-shop")
+    adapter = JiteraGEPAAdapter(optimize.stub_rollout(baseline))
+    batch = adapter.evaluate(
+        make_tasks(baseline), {COMPONENT: "sql injection"}, capture_traces=True
+    )
+    dataset = adapter.make_reflective_dataset({COMPONENT: "sql injection"}, batch, [COMPONENT])
+    text = dataset[COMPONENT][0]["Feedback"]
+    assert "Missed:" in text
+    assert "xss" in text
+    assert "sqli" not in text.split("Missed:")[1]
+
+
+def test_feedback_when_everything_is_covered() -> None:
+    assert "every category" in feedback({"missed": [], "covered": ["sqli"]})
+
+
+def test_dry_run_improves_on_the_seed(tmp_path: Path) -> None:
+    out = tmp_path / "best.txt"
+    assert optimize.main(["--dry-run", "--max-metric-calls", "6", "--out", str(out)]) == 0
+    best = out.read_text()
+    baseline = Baseline.load("juice-shop")
+    seed_score, _ = optimize.stub_rollout(baseline)(optimize.SEED, {})
+    best_score, _ = optimize.stub_rollout(baseline)(best, {})
+    assert best_score > seed_score

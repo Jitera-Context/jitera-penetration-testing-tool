@@ -1,0 +1,3 @@
+# Run results are machine-local history, not committed.
+*
+!.gitignore
