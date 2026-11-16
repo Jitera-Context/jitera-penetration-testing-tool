@@ -1,0 +1,45 @@
+# Plans
+
+Where the project stands and what comes next. Update this file in the same PR
+that finishes or adds an item.
+
+## Done
+
+| PR | What |
+|---|---|
+| #3 | Fork architecture: checkpoint, patches, `fork/dev`, sync, skills |
+| #4 | Rebrand to Jitera; Jitera User-Agent on our own calls and on scan traffic |
+| #5 | Jitera README; `fork/OWNED` so replaced upstream files never conflict |
+| #6 | Command renamed to `jitera-pentest` (`jitera` is the Jitera Gateway CLI) |
+| #7 | Eval on OWASP Juice Shop with a category gate; GEPA optimization |
+| #8 | `fork/dev eval`, `eval-history`, `gepa`; `/eval-run` and `/eval-gepa` |
+| #9 | `.env.example`, and loading `.env` safely |
+| #10 | The eval reads `.env` and checks the model before scanning; README eval guide |
+
+## Next, in priority order
+
+| # | Item | Why | Done when | Eval |
+|---|---|---|---|---|
+| 1 | **Calibrate the eval gate** | `min_categories: 6` is a guess, not a measurement | Three real `fork/dev eval` runs recorded; gate set a little below typical coverage in a PR | This *is* the eval |
+| 2 | **First real upstream sync** | We're behind upstream; its newer commits fix 12 of our failing upstream tests | Sync PR merged with a merge commit; tests and eval pass | Required |
+| 3 | **Turn on CI** | No checks run on PRs: upstream's workflows aren't active in this repo | Lint, types, tests and `fork/dev verify` run on every PR and block merges | — |
+| 4 | **Eval in CI** | "Every feature passes the eval" should be enforced, not just checked by reviewers | A quick eval runs on PRs that touch agent behavior; a full one runs nightly on `main` | — |
+| 5 | **Update uv; handle Dependabot** | uv 0.8.8 can't update this repo's `uv.lock` safely, so dependency PRs #1 and #2 are blocked | A current uv; dependency bumps land through a reviewed lock update | Required |
+| 6 | **Release pipeline** | The binary is still named `strix`, and we publish no releases | `jitera-pentest` binaries on our releases; installer and self-update use them | Required |
+| 7 | **GEPA optimization run** | Better agent instructions, measured | A GEPA result validated by repeated evals and adopted in a PR | Required |
+
+## Later
+
+- **More eval targets.** API-focused checks, and other deliberately vulnerable
+  training apps, each with its own `eval/baseline/<name>.yaml`.
+- **Brand assets.** A real logo for the viewer and PDF reports (today a "J" mark).
+- **Sandbox image.** Keep upstream's image pinned by digest, or publish ours.
+- **Contribute upstream.** Send generic fixes to `usestrix/strix`, including
+  fixes for the 9 upstream tests that also fail on upstream's `main`.
+
+## Open decisions
+
+- Who the users are, and how the tool is distributed (see the
+  [vision](../visions/README.md)).
+- The coverage level we commit to once the gate is calibrated.
+- The CI budget for eval runs: per PR, nightly, per release.

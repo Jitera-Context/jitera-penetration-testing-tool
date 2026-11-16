@@ -1,0 +1,33 @@
+Title: Add .github/pull_request_template.md
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/.github/pull_request_template.md b/.github/pull_request_template.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..f75437023c12d7b8ab6ae9d1316fdec3562bae07
+--- /dev/null
++++ b/.github/pull_request_template.md
+@@ -0,0 +1,23 @@
++## What and why
++
++<!-- What changes, and why. Link the plan item if there is one (docs/plans). -->
++
++## Eval
++
++Every feature must pass the eval (docs/architecture/eval-driven-development.md).
++
++- [ ] **This PR changes agent behavior** (prompts, skills, tools, scan flow, runtime, LLM settings, scan traffic, or an upstream sync)
++  - [ ] `fork/dev eval` passed on a fresh scan (exit 0); summary pasted below
++  - [ ] No category that recent runs found is now missed (`fork/dev eval-history`)
++- [ ] **Not a behavior change** (docs, `fork/` tooling, tests or CI only): no eval needed
++
++```text
++<!-- paste the fork/dev eval summary: coverage, gate, missed categories; plus scan mode and cost -->
++```
++
++## Fork workflow
++
++- [ ] `fork/dev test` passes
++- [ ] `fork/dev save` run; code and patches committed together (`fork/dev verify` passes)
++- [ ] New patches to upstream files have a real `Title:` and `Why:`
++- [ ] A sync PR will be merged with **Create a merge commit**

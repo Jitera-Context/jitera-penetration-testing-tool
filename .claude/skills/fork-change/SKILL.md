@@ -31,7 +31,10 @@ Prefer `strix/jitera/` plus upstream's hooks. Small edits to upstream files mean
 
 1. Edit files. Run with `uv run --frozen jitera-pentest ...`.
 2. `git add` any new file. `fork/dev save` only records tracked files, and `fork/dev status` lists untracked ones.
-3. `fork/dev test`
+3. `fork/dev test`. If the change affects agent behavior (prompts, skills, tools,
+   scan flow, runtime, LLM settings, scan traffic), it must also pass the eval:
+   run `/eval-run` and put its summary in the PR. See
+   `docs/architecture/eval-driven-development.md`.
 4. `fork/dev save`: writes, updates or removes patches and stages them.
    For an edited upstream file, replace the `Title:` / `Why:` TODO lines in its patch.
    New files get a header automatically.
