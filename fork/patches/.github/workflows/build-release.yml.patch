@@ -1,0 +1,32 @@
+Title: Release assets are named jitera-pentest-<version>-<target>
+Why: The installer downloads jitera-pentest archives; strix-named assets would 404.
+Upstream-PR: none
+
+diff --git a/.github/workflows/build-release.yml b/.github/workflows/build-release.yml
+index 337255c2c6643d4f866e8eb065f6dea2e7f9ff2a..8e11d1aacd016a9881acda0fa57277c23883ec75 100644
+--- a/.github/workflows/build-release.yml
++++ b/.github/workflows/build-release.yml
+@@ -90,17 +90,17 @@ jobs:
+           mkdir -p dist/release
+ 
+           if [[ "${{ runner.os }}" == "Windows" ]]; then
+-            cp dist/strix.exe "dist/release/strix-${VERSION}-${{ matrix.target }}.exe"
+-            (cd dist/release && 7z a "strix-${VERSION}-${{ matrix.target }}.zip" "strix-${VERSION}-${{ matrix.target }}.exe")
++            cp dist/strix.exe "dist/release/jitera-pentest-${VERSION}-${{ matrix.target }}.exe"
++            (cd dist/release && 7z a "jitera-pentest-${VERSION}-${{ matrix.target }}.zip" "jitera-pentest-${VERSION}-${{ matrix.target }}.exe")
+           else
+-            cp dist/strix "dist/release/strix-${VERSION}-${{ matrix.target }}"
+-            chmod +x "dist/release/strix-${VERSION}-${{ matrix.target }}"
+-            tar -C dist/release -czvf "dist/release/strix-${VERSION}-${{ matrix.target }}.tar.gz" "strix-${VERSION}-${{ matrix.target }}"
++            cp dist/strix "dist/release/jitera-pentest-${VERSION}-${{ matrix.target }}"
++            chmod +x "dist/release/jitera-pentest-${VERSION}-${{ matrix.target }}"
++            tar -C dist/release -czvf "dist/release/jitera-pentest-${VERSION}-${{ matrix.target }}.tar.gz" "jitera-pentest-${VERSION}-${{ matrix.target }}"
+           fi
+ 
+       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+         with:
+-          name: strix-${{ matrix.target }}
++          name: jitera-pentest-${{ matrix.target }}
+           path: |
+             dist/release/*.tar.gz
+             dist/release/*.zip

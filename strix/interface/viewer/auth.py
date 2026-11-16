@@ -27,7 +27,10 @@ from strix.utils.secret_files import write_secret_text
 
 logger = logging.getLogger(__name__)
 
-AUTH_PATH = Path.home() / ".strix" / "viewer-auth.json"
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
+AUTH_PATH = Path.home() / brand.current().home_dir_name / "viewer-auth.json"
 
 _OTP_TIMEOUT = 15
 _SEND_TIMEOUT = 30

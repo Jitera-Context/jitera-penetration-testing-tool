@@ -1,0 +1,21 @@
+Title: ChatGPT sign-in tokens live in the brand's home folder (~/.jitera-pentest)
+Why: Jitera kept its settings and sign-ins in upstream's ~/.strix, shared with any Strix install.
+Upstream-PR: none
+
+diff --git a/strix/config/codex.py b/strix/config/codex.py
+index b7cf7ae55d338ef3a3664d1ce1b4a065cbb8218f..996bd5d33fd50b5f4b7838d421e66a4fed8f6b1d 100644
+--- a/strix/config/codex.py
++++ b/strix/config/codex.py
+@@ -56,8 +56,11 @@ _EXPIRY_SKEW_S = 300
+ 
+ _refresh_lock = threading.Lock()
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ # Kept separate from cli-config.json so OAuth tokens never land in the env-var config.
+-AUTH_PATH = Path.home() / ".strix" / "subscription-auth.json"
++AUTH_PATH = Path.home() / brand.current().home_dir_name / "subscription-auth.json"
+ 
+ 
+ def _read_store() -> dict[str, Any]:

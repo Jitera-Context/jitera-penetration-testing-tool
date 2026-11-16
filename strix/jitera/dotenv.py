@@ -6,7 +6,7 @@ the ``.env`` next to the source checkout. Never the current directory's
 unrelated keys such as ``OPENAI_API_KEY``.
 
 Values never override the real environment, and empty values are skipped, so
-an unfilled template line can't clear a setting saved in ~/.strix.
+an unfilled template line can't clear a setting saved in ~/.jitera-pentest.
 """
 
 from __future__ import annotations

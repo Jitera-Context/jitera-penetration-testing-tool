@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/dotenv.py b/strix/jitera/dotenv.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..4c5c272436696b37a202178db27cb32d6cb72e7b
+index 0000000000000000000000000000000000000000..82b9fba2ffe5b839575c431eeafcc54f0aba814c
 --- /dev/null
 +++ b/strix/jitera/dotenv.py
 @@ -0,0 +1,70 @@
@@ -16,7 +16,7 @@ index 0000000000000000000000000000000000000000..4c5c272436696b37a202178db27cb32d
 +unrelated keys such as ``OPENAI_API_KEY``.
 +
 +Values never override the real environment, and empty values are skipped, so
-+an unfilled template line can't clear a setting saved in ~/.strix.
++an unfilled template line can't clear a setting saved in ~/.jitera-pentest.
 +"""
 +
 +from __future__ import annotations

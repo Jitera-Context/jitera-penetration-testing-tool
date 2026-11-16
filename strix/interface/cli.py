@@ -29,11 +29,16 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
+from strix.core.paths import RUNS_DIR_NAME  # noqa: E402  (Jitera fork)
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def _resolve_sandbox_image() -> str:
     image = load_settings().runtime.image
     if not image:
         raise RuntimeError(
-            "strix_image is not configured. Set it in ~/.strix/cli-config.json.",
+            "strix_image is not configured. "
+            f"Set it in ~/{brand.current().home_dir_name}/cli-config.json.",
         )
     return image
 
@@ -58,7 +63,7 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
     results_text = Text()
     results_text.append("Output", style="dim")
     results_text.append("  ")
-    results_text.append(f"strix_runs/{args.run_name}", style="#60a5fa")
+    results_text.append(f"{RUNS_DIR_NAME}/{args.run_name}", style="#60a5fa")
 
     note_text = Text()
     note_text.append("\n\n", style="dim")

@@ -1,20 +1,21 @@
-Title: Add the `jitera-pentest` command; make eval/ importable in tests
-Why: Engineers and the wheel start Jitera through strix.jitera.bootstrap. Not `jitera`: that is the Jitera Gateway CLI. pytest pythonpath lets tests/jitera import the eval/ harness.
+Title: `jitera-pentest` is the only command; make eval/ importable in tests
+Why: Engineers and the wheel start Jitera through strix.jitera.bootstrap. Not `jitera`: that is the Jitera Gateway CLI. The upstream `strix` command is not installed: it skipped the bootstrap (telemetry on, Strix Cloud allowed) and shadowed a real Strix install. pytest pythonpath lets tests/jitera import the eval/ harness.
 Upstream-PR: none
 
 diff --git a/pyproject.toml b/pyproject.toml
-index 731da7791bc80090f65861d10dc495f4dbf31ac9..065d250ac800f850ae53cb646439e0d8c145b4da 100644
+index 731da7791bc80090f65861d10dc495f4dbf31ac9..c55a14a8db7f8b08b8f047a704da12e90813674e 100644
 --- a/pyproject.toml
 +++ b/pyproject.toml
-@@ -56,6 +56,7 @@ dependencies = [
+@@ -55,7 +55,7 @@ dependencies = [
+ ]
  
  [project.scripts]
- strix = "strix.interface.main:main"
+-strix = "strix.interface.main:main"
 +jitera-pentest = "strix.jitera.bootstrap:main"
  
  [dependency-groups]
  dev = [
-@@ -72,6 +73,8 @@ dev = [
+@@ -72,6 +72,8 @@ dev = [
  
  [tool.pytest.ini_options]
  asyncio_mode = "auto"

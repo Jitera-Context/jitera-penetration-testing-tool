@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_patches.py b/tests/jitera/test_patches.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..c0346a0da3caf6a0588af1fc97413f592196bc23
+index 0000000000000000000000000000000000000000..d80ffeca8a198feaddf34c7b27582448068f0a18
 --- /dev/null
 +++ b/tests/jitera/test_patches.py
-@@ -0,0 +1,131 @@
+@@ -0,0 +1,139 @@
 +"""The edited upstream code follows the active brand profile.
 +
 +Each check runs in a fresh interpreter so module-level values are computed under
@@ -18,12 +18,18 @@ index 0000000000000000000000000000000000000000..c0346a0da3caf6a0588af1fc97413f59
 +from __future__ import annotations
 +
 +import json
++import os
 +import subprocess
 +import sys
++from typing import TYPE_CHECKING
 +
 +import pytest
 +
 +from strix.jitera import brand
++
++
++if TYPE_CHECKING:
++    from pathlib import Path
 +
 +
 +def _evaluate(profile: str, expression: str) -> object:
@@ -126,13 +132,15 @@ index 0000000000000000000000000000000000000000..c0346a0da3caf6a0588af1fc97413f59
 +    assert header == "JiteraViewer/1.0"
 +
 +
-+def test_cli_help_uses_the_jitera_command_without_upstream_cloud() -> None:
++def test_cli_help_uses_the_jitera_command_without_upstream_cloud(tmp_path: Path) -> None:
++    # A throwaway home: the command copies settings from ~/.strix on first run.
 +    result = subprocess.run(
 +        [sys.executable, "-m", "strix.jitera", "--help"],
 +        capture_output=True,
 +        text=True,
 +        check=False,
 +        timeout=120,
++        env={**os.environ, "HOME": str(tmp_path)},
 +    )
 +    assert "jitera-pentest --target https://example.com" in result.stdout
 +    assert "Strix Cloud" not in result.stdout

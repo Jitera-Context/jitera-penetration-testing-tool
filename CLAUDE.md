@@ -40,4 +40,5 @@ Read first:
   merge with a merge commit, never a squash.
 - Run uv with `--frozen`.
 - `AGENTS.md` is upstream's Strix guide. In this fork, the command is
-  `jitera-pentest`, settings use `JITERA_PENTEST_*`, and `cloud` is blocked.
+  `jitera-pentest`, settings use `JITERA_PENTEST_*`, `cloud` is blocked, scans
+  write to `jitera_pentest_runs/`, and saved settings live in `~/.jitera-pentest/`.

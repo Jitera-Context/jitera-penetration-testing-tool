@@ -1,0 +1,19 @@
+Title: Wheel smoke test runs jitera-pentest and checks no strix command is installed
+Why: The wheel installs only jitera-pentest now.
+Upstream-PR: none
+
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 51d0fe0e8b3cb299f550f6d5f3c8daacbda31b7a..cc82c71a56b34d616699719669f3859c1a1812cc 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -115,7 +115,8 @@ jobs:
+         run: |
+           uv venv --python 3.12 /tmp/strix-smoke
+           uv pip install --python /tmp/strix-smoke/bin/python dist/*.whl
+-          /tmp/strix-smoke/bin/strix --version
+-          /tmp/strix-smoke/bin/strix --help >/dev/null
++          /tmp/strix-smoke/bin/jitera-pentest --version
++          /tmp/strix-smoke/bin/jitera-pentest --help >/dev/null
++          test ! -e /tmp/strix-smoke/bin/strix
+       - name: Vertex AI and Bedrock dependencies install with the wheel
+         run: /tmp/strix-smoke/bin/python -c "import google.auth.transport.requests, boto3"

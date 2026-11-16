@@ -1,0 +1,20 @@
+Title: Update-check cache lives in the brand's home folder (~/.jitera-pentest)
+Why: Jitera kept its settings and sign-ins in upstream's ~/.strix, shared with any Strix install.
+Upstream-PR: none
+
+diff --git a/strix/interface/update_check.py b/strix/interface/update_check.py
+index 9e98b38fd1751a0cd4a6675ea50a7a2252a5662b..c772aa74920736385472a908b5f7eabb91787907 100644
+--- a/strix/interface/update_check.py
++++ b/strix/interface/update_check.py
+@@ -40,7 +40,10 @@ PYPI_PACKAGE = "strix-agent"
+ CHECK_INTERVAL_SECONDS = 24 * 60 * 60
+ REQUEST_TIMEOUT_SECONDS = 5
+ 
+-_CACHE_PATH = Path.home() / ".strix" / "update-check.json"
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
++_CACHE_PATH = Path.home() / brand.current().home_dir_name / "update-check.json"
+ 
+ _background_thread: threading.Thread | None = None
+ 

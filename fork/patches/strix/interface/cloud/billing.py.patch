@@ -1,0 +1,22 @@
+Title: Wallet npm cache lives in the brand's home folder (~/.jitera-pentest)
+Why: Jitera kept its settings and sign-ins in upstream's ~/.strix, shared with any Strix install.
+Upstream-PR: none
+
+diff --git a/strix/interface/cloud/billing.py b/strix/interface/cloud/billing.py
+index 4bc0c1f87f8598ce033f3628b3e764e833a59f5c..682c8ef9010b6b3675ddf79b81bfde4c9c1a2ea1 100644
+--- a/strix/interface/cloud/billing.py
++++ b/strix/interface/cloud/billing.py
+@@ -551,9 +551,12 @@ def _npx_prefix(npx: str, wallet_root: Path) -> list[str]:
+     ]
+ 
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ def _wallet_npm_cache() -> Path:
+     """Keep one private npm cache so the pinned wallet client installs once."""
+-    cache = Path.home() / ".strix" / "wallet-npm-cache"
++    cache = Path.home() / brand.current().home_dir_name / "wallet-npm-cache"
+     cache.mkdir(mode=0o700, parents=True, exist_ok=True)
+     return cache
+ 

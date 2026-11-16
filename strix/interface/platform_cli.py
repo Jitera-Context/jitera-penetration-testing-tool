@@ -28,10 +28,11 @@ from strix.config import load_settings
 from strix.interface.platform_identity import read_or_create_identity
 from strix.interface.terminal_text import sanitize_terminal_text
 from strix.interface.url_safety import is_safe_web_url
+from strix.jitera import brand  # (Jitera fork)
 from strix.utils.secret_files import write_secret_text
 
 
-AUTH_PATH = Path.home() / ".strix" / "platform-auth.json"
+AUTH_PATH = Path.home() / brand.current().home_dir_name / "platform-auth.json"
 
 _HTTP_TIMEOUT_S = 30
 _DEFAULT_POLL_INTERVAL_S = 5

@@ -8,12 +8,18 @@ this test process.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
+from typing import TYPE_CHECKING
 
 import pytest
 
 from strix.jitera import brand
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _evaluate(profile: str, expression: str) -> object:
@@ -116,13 +122,15 @@ def test_viewer_server_header_names_jitera() -> None:
     assert header == "JiteraViewer/1.0"
 
 
-def test_cli_help_uses_the_jitera_command_without_upstream_cloud() -> None:
+def test_cli_help_uses_the_jitera_command_without_upstream_cloud(tmp_path: Path) -> None:
+    # A throwaway home: the command copies settings from ~/.strix on first run.
     result = subprocess.run(
         [sys.executable, "-m", "strix.jitera", "--help"],
         capture_output=True,
         text=True,
         check=False,
         timeout=120,
+        env={**os.environ, "HOME": str(tmp_path)},
     )
     assert "jitera-pentest --target https://example.com" in result.stdout
     assert "Strix Cloud" not in result.stdout

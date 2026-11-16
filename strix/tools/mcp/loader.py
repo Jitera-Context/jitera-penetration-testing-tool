@@ -27,7 +27,10 @@ from strix.tools.mcp.config import McpConnectionConfig
 logger = logging.getLogger(__name__)
 
 
-_DEFAULT_PATH: Path = Path.home() / ".strix" / "mcp-servers.json"
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
+_DEFAULT_PATH: Path = Path.home() / brand.current().home_dir_name / "mcp-servers.json"
 _PATH_ENV_VAR = "STRIX_MCP_CONFIG"
 # Per-run selection, set by the --mcp-server / --mcp-exclude CLI flags. Each is a
 # comma-separated list of connection names.

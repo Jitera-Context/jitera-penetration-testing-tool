@@ -30,11 +30,14 @@ def get_version() -> str:
         return "unknown"
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def is_first_run() -> bool:
     global _FIRST_RUN_CACHED  # noqa: PLW0603
     if _FIRST_RUN_CACHED is not None:
         return _FIRST_RUN_CACHED
-    marker = Path.home() / ".strix" / ".seen"
+    marker = Path.home() / brand.current().home_dir_name / ".seen"
     if marker.exists():
         _FIRST_RUN_CACHED = False
         return False

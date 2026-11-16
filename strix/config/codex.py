@@ -56,8 +56,11 @@ _EXPIRY_SKEW_S = 300
 
 _refresh_lock = threading.Lock()
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 # Kept separate from cli-config.json so OAuth tokens never land in the env-var config.
-AUTH_PATH = Path.home() / ".strix" / "subscription-auth.json"
+AUTH_PATH = Path.home() / brand.current().home_dir_name / "subscription-auth.json"
 
 
 def _read_store() -> dict[str, Any]:

@@ -1,7 +1,7 @@
 """Run one scan of the target and locate its output directory.
 
 The scan runs the Jitera entry point (``python -m strix.jitera``) headlessly in
-a fresh working directory, so the single run it produces under ``strix_runs/`` is
+a fresh working directory, so the single run it produces under ``jitera_pentest_runs/`` is
 unambiguous without needing a run-name flag.
 """
 
@@ -13,6 +13,8 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+
+from strix.jitera import brand
 
 
 if TYPE_CHECKING:
@@ -58,8 +60,8 @@ def check_reachable(url: str, timeout: float = 10.0) -> tuple[bool, str]:
 
 
 def find_run_dir(workdir: Path) -> Path | None:
-    """The newest run directory produced under ``workdir/strix_runs``."""
-    runs = workdir / "strix_runs"
+    """The newest run directory the Jitera entry point produced under ``workdir``."""
+    runs = workdir / brand.JITERA.runs_dir_name
     if not runs.is_dir():
         return None
     candidates = [d for d in runs.iterdir() if d.is_dir()]

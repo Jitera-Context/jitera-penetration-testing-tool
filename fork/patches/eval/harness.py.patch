@@ -4,14 +4,14 @@ Upstream-PR: none
 
 diff --git a/eval/harness.py b/eval/harness.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..ec51e4e04d1f577ba19af3dd4ace3b40aa58accc
+index 0000000000000000000000000000000000000000..98cb7b6fb9c55314e2ab3c996012e4674da109f3
 --- /dev/null
 +++ b/eval/harness.py
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,105 @@
 +"""Run one scan of the target and locate its output directory.
 +
 +The scan runs the Jitera entry point (``python -m strix.jitera``) headlessly in
-+a fresh working directory, so the single run it produces under ``strix_runs/`` is
++a fresh working directory, so the single run it produces under ``jitera_pentest_runs/`` is
 +unambiguous without needing a run-name flag.
 +"""
 +
@@ -23,6 +23,8 @@ index 0000000000000000000000000000000000000000..ec51e4e04d1f577ba19af3dd4ace3b40
 +import urllib.request
 +from dataclasses import dataclass
 +from typing import TYPE_CHECKING
++
++from strix.jitera import brand
 +
 +
 +if TYPE_CHECKING:
@@ -68,8 +70,8 @@ index 0000000000000000000000000000000000000000..ec51e4e04d1f577ba19af3dd4ace3b40
 +
 +
 +def find_run_dir(workdir: Path) -> Path | None:
-+    """The newest run directory produced under ``workdir/strix_runs``."""
-+    runs = workdir / "strix_runs"
++    """The newest run directory the Jitera entry point produced under ``workdir``."""
++    runs = workdir / brand.JITERA.runs_dir_name
 +    if not runs.is_dir():
 +        return None
 +    candidates = [d for d in runs.iterdir() if d.is_dir()]

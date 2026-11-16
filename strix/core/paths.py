@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from strix.jitera import brand  # (Jitera fork)
 
-RUNS_DIR_NAME = "strix_runs"
+
+RUNS_DIR_NAME = brand.current().runs_dir_name
 RUNTIME_STATE_DIR_NAME = ".state"
 RUN_RECORD_FILENAME = "run.json"
 

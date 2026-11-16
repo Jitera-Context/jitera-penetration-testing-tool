@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_eval.py b/tests/jitera/test_eval.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..bfaa6b0eebd01598d93911fe59fc667945841d19
+index 0000000000000000000000000000000000000000..c387d558be476440fc808bc5e4fca7100979cee7
 --- /dev/null
 +++ b/tests/jitera/test_eval.py
 @@ -0,0 +1,117 @@
@@ -111,8 +111,8 @@ index 0000000000000000000000000000000000000000..bfaa6b0eebd01598d93911fe59fc6679
 +def test_find_run_dir_picks_the_run(tmp_path: Path) -> None:
 +    root = tmp_path
 +    assert find_run_dir(root) is None
-+    (root / "strix_runs" / "run-a").mkdir(parents=True)
-+    assert find_run_dir(root) == root / "strix_runs" / "run-a"
++    (root / "jitera_pentest_runs" / "run-a").mkdir(parents=True)
++    assert find_run_dir(root) == root / "jitera_pentest_runs" / "run-a"
 +
 +
 +def test_runs_in_the_same_second_keep_separate_result_files(

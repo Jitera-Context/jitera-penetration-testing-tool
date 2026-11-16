@@ -1,0 +1,20 @@
+Title: Run output folder is named after the brand (jitera_pentest_runs)
+Why: Every scan wrote to ./strix_runs.
+Upstream-PR: none
+
+diff --git a/strix/core/paths.py b/strix/core/paths.py
+index 2cd7ba0b9208c90057bf7bddf76d40267e8788b8..f54a03d7055a384a85202fa2f7904d9842b602c9 100644
+--- a/strix/core/paths.py
++++ b/strix/core/paths.py
+@@ -4,8 +4,10 @@ from __future__ import annotations
+ 
+ from pathlib import Path
+ 
++from strix.jitera import brand  # (Jitera fork)
+ 
+-RUNS_DIR_NAME = "strix_runs"
++
++RUNS_DIR_NAME = brand.current().runs_dir_name
+ RUNTIME_STATE_DIR_NAME = ".state"
+ RUN_RECORD_FILENAME = "run.json"
+ 

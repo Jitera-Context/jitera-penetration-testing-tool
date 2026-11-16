@@ -1511,7 +1511,7 @@ def write_fetched_collection(collection: dict[str, Any], collection_uid: str) ->
     Returns the file path, so a ``postman://`` target continues as an ordinary
     spec file from here on and the API key never leaves the host.
     """
-    staging = Path(tempfile.gettempdir()) / "strix_api_specs" / "fetched"
+    staging = Path(tempfile.gettempdir()) / brand.current().temp_dir_name("api_specs") / "fetched"
     staging.mkdir(parents=True, exist_ok=True)
     path = staging / f"{sanitize_name(collection_uid)}.postman_collection.json"
     path.write_text(json.dumps(collection, indent=2), encoding="utf-8")
@@ -1530,7 +1530,7 @@ def stage_api_specs(targets_info: list[dict[str, Any]], run_name: str) -> list[d
     if not specs:
         return []
 
-    staging = Path(tempfile.gettempdir()) / "strix_api_specs" / run_name
+    staging = Path(tempfile.gettempdir()) / brand.current().temp_dir_name("api_specs") / run_name
     staging.mkdir(parents=True, exist_ok=True)
 
     used: set[str] = set()
@@ -1563,7 +1563,7 @@ def clone_repository(repo_url: str, run_name: str, dest_name: str | None = None)
     if git_executable is None:
         raise FileNotFoundError("Git executable not found in PATH")
 
-    temp_dir = Path(tempfile.gettempdir()) / "strix_repos" / run_name
+    temp_dir = Path(tempfile.gettempdir()) / brand.current().temp_dir_name("repos") / run_name
     temp_dir.mkdir(parents=True, exist_ok=True)
 
     if dest_name:

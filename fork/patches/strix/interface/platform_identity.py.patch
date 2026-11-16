@@ -1,0 +1,21 @@
+Title: Install ID lives in the brand's home folder (~/.jitera-pentest)
+Why: Jitera kept its settings and sign-ins in upstream's ~/.strix, shared with any Strix install.
+Upstream-PR: none
+
+diff --git a/strix/interface/platform_identity.py b/strix/interface/platform_identity.py
+index 508e7e396f2a1d1f389c6fc32db27aa96b96c7e8..c0c0c2e8876af43a03e69e33733d03dd63dbdac6 100644
+--- a/strix/interface/platform_identity.py
++++ b/strix/interface/platform_identity.py
+@@ -8,10 +8,11 @@ from pathlib import Path
+ from typing import Any, cast
+ from uuid import uuid4
+ 
++from strix.jitera import brand  # (Jitera fork)
+ from strix.utils.secret_files import write_secret_text
+ 
+ 
+-IDENTITY_PATH = Path.home() / ".strix" / "cli-identity.json"
++IDENTITY_PATH = Path.home() / brand.current().home_dir_name / "cli-identity.json"
+ 
+ 
+ def _default_device_name(instance_id: str) -> str:

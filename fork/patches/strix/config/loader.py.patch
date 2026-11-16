@@ -1,0 +1,20 @@
+Title: Saved settings live in the brand's home folder (~/.jitera-pentest)
+Why: Jitera kept its settings and sign-ins in upstream's ~/.strix, shared with any Strix install.
+Upstream-PR: none
+
+diff --git a/strix/config/loader.py b/strix/config/loader.py
+index 9edee5bc0d7a151525ed7499ccdd405406a82310..d2bf3b611d10a6ff8f083459cf9e49d0ffef7192 100644
+--- a/strix/config/loader.py
++++ b/strix/config/loader.py
+@@ -24,7 +24,10 @@ if TYPE_CHECKING:
+ logger = logging.getLogger(__name__)
+ 
+ 
+-_DEFAULT_PATH: Path = Path.home() / ".strix" / "cli-config.json"
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
++_DEFAULT_PATH: Path = Path.home() / brand.current().home_dir_name / "cli-config.json"
+ _override: Path | None = None
+ _cached: Settings | None = None
+ 

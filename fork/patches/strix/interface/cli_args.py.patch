@@ -1,12 +1,12 @@
-Title: --help shows our name and command, no Strix Cloud section
-Why: Help text used the strix command and advertised Strix Cloud.
+Title: --help and --version show our command, runs and settings folders, no Strix Cloud section
+Why: Help text used the strix command, the strix_runs and ~/.strix folders, and advertised Strix Cloud; --version printed 'strix <version>'.
 Upstream-PR: none
 
 diff --git a/strix/interface/cli_args.py b/strix/interface/cli_args.py
-index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..7abe430fb556c635ab2372671735905bfcb0f87b 100644
+index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..a26d8a7251a73e1d9948d0e019df7dcede53cc89 100644
 --- a/strix/interface/cli_args.py
 +++ b/strix/interface/cli_args.py
-@@ -56,62 +56,72 @@ def _positive_int(value: str) -> int:
+@@ -56,69 +56,79 @@ def _positive_int(value: str) -> int:
      return parsed
  
  
@@ -92,18 +92,26 @@ index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..7abe430fb556c635ab2372671735905b
    # Extra files placed in the sandbox workspace
 -  strix --target ./my-project --workspace-file ./wordlist.txt
 -  strix --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
--
++  {profile.command} --target ./my-project --workspace-file ./wordlist.txt
++  {profile.command} --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
+ 
 -Strix Cloud:
 -  strix cloud login
 -  strix cloud scans start --source . --yes --wait
 -  strix cloud                      # list every cloud resource
-+  {profile.command} --target ./my-project --workspace-file ./wordlist.txt
-+  {profile.command} --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
- 
+-
 -  Run a pentest in Strix Cloud     https://app.strix.ai
 -  Try Strix Enterprise             https://strix.ai/demo
 -        """,
 +{cloud_help}        """,
+     )
+ 
+     parser.add_argument(
+         "-v",
+         "--version",
+         action="version",
+-        version=f"strix {get_version()}",
++        version=f"{brand.current().command} {get_version()}",
      )
  
      parser.add_argument(
@@ -117,3 +125,35 @@ index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..7abe430fb556c635ab2372671735905b
          "the file into the sandbox, outside every target directory. The agent can edit the "
          "copy. The file on this machine does not change.",
      )
+@@ -246,14 +257,20 @@ Strix Cloud:
+     parser.add_argument(
+         "--config",
+         type=str,
+-        help="Path to a custom config file (JSON) to use instead of ~/.strix/cli-config.json",
++        help=(
++            "Path to a custom config file (JSON) to use instead of "
++            f"~/{brand.current().home_dir_name}/cli-config.json"
++        ),
+     )
+ 
+     parser.add_argument(
+         "--mcp-config",
+         type=str,
+         metavar="PATH",
+-        help="Path to an MCP servers JSON file to use instead of ~/.strix/mcp-servers.json.",
++        help=(
++            "Path to an MCP servers JSON file to use instead of "
++            f"~/{brand.current().home_dir_name}/mcp-servers.json."
++        ),
+     )
+ 
+     parser.add_argument(
+@@ -306,7 +323,7 @@ Strix Cloud:
+         const="",
+         metavar="RUN_NAME",
+         help=(
+-            "Resume a prior scan by its run name (the dir under ./strix_runs/). "
++            f"Resume a prior scan by its run name (the dir under ./{RUNS_DIR_NAME}/). "
+             "Picks up the root + every non-terminal subagent's full LLM history "
+             "and agent topology. Skips fresh run-name generation. Without a "
+             "name, opens a picker of the prior runs."

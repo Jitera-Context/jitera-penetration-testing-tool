@@ -68,7 +68,7 @@ uv run pyinstaller strix.spec --noconfirm
 RELEASE_DIR="dist/release"
 mkdir -p "$RELEASE_DIR"
 
-BINARY_NAME="strix-${VERSION}-${OS_NAME}-${ARCH_NAME}"
+BINARY_NAME="jitera-pentest-${VERSION}-${OS_NAME}-${ARCH_NAME}"
 
 if [ "$OS_NAME" = "windows" ]; then
     if [ ! -f "dist/strix.exe" ]; then

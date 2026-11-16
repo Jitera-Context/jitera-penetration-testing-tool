@@ -16,7 +16,7 @@ every sync.
 | An agent tool | `strix/jitera/tools/<name>.py` (`@function_tool`) | `register_agent_tools` (upstream hook) |
 | Pentest knowledge, or a replacement for an upstream skill | `strix/jitera/skills/<category>/<name>.md` | `register_skill_dir` (upstream hook) |
 | A CLI subcommand | `strix/jitera/commands/<name>.py` | `COMMANDS`, dispatched by the bootstrap |
-| An external service as a tool | An MCP server | `~/.strix/mcp-servers.json`; no code |
+| An external service as a tool | An MCP server | `~/.jitera-pentest/mcp-servers.json`; no code |
 | Behavior upstream has no hook for | A minimal edit to the upstream file | Recorded as a patch |
 | A generic bug fix | A PR to `usestrix/strix` first | Comes back on the next sync |
 
@@ -34,7 +34,12 @@ flowchart LR
 ## Rules that keep sync cheap
 
 - **Never rename upstream internals.** The `strix` package, `STRIX_*`
-  settings, `~/.strix`, the Go module path and class names stay as they are.
+  settings, the Go module path and class names stay as they are.
+- **What lands on a user's disk is named after Jitera.** Run folders, log
+  files, temp folders and the settings folder come from the brand
+  (`file_prefix`, `home_dir_name` in `strix/jitera/brand.py`):
+  `jitera_pentest_runs/`, `jitera_pentest.log`, `~/.jitera-pentest/`. A test
+  fails when upstream code adds a `.strix` or `strix_runs`-style path.
 - **Keep in-place edits small.** Change the line you need, not the
   function around it. No reformatting of nearby code.
 - **Read brand values; don't hardcode them.** In an upstream file, put

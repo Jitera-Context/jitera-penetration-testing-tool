@@ -9,8 +9,9 @@
 #             (CLI, TUI, viewer, reports)
 #
 # Internal identifiers are out of scope on purpose: the `strix` Python package,
-# STRIX_* env vars, ~/.strix, the Go module path and class names stay upstream
-# so syncs stay conflict-free.
+# STRIX_* env vars, the Go module path and class names stay upstream so syncs
+# stay conflict-free. Names written to disk are checked by
+# tests/jitera/test_output_names.py instead.
 #
 # Usage: fork/scripts/brand-audit.sh [--strict] [--list]
 #   --strict  exit 1 when any non-allowlisted outbound hit remains
