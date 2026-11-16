@@ -197,6 +197,7 @@ footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--lin
 │   <span class="n">── sync record and tooling (never patched, never touched by sync) ──</span>
 ├── <span class="p">fork/</span>
 │   ├── <span class="p">CHECKPOINT</span>                     <span class="n">upstream commit hash we are based on</span> <span class="ok">✓</span>
+│   ├── <span class="p">OWNED</span>                          <span class="n">files we fully replaced (README.md): sync keeps ours</span> <span class="ok">✓</span>
 │   ├── <span class="p">patches/</span>                       <span class="n">one patch per changed file, same path</span> <span class="ok">✓</span>
 │   │   ├── <span class="p">strix/config/models.py.patch</span>     <span class="n">edit</span>
 │   │   ├── <span class="p">strix/jitera/brand.py.patch</span>      <span class="n">new file</span>
@@ -450,6 +451,7 @@ diff --git a/strix/report/sarif.py b/strix/report/sarif.py
         <thead><tr><th>Sync says</th><th>Meaning</th><th>Do this</th></tr></thead>
         <tbody>
           <tr><td><code>✓ applied</code></td><td>Upstream didn’t touch our lines</td><td>Nothing</td></tr>
+          <tr><td><code>= kept ours</code></td><td>A file in <code>fork/OWNED</code>; sync kept our version</td><td>If it says upstream changed it, run the printed <code>git diff</code> and copy anything useful</td></tr>
           <tr><td><code>✗ CONFLICT</code></td><td>Upstream changed the same lines, or added a file we also added</td><td>In the file, keep upstream’s new code (<code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; ours</code>) and re-apply our change (<code>&gt;&gt;&gt;&gt;&gt;&gt;&gt; theirs</code>). Then <code>fork/dev sync --continue</code></td></tr>
           <tr><td><code>✗ FAILED</code></td><td>The file moved or was deleted upstream</td><td>Redo our change where the code lives now, <code>git add</code> new files, then <code>fork/dev sync --continue</code></td></tr>
         </tbody>

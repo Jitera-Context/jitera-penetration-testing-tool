@@ -1,0 +1,5 @@
+# Upstream files we have fully replaced with our own version, one path per line.
+# Sync keeps our version instead of re-applying a patch, so upstream edits to
+# these files never cause a conflict. When upstream changed one, sync prints
+# the command to review upstream's change, in case something should be copied.
+README.md

@@ -11,7 +11,7 @@ description: Take a new upstream Strix (usestrix/strix) into the Jitera fork wit
 1. branches `sync/upstream-<ref>-<date>` from `origin/main`
 2. goes back to the checkpoint: removes all patched changes, leaving pure upstream
 3. takes the latest upstream (a clean merge)
-4. re-applies every patch with a 3-way merge
+4. re-applies every patch with a 3-way merge; files listed in `fork/OWNED` keep our version instead
 5. moves the checkpoint, refreshes the patches, and squashes everything into ONE merge commit (parents: main, new upstream)
 
 ## Steps
@@ -23,6 +23,7 @@ description: Take a new upstream Strix (usestrix/strix) into the Jitera fork wit
    - **FAILED**: the file moved or was deleted upstream. Re-make our change where the code lives now, and `git add` any new file.
    - Then run `fork/dev sync --continue`. It refuses while conflict markers remain.
    - `fork/dev sync --abort` drops the sync.
+   - `= kept ours  <file> (upstream changed it ...)`: not an error. Run the printed `git diff` and copy anything useful from upstream into our version.
 4. `fork/dev test`
 5. `git push -u origin <branch>` and open a PR into `main` titled `Sync upstream <ref> (<sha>)`. List the patches that conflicted and how you fixed them.
 6. Merge with **Create a merge commit**. Never squash or rebase: the checkpoint commit must stay in history, or `fork/dev verify` fails.
