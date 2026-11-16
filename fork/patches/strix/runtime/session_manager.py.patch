@@ -1,0 +1,26 @@
+Title: Sandbox browser uses the Jitera scan User-Agent
+Why: Passes AGENT_BROWSER_USER_AGENT to the container; the image honours it without a rebuild.
+Upstream-PR: none
+
+diff --git a/strix/runtime/session_manager.py b/strix/runtime/session_manager.py
+index d92b1fdbd47a569c5d24be1022133ff132cb158e..21763271d924e6ca11d0caabee337c4c1ad448c1 100644
+--- a/strix/runtime/session_manager.py
++++ b/strix/runtime/session_manager.py
+@@ -268,6 +268,9 @@ async def _resolve_extra_file_archive(
+     return build_extra_file_archive(files, local_sources) if files else None
+ 
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ async def create_or_reuse(
+     scan_id: str,
+     *,
+@@ -326,6 +329,7 @@ async def create_or_reuse(
+                 "https_proxy": container_caido_url,
+                 "ALL_PROXY": container_caido_url,
+                 "NO_PROXY": "localhost,127.0.0.1",
++                **brand.current().sandbox_env(),
+             },
+         ),
+     )

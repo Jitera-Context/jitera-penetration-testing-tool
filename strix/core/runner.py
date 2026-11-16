@@ -212,6 +212,9 @@ def _compose_root_instructions_override(
     )
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 async def run_strix_scan(
     *,
     scan_config: dict[str, Any],
@@ -290,8 +293,9 @@ async def run_strix_scan(
     is_resume = agents_path.exists()
 
     logger.info(
-        "%s Strix scan %s (image=%s, max_turns=%d, interactive=%s, run_dir=%s)",
+        "%s %s scan %s (image=%s, max_turns=%d, interactive=%s, run_dir=%s)",
         "Resuming" if is_resume else "Starting",
+        brand.current().name,
         scan_id,
         image,
         max_turns,
@@ -687,9 +691,10 @@ async def run_strix_scan(
     except RateLimitError as exc:
         logger.warning(
             "Scan %s stopped: persistent rate limit from the LLM provider (%s). "
-            "Resume with 'strix --resume %s' once the limit clears.",
+            "Resume with '%s --resume %s' once the limit clears.",
             scan_id,
             exc,
+            brand.current().command,
             scan_id,
         )
         _note_exit_reason("rate_limited")
@@ -704,7 +709,7 @@ async def run_strix_scan(
                 await coordinator.set_status(root_id, "running")
         raise
     except BaseException:
-        logger.exception("Strix scan %s failed", scan_id)
+        logger.exception("%s scan %s failed", brand.current().name, scan_id)
         if root_id is not None:
             with contextlib.suppress(Exception):
                 await coordinator.set_status(root_id, "failed")
@@ -727,5 +732,5 @@ async def run_strix_scan(
         if cleanup_on_exit:
             logger.info("Tearing down sandbox session for scan %s", scan_id)
             await session_manager.cleanup(scan_id)
-        logger.info("Strix scan %s done", scan_id)
+        logger.info("%s scan %s done", brand.current().name, scan_id)
         teardown_logging()

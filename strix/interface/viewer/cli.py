@@ -28,10 +28,13 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def run_view(argv: list[str]) -> None:
     parser = argparse.ArgumentParser(
-        prog="strix view",
-        description="Open a local web view of a Strix run (live or finished).",
+        prog=f"{brand.current().command} view",
+        description=f"Open a local web view of a {brand.current().name} run (live or finished).",
     )
     parser.add_argument(
         "run",

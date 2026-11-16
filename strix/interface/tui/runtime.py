@@ -66,6 +66,9 @@ def _open_output_sink() -> TextIO:
     return Path(os.devnull).open("a", buffering=1, encoding="utf-8")
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 class GoTuiRuntime:
     def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
@@ -394,7 +397,8 @@ class GoTuiRuntime:
         if packaged.is_file():
             return [str(packaged)]
         raise RuntimeError(
-            "Bubble Tea TUI binary not found. Reinstall Strix from an official platform wheel."
+            "Bubble Tea TUI binary not found. "
+            f"Reinstall {brand.current().name} from an official platform wheel."
         )
 
     @staticmethod

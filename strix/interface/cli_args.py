@@ -56,54 +56,13 @@ def _positive_int(value: str) -> int:
     return parsed
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Strix Multi-Agent Cybersecurity Penetration Testing Tool",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # Web application penetration test
-  strix --target https://example.com
-
-  # GitHub repository analysis
-  strix --target https://github.com/user/repo
-  strix --target git@github.com:user/repo.git
-
-  # Local code analysis
-  strix --target ./my-project
-
-  # API spec test (OpenAPI/Swagger file or Postman collection export)
-  strix --target ./openapi.yaml --target https://api.example.com
-  strix --target ./collection.postman_collection.json
-
-  # Postman collection pulled live by id (needs POSTMAN_API_KEY); optional environment
-  strix --target postman://<collection-uuid> --target https://api.example.com
-  strix --target "postman://<collection-uuid>?env=<environment-uuid>"
-
-  # Domain penetration test
-  strix --target example.com
-
-  # IP address penetration test
-  strix --target 192.168.1.42
-
-  # Multiple targets (e.g., white-box testing with source and deployed app)
-  strix --target https://github.com/user/repo --target https://example.com
-  strix --target ./my-project --target https://staging.example.com --target https://prod.example.com
-
-  # Targets from a file, one target per non-empty, non-comment line
-  strix --target-list ./targets.txt
-
-  # Custom instructions (inline)
-  strix --target example.com --instruction "Focus on authentication vulnerabilities"
-
-  # Custom instructions (from file)
-  strix --target example.com --instruction-file ./instructions.txt
-  strix --target https://app.com --instruction-file /path/to/detailed_instructions.md
-
-  # Extra files placed in the sandbox workspace
-  strix --target ./my-project --workspace-file ./wordlist.txt
-  strix --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
-
+    profile = brand.current()
+    cloud_help = (
+        """
 Strix Cloud:
   strix cloud login
   strix cloud scans start --source . --yes --wait
@@ -111,7 +70,58 @@ Strix Cloud:
 
   Run a pentest in Strix Cloud     https://app.strix.ai
   Try Strix Enterprise             https://strix.ai/demo
-        """,
+"""
+        if profile.promo
+        else ""
+    )
+    parser = argparse.ArgumentParser(
+        description=f"{profile.name} Multi-Agent Cybersecurity Penetration Testing Tool",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=f"""
+Examples:
+  # Web application penetration test
+  {profile.command} --target https://example.com
+
+  # GitHub repository analysis
+  {profile.command} --target https://github.com/user/repo
+  {profile.command} --target git@github.com:user/repo.git
+
+  # Local code analysis
+  {profile.command} --target ./my-project
+
+  # API spec test (OpenAPI/Swagger file or Postman collection export)
+  {profile.command} --target ./openapi.yaml --target https://api.example.com
+  {profile.command} --target ./collection.postman_collection.json
+
+  # Postman collection pulled live by id (needs POSTMAN_API_KEY); optional environment
+  {profile.command} --target postman://<collection-uuid> --target https://api.example.com
+  {profile.command} --target "postman://<collection-uuid>?env=<environment-uuid>"
+
+  # Domain penetration test
+  {profile.command} --target example.com
+
+  # IP address penetration test
+  {profile.command} --target 192.168.1.42
+
+  # Multiple targets (e.g., white-box testing with source and deployed app)
+  {profile.command} --target https://github.com/user/repo --target https://example.com
+  {profile.command} --target ./my-project --target https://staging.example.com --target https://prod.example.com
+
+  # Targets from a file, one target per non-empty, non-comment line
+  {profile.command} --target-list ./targets.txt
+
+  # Custom instructions (inline)
+  {profile.command} --target example.com --instruction "Focus on authentication vulnerabilities"
+
+  # Custom instructions (from file)
+  {profile.command} --target example.com --instruction-file ./instructions.txt
+  {profile.command} --target https://app.com --instruction-file /path/to/detailed_instructions.md
+
+  # Extra files placed in the sandbox workspace
+  {profile.command} --target ./my-project --workspace-file ./wordlist.txt
+  {profile.command} --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
+
+{cloud_help}        """,
     )
 
     parser.add_argument(
@@ -176,7 +186,8 @@ Strix Cloud:
         help="Place a file from this machine into the sandbox workspace before the scan "
         "starts, for example a wordlist, an API specification, or notes. Repeat the option "
         "for more files. DEST is the path inside /workspace and defaults to the file name "
-        "(for example '--workspace-file ./wordlist.txt:lists/wordlist.txt'). Strix copies "
+        "(for example '--workspace-file ./wordlist.txt:lists/wordlist.txt'). "
+        f"{profile.name} copies "
         "the file into the sandbox, outside every target directory. The agent can edit the "
         "copy. The file on this machine does not change.",
     )

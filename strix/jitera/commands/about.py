@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 
 from strix.jitera import brand
-from strix.jitera.bootstrap import package_version
+from strix.jitera.brand import package_version
 
 
 def run(argv: list[str]) -> int:

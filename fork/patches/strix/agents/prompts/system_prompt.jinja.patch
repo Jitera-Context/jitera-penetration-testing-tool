@@ -1,0 +1,18 @@
+Title: Agent sends the Jitera User-Agent on crafted requests
+Why: Upstream forbade identifying user-agents; we identify our authorized traffic. Upstream output is unchanged.
+Upstream-PR: none
+
+diff --git a/strix/agents/prompts/system_prompt.jinja b/strix/agents/prompts/system_prompt.jinja
+index 6c6a0ab95cf044fc9a3488a74afcf81bb3769428..8da5920f237cb63bf698139de208aca9949766d5 100644
+--- a/strix/agents/prompts/system_prompt.jinja
++++ b/strix/agents/prompts/system_prompt.jinja
+@@ -22,7 +22,8 @@ CLI OUTPUT:
+ - You may use simple markdown: **bold**, *italic*, `code`, ~~strikethrough~~, [links](url), and # headers
+ - Do NOT use complex markdown like bullet lists, numbered lists, or tables
+ - Use line breaks and indentation for structure
+-- NEVER use any identifiable names/markers in HTTP requests, payloads, user-agents, or any inputs
++{% if scan_user_agent %}- Send every HTTP request you craft with the User-Agent "{{ scan_user_agent }}" (curl -A, headers in scripts, tool options such as sqlmap --user-agent; never --random-agent) so the client can identify our authorized testing traffic
++- NEVER add any other identifiable names/markers to HTTP requests, payloads, or any inputs{% else %}- NEVER use any identifiable names/markers in HTTP requests, payloads, user-agents, or any inputs{% endif %}
+ 
+ INTER-AGENT MESSAGES:
+ - Messages from other agents arrive prefixed with a header like `[Message from agent <name> | type=... | priority=...]`. Treat them as internal context — never repeat them verbatim in your own output.

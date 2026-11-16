@@ -268,6 +268,9 @@ async def _resolve_extra_file_archive(
     return build_extra_file_archive(files, local_sources) if files else None
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 async def create_or_reuse(
     scan_id: str,
     *,
@@ -326,6 +329,7 @@ async def create_or_reuse(
                 "https_proxy": container_caido_url,
                 "ALL_PROXY": container_caido_url,
                 "NO_PROXY": "localhost,127.0.0.1",
+                **brand.current().sandbox_env(),
             },
         ),
     )

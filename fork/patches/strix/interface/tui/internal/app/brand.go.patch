@@ -1,0 +1,54 @@
+Title: Add strix/interface/tui/internal/app/brand.go
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/strix/interface/tui/internal/app/brand.go b/strix/interface/tui/internal/app/brand.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..79c275d9a185b97ebc18e9abd0350888e0a808af
+--- /dev/null
++++ b/strix/interface/tui/internal/app/brand.go
+@@ -0,0 +1,44 @@
++package app
++
++import (
++	"os"
++	"strings"
++)
++
++// Brand values come from the Python side (strix/jitera/bootstrap.py) through
++// the inherited environment. Unset means upstream Strix, so upstream's tests
++// and the plain `strix` command look exactly as before.
++
++func brandEnv(key, fallback string) string {
++	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
++		return value
++	}
++	return fallback
++}
++
++func brandName() string { return brandEnv("STRIX_BRAND_NAME", "Strix") }
++
++func brandURL() string { return brandEnv("STRIX_BRAND_URL", "strix.ai") }
++
++func brandTagline() string {
++	return brandEnv("STRIX_BRAND_TAGLINE", "Open-source AI hackers for your apps")
++}
++
++// Branded swaps the upstream product name in a UI string for the active brand.
++func Branded(text string) string { return strings.ReplaceAll(text, "Strix", brandName()) }
++
++// brandBanner is the block-letter wordmark for the active brand.
++func brandBanner() string {
++	if brandName() == "Jitera" {
++		return jiteraBanner
++	}
++	return banner
++}
++
++// jiteraBanner is the Jitera wordmark in the same bevelled block letters as banner.
++const jiteraBanner = `      ██╗██╗████████╗███████╗██████╗  █████╗
++      ██║██║╚══██╔══╝██╔════╝██╔══██╗██╔══██╗
++      ██║██║   ██║   █████╗  ██████╔╝███████║
++ ██   ██║██║   ██║   ██╔══╝  ██╔══██╗██╔══██║
++ ╚█████╔╝██║   ██║   ███████╗██║  ██║██║  ██║
++  ╚════╝ ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝`

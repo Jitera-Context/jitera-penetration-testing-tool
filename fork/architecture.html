@@ -200,7 +200,7 @@ footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--lin
 │   ├── <span class="p">patches/</span>                       <span class="n">one patch per changed file, same path</span> <span class="ok">✓</span>
 │   │   ├── <span class="p">strix/config/models.py.patch</span>     <span class="n">edit</span>
 │   │   ├── <span class="p">strix/jitera/brand.py.patch</span>      <span class="n">new file</span>
-│   │   └── <span class="p">…</span>                              <span class="n">18 patches today</span>
+│   │   └── <span class="p">…</span>                              <span class="n">one per changed file</span>
 │   ├── <span class="p">dev</span>                            <span class="n">all commands</span>                         <span class="ok">✓</span>
 │   ├── <span class="p">scripts/</span>                       <span class="n">sync, brand audit, diagrams</span>          <span class="ok">✓</span>
 │   └── <span class="p">architecture.html</span>              <span class="n">this page</span>                            <span class="ok">✓</span>
@@ -557,7 +557,7 @@ diff --git a/strix/report/sarif.py b/strix/report/sarif.py
 
   <footer>
     <span>Tested 2026-11-16 in a throwaway copy: a clean sync of 3 upstream commits; a sync where upstream changed our SARIF line and added its own NOTICE, fixed and continued; and <code>--abort</code>.</span>
-    <span>Brand values in <code>strix/jitera/brand.py</code> are placeholders until the product name, CLI name and website are final.</span>
+    <span>Brand: <b>Jitera</b>, command <code>jitera</code>, User-Agent <code>Jitera/&lt;version&gt;</code> for our own calls and <code>Mozilla/5.0 (compatible; Jitera/&lt;version&gt;; +https://jitera.com)</code> for scan traffic, all from <code>strix/jitera/brand.py</code>.</span>
   </footer>
 </main>
 </body>

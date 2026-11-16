@@ -967,6 +967,9 @@ def _should_activate_auto_scope(
     return False
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def _resolve_repo_diff_scope(
     source: dict[str, str], diff_base: str | None, env: dict[str, str]
 ) -> RepoDiffScope:
@@ -979,7 +982,8 @@ def _resolve_repo_diff_scope(
 
     if _is_repo_shallow(repo_path):
         raise ValueError(
-            "Strix requires full git history for diff-scope. Please set fetch-depth: 0 "
+            f"{brand.current().name} requires full git history for diff-scope. "
+            "Please set fetch-depth: 0 "
             "in your CI config."
         )
 

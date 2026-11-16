@@ -1,0 +1,22 @@
+Title: Sign-in success page shows the brand
+Why: The ChatGPT sign-in callback page named Strix and linked to strix.ai.
+Upstream-PR: none
+
+diff --git a/strix/interface/auth_cli.py b/strix/interface/auth_cli.py
+index 51e6b9fe9db46f0599cbae926b0d3e66f000b727..829ef293a6ac8cd6aca95e71aaf3b996e900c63b 100644
+--- a/strix/interface/auth_cli.py
++++ b/strix/interface/auth_cli.py
+@@ -329,8 +329,12 @@ def _logo_img_tag() -> str:
+     return f'<img class="logo" src="data:image/png;base64,{encoded}" alt="" />'
+ 
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ def _render_callback_html() -> str:
+-    return _CALLBACK_HTML.replace("<!--LOGO-->", _logo_img_tag())
++    logo = _logo_img_tag() if brand.current() is brand.UPSTREAM else ""
++    return brand.rebrand(_CALLBACK_HTML).replace("<!--LOGO-->", logo)
+ 
+ 
+ _CALLBACK_HTML = """<!doctype html>

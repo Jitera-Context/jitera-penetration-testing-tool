@@ -1,0 +1,41 @@
+Title: Splash screen follows the brand
+Why: The splash said 'Starting Strix Agent', 'Welcome to Strix!' and strix.ai.
+Upstream-PR: none
+
+diff --git a/strix/interface/tui/internal/app/view.go b/strix/interface/tui/internal/app/view.go
+index df4acaa2c9df7c9a8aeab77b95ca06188e7f3493..3e6de7bbc76d220ef08f755aed35a9a6098b6b66 100644
+--- a/strix/interface/tui/internal/app/view.go
++++ b/strix/interface/tui/internal/app/view.go
+@@ -278,7 +278,7 @@ func (m Model) viewInner() string {
+ 		return m.splashView()
+ 	}
+ 	if !m.ready {
+-		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, lipgloss.NewStyle().Foreground(dim).Render("Connecting to Strix…"), lipgloss.WithWhitespaceBackground(black))
++		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, lipgloss.NewStyle().Foreground(dim).Render(Branded("Connecting to Strix…")), lipgloss.WithWhitespaceBackground(black))
+ 	}
+ 	main := m.mainView()
+ 	if m.snapshot.SetupMode {
+@@ -408,7 +408,7 @@ var baseColorRestorer = strings.NewReplacer(
+ )
+ 
+ func (m Model) splashView() string {
+-	shine := "Starting Strix Agent"
++	shine := Branded("Starting Strix Agent")
+ 	chars := []rune(shine)
+ 	pos := m.splashFrame % (len(chars) + 8)
+ 	var start strings.Builder
+@@ -432,11 +432,11 @@ func (m Model) splashView() string {
+ 		start.WriteString(lipgloss.NewStyle().Foreground(color).Bold(bold).Render(string(char)))
+ 	}
+ 	welcome := lipgloss.NewStyle().Bold(true).Foreground(white).Render("Welcome to ") +
+-		lipgloss.NewStyle().Bold(true).Foreground(green).Render("Strix") +
++		lipgloss.NewStyle().Bold(true).Foreground(green).Render(brandName()) +
+ 		lipgloss.NewStyle().Bold(true).Foreground(white).Render("!")
+ 	version := lipgloss.NewStyle().Foreground(white).Faint(true).Render("v" + appVersion)
+-	tagline := lipgloss.NewStyle().Foreground(white).Faint(true).Render("Open-source AI hackers for your apps")
+-	url := lipgloss.NewStyle().Bold(true).Foreground(green).Render("strix.ai")
++	tagline := lipgloss.NewStyle().Foreground(white).Faint(true).Render(brandTagline())
++	url := lipgloss.NewStyle().Bold(true).Foreground(green).Render(brandURL())
+ 	// The wordmark is shared with the launch screen so the two read as one moment.
+ 	content := wordmark() + "\n\n" +
+ 		welcome + "\n" + version + "\n" + tagline + "\n\n" +

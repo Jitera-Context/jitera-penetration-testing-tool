@@ -1,0 +1,76 @@
+Title: Installer messages, repo and links are Jitera
+Why: Installed from usestrix/strix and linked to Strix Cloud. Binary name is unchanged until our release pipeline exists.
+Upstream-PR: none
+
+diff --git a/scripts/install.sh b/scripts/install.sh
+index 7c7ce38ad6ac47fd4dbc717a164dc72747d4a793..68e2a0d612cb443bf304b27de7170424f03dbebc 100755
+--- a/scripts/install.sh
++++ b/scripts/install.sh
+@@ -3,7 +3,8 @@
+ set -euo pipefail
+ 
+ APP=strix
+-REPO="usestrix/strix"
++BRAND_NAME="Jitera"
++REPO="Jitera-Context/jitera-penetration-testing-tool"
+ STRIX_IMAGE="ghcr.io/usestrix/strix-sandbox:1.4.1"
+ 
+ MUTED='\033[0;2m'
+@@ -135,7 +136,7 @@ check_version() {
+     if [[ -x "$INSTALL_DIR/strix" ]]; then
+         installed_version=$("$INSTALL_DIR/strix" --version 2>/dev/null | awk '{print $2}' || echo "")
+         if [[ "$installed_version" == "$specific_version" ]]; then
+-            print_message info "${GREEN}✓ Strix ${NC}$specific_version${GREEN} already installed${NC}"
++            print_message info "${GREEN}✓ ${BRAND_NAME} ${NC}$specific_version${GREEN} already installed${NC}"
+             SKIP_DOWNLOAD=true
+         elif [[ -n "$installed_version" ]]; then
+             print_message info "${MUTED}Installed: ${NC}$installed_version ${MUTED}→ Upgrading to ${NC}$specific_version"
+@@ -144,7 +145,7 @@ check_version() {
+ }
+ 
+ download_and_install() {
+-    print_message info "\n${CYAN}🦉 Installing Strix${NC} ${MUTED}version: ${NC}$specific_version"
++    print_message info "\n${CYAN}Installing ${BRAND_NAME}${NC} ${MUTED}version: ${NC}$specific_version"
+     print_message info "${MUTED}Platform: ${NC}$target\n"
+ 
+     local tmp_dir=$(mktemp -d)
+@@ -171,14 +172,14 @@ download_and_install() {
+     cd - > /dev/null
+     rm -rf "$tmp_dir"
+ 
+-    echo -e "${GREEN}✓ Strix installed to $INSTALL_DIR${NC}"
++    echo -e "${GREEN}✓ ${BRAND_NAME} installed to $INSTALL_DIR${NC}"
+ }
+ 
+ check_docker() {
+     echo ""
+     if ! command -v docker >/dev/null 2>&1; then
+         echo -e "${YELLOW}⚠ Docker not found${NC}"
+-        echo -e "${MUTED}Strix requires Docker to run the security sandbox.${NC}"
++        echo -e "${MUTED}${BRAND_NAME} requires Docker to run the security sandbox.${NC}"
+         echo -e "${MUTED}Please install Docker: ${NC}https://docs.docker.com/get-docker/"
+         echo ""
+         return 1
+@@ -310,7 +311,7 @@ verify_installation() {
+ 
+     if [[ -x "$INSTALL_DIR/strix" ]]; then
+         local version=$("$INSTALL_DIR/strix" --version 2>/dev/null | awk '{print $2}' || echo "unknown")
+-        echo -e "${GREEN}✓ Strix ${NC}$version${GREEN} ready${NC}"
++        echo -e "${GREEN}✓ ${BRAND_NAME} ${NC}$version${GREEN} ready${NC}"
+     fi
+ }
+ 
+@@ -342,12 +343,8 @@ echo ""
+ echo -e "  ${CYAN}2.${NC} Run a penetration test:"
+ echo -e "     ${MUTED}strix --target https://example.com${NC}"
+ echo ""
+-echo -e "${MUTED}For more information visit ${NC}https://strix.ai"
++echo -e "${MUTED}For more information visit ${NC}https://jitera.com"
+ echo -e "${MUTED}Supported models ${NC}https://docs.strix.ai/llm-providers/overview"
+-echo -e "${MUTED}Join our community ${NC}https://discord.gg/strix-ai"
+-echo ""
+-echo -e "${MUTED}Run a pentest in Strix Cloud ${NC}https://app.strix.ai"
+-echo -e "${MUTED}Enterprise ${NC}https://strix.ai/demo"
+ echo ""
+ 
+ echo -e "${YELLOW}→${NC} Run ${MUTED}source ~/.$(basename $SHELL)rc${NC} or open a new terminal"
