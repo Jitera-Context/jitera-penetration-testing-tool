@@ -19,7 +19,7 @@ Each run is recorded in `results/` (`<timestamp>.json`, `latest.json`, and an ap
 Set your model and key in the checkout's `.env` first (`cp .env.example .env`). The eval and GEPA read it too.
 
 ```bash
-fork/dev eval --check                         # is the target up? (no scan, no cost)
+fork/dev eval --check                         # target up and model set? (no scan, no cost)
 fork/dev eval                                 # scan, score, gate
 fork/dev eval --from-run DIR                  # score a finished run, no scan
 fork/dev eval --scan-mode quick --max-budget 5
@@ -36,7 +36,7 @@ a paid scan, reads the exit code, and reports coverage and misses.
 |---|---|
 | 0 | Pass: coverage at or above the gate |
 | 1 | Regression: coverage below the gate |
-| 2 | Setup problem (bad baseline, the scan produced no output) |
+| 2 | Setup problem: no model configured, a bad baseline, or the scan produced no output |
 | 3 | Target unreachable. Not a regression: the public demo is often down |
 
 If the demo is down, run Juice Shop locally and pass `--target`:

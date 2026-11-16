@@ -16,7 +16,6 @@ Writes the best instruction found to eval/gepa/optimized_instructions.txt.
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 from collections.abc import Callable
 from pathlib import Path
@@ -25,9 +24,8 @@ from typing import Any
 import gepa
 import litellm
 
-from eval._lib import EVAL_DIR, Baseline
+from eval._lib import EVAL_DIR, MISSING_MODEL_HELP, Baseline, configured_model, prepare_settings
 from eval.gepa.adapter import COMPONENT, JiteraGEPAAdapter, Rollout, make_tasks, scan_rollout
-from strix.jitera import bootstrap, brand
 
 
 ReflectionLM = Callable[[Any], str]
@@ -96,15 +94,13 @@ def litellm_reflection(model: str) -> ReflectionLM:
 
 
 def main(argv: list[str] | None = None) -> int:
-    # Same settings as the scans: our .env, then JITERA_PENTEST_* -> STRIX_*.
-    bootstrap.load_env_file()
-    bootstrap.prepare_environment(os.environ, brand.JITERA)
+    prepare_settings()  # same .env and settings as the scans
     parser = argparse.ArgumentParser(prog="eval.gepa.optimize", description=__doc__)
     parser.add_argument("--baseline", default="juice-shop")
     parser.add_argument("--target", help="override the baseline target, e.g. a local Juice Shop")
     parser.add_argument("--dry-run", action="store_true", help="stub scorer + stub LM, no scans")
     parser.add_argument("--max-metric-calls", type=int, default=6)
-    parser.add_argument("--reflection-model", default=os.environ.get("STRIX_LLM", ""))
+    parser.add_argument("--reflection-model", default=configured_model() or "")
     parser.add_argument("--seed-file", type=Path, help="start from this instruction file")
     parser.add_argument("--out", type=Path, help=f"default: {DEFAULT_OUT}")
     args = parser.parse_args(argv)
@@ -121,7 +117,7 @@ def main(argv: list[str] | None = None) -> int:
         reflection = stub_reflection(baseline)
     else:
         if not args.reflection_model:
-            print("eval.gepa: set STRIX_LLM or --reflection-model for a real run", file=sys.stderr)
+            print(f"eval.gepa: {MISSING_MODEL_HELP}", file=sys.stderr)
             return 2
         print(
             f"WARNING: each of up to {args.max_metric_calls} metric calls runs a full scan "

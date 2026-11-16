@@ -3,10 +3,10 @@ Why: Upstream's README is Strix's product page. Listed in fork/OWNED, so sync ke
 Upstream-PR: none
 
 diff --git a/README.md b/README.md
-index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..6483fabf28e67412263743567f96327382bb0d11 100644
+index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..46f1f1e32f9c19064805c7c5699f9defeb71be59 100644
 --- a/README.md
 +++ b/README.md
-@@ -1,393 +1,165 @@
+@@ -1,393 +1,200 @@
 -<p align="center">
 -  <a href="https://strix.ai/">
 -    <img src="https://github.com/usestrix/.github/raw/main/imgs/cover.png" alt="Strix Banner" width="100%">
@@ -125,11 +125,9 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..6483fabf28e67412263743567f963273
  
 -> [!NOTE]
 -> First run automatically pulls the sandbox Docker image. Results are saved to `strix_runs/<run-name>`
-+Prebuilt binaries will be published on this repository's releases once the release pipeline is in place.
- 
+-
 -### Updating
-+## Quick start
- 
+-
 -```bash
 -# Self-update the standalone binary to the latest release
 -strix --update
@@ -147,9 +145,11 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..6483fabf28e67412263743567f963273
 -- **Open Source** - free, runs locally with Docker and your own LLM key. [Quick Start](https://docs.strix.ai/quickstart)
 -- **Strix Cloud** - no setup, validated findings, one-click autofix, and PR reviews. [Run a pentest →](https://app.strix.ai?intent=pentest&utm_source=github&utm_medium=readme&utm_content=table_cloud)
 -- **Enterprise** - SSO, compliance-ready reports, VPC or self-hosted deployment. [Try Strix Enterprise →](https://strix.ai/demo?utm_source=github&utm_medium=readme&utm_content=table_demo)
--
++Prebuilt binaries will be published on this repository's releases once the release pipeline is in place.
+ 
 ----
--
++## Quick start
+ 
 -## ☁️ Strix Cloud
 -
 -Try the Strix full-stack penetration testing platform at **[app.strix.ai](https://app.strix.ai?utm_source=github&utm_medium=readme&utm_content=cloud_heading)** - sign up for free, connect your repos and domains, and launch a pentest in minutes.
@@ -242,13 +242,13 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..6483fabf28e67412263743567f963273
  ```
  
 -The dashboard shows the findings, a live map of the agent team, and past runs. Nothing leaves your machine, and the UI ships prebuilt. `strix view` binds to `127.0.0.1` and prints a tokened link that grants access to the run, so share it carefully.
+-
+-See the [viewer documentation](https://docs.strix.ai/usage/viewer) for the options and for reaching the viewer from another machine.
 +The command is `jitera-pentest` because `jitera` is the Jitera Gateway CLI. Use `jitera-pentest`, not `strix`: the `strix` command is still installed, but it runs upstream's branding and telemetry.
  
--See the [viewer documentation](https://docs.strix.ai/usage/viewer) for the options and for reaching the viewer from another machine.
+----
 +## Usage
  
-----
--
 -## Usage Examples
 +```bash
 +# Local code, a GitHub repository, or a live app
@@ -377,13 +377,6 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..6483fabf28e67412263743567f963273
  
 -        run: strix -n -t ./ --scan-mode quick
 -```
--
--> [!TIP]
--> In CI pull request runs, Strix automatically scopes quick reviews to changed files, which is why the
--> checkout above fetches full history. See the
--> [CI/CD documentation](https://docs.strix.ai/integrations/github-actions) for the details.
--
--### Configuration
 +| | Strix | Jitera |
 +|---|---|---|
 +| Command | `strix` | `jitera-pentest` |
@@ -394,59 +387,83 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..6483fabf28e67412263743567f963273
 +| Viewer | Strix Cloud upsells, email and feedback relays | Hidden |
 +| CLI, terminal UI, reports, viewer | Strix | Jitera |
  
+-> [!TIP]
+-> In CI pull request runs, Strix automatically scopes quick reviews to changed files, which is why the
+-> checkout above fetches full history. See the
+-> [CI/CD documentation](https://docs.strix.ai/integrations/github-actions) for the details.
++Customers can recognize our authorized scan traffic by its User-Agent.
+ 
+-### Configuration
++## Eval: OWASP Juice Shop
+ 
 -```bash
 -export STRIX_LLM="vercel_ai_gateway/zai/glm-5.3"   # Vercel AI Gateway
 -# export STRIX_LLM="openrouter/z-ai/glm-5.3"       # OpenRouter
 -export LLM_API_KEY="your-api-key"
--
++Checks that the scanner still finds what it should, on [OWASP Juice Shop](https://owasp.org/www-project-juice-shop/), a deliberately vulnerable app OWASP publishes for this purpose. The eval uses the same `.env` as the tool.
+ 
 -# Optional
 -export LLM_API_BASE="your-api-base-url"  # if using a local model, e.g. Ollama, LMStudio
--```
-+Customers can recognize our authorized scan traffic by its User-Agent.
++```bash
++cp .env.example .env                              # once: set JITERA_PENTEST_LLM and LLM_API_KEY
++fork/dev eval --check                             # target up and model set? No scan, no cost
++fork/dev eval                                     # scan, score, pass or fail (takes a while, costs LLM credit)
++fork/dev eval --scan-mode quick --max-budget 5    # a cheaper run
++fork/dev eval-history                             # recent runs: coverage, gate, result
+ ```
  
 -> [!NOTE]
 -> Strix automatically saves your configuration to `~/.strix/cli-config.json`, so you don't have to re-enter it on every run.
 -> See the [configuration reference](https://docs.strix.ai/advanced/configuration) for every environment variable.
-+## Developing
++A run passes when its findings cover at least 6 of the 12 vulnerability categories in [`eval/baseline/juice-shop.yaml`](eval/baseline/juice-shop.yaml). Each run is recorded in `eval/results/`.
  
 -#### Sign in with a ChatGPT subscription
-+This repository is a fork kept easy to sync with upstream:
++| Exit code | Meaning |
++|---|---|
++| `0` | Pass |
++| `1` | Regression: below the gate |
++| `2` | Setup problem, for example no model configured |
++| `3` | Target down |
  
 -Instead of a metered API key, you can run Strix on your ChatGPT Plus/Pro subscription:
-+- Edit the source directly. Our own code lives in `strix/jitera/`, our tests in `tests/jitera/`.
-+- `fork/dev save` records every change since the upstream checkpoint (`fork/CHECKPOINT`) as patches in `fork/patches/`. Commit the code and its patches together.
-+- `fork/dev sync` takes a new upstream: back to the checkpoint, remove our changes, take the latest upstream, re-apply the patches.
++If the public demo is down, run Juice Shop locally and point the eval at it:
  
  ```bash
 -strix auth login chatgpt             # sign in with your ChatGPT account
 -export STRIX_LLM="chatgpt/gpt-5.4"   # chatgpt/<model> runs on the subscription
 -strix auth status                    # show the active sign-in, or logout to forget it
-+fork/dev help       # every command
-+fork/dev status     # checkpoint, how far upstream moved, patches out of date
-+fork/dev test       # brand audit, lint, type check, tests
-+fork/dev eval       # OWASP Juice Shop eval: did the scanner regress?
-+fork/dev gepa       # optimize the agent's instructions with GEPA
++docker run --rm -p 3000:3000 bkimminich/juice-shop:v20.4.0
++fork/dev eval --target http://localhost:3000
  ```
  
 -#### Use the managed platform: `strix cloud`
 -
 -Run scans on [app.strix.ai](https://app.strix.ai) from the terminal, without Docker or an LLM key:
--
--```bash
++To improve the agent's instructions with [GEPA](https://pypi.org/project/gepa/), start with a dry run. A real run does a full scan for every step, so it's slow and costs LLM credit.
+ 
+ ```bash
 -strix cloud login                                  # browser sign-in, one credential per install
 -strix cloud scans start --source . --yes --wait    # scan local code, approving the upload
 -strix cloud scans start --engagement-type live_test --domain-ids <uuid> --wait
 -strix cloud vulns list --severity critical
--```
--
++fork/dev gepa --dry-run                 # check the setup: no scans, no cost
++fork/dev gepa --max-metric-calls 6      # real optimization
+ ```
+ 
 -Every [REST API](https://docs.app.strix.ai) operation has a matching `strix cloud <resource> <verb>` command. Run `strix cloud` to list the resources, and add `help` to a resource to list its verbs. Output is JSON when stdout is not a terminal or when you pass `--json`. Binary downloads are the exception: redirect the raw bytes, or combine `--output FILE --json` for download metadata.
--
++[`eval/README.md`](eval/README.md) has the details. In Claude Code, `/eval-run` and `/eval-gepa` run these for you and ask before anything that costs money.
+ 
 -See the [cloud CLI documentation](https://docs.strix.ai/cloud/cli) for scopes, workspaces, billing, and source-upload options.
--
++## Developing
+ 
 -#### Connect your own MCP servers
--
++This repository is a fork kept easy to sync with upstream:
+ 
 -Strix can connect to Model Context Protocol (MCP) servers you list and expose their tools to the agent during a run. Create `~/.strix/mcp-servers.json` with a JSON list of local `stdio` servers or remote `http` servers:
--
++- Edit the source directly. Our own code lives in `strix/jitera/`, our tests in `tests/jitera/`.
++- `fork/dev save` records every change since the upstream checkpoint (`fork/CHECKPOINT`) as patches in `fork/patches/`. Commit the code and its patches together.
++- `fork/dev sync` takes a new upstream: back to the checkpoint, remove our changes, take the latest upstream, re-apply the patches.
+ 
 -```json
 -[
 -  {
@@ -457,8 +474,12 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..6483fabf28e67412263743567f963273
 -    "allowed_tools": ["list_issues"]
 -  }
 -]
--```
--
++```bash
++fork/dev help       # every command
++fork/dev status     # checkpoint, how far upstream moved, patches out of date
++fork/dev test       # brand audit, lint, type check, tests
+ ```
+ 
 -Each server's tools are namespaced by `name`, for example `github_list_issues`. See the [MCP documentation](https://docs.strix.ai/integrations/mcp) for the full schema, tool filtering, and `stdio` servers.
 -
 -**Recommended models for best results:**
@@ -493,7 +514,7 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..6483fabf28e67412263743567f963273
 -## Acknowledgements
 -
 -Strix builds on the incredible work of open-source projects like [LiteLLM](https://github.com/BerriAI/litellm), [Caido](https://github.com/caido/caido), [Nuclei](https://github.com/projectdiscovery/nuclei), [Playwright](https://github.com/microsoft/playwright), and [Bubble Tea](https://github.com/charmbracelet/bubbletea). Huge thanks to their maintainers!
-+The eval and GEPA are described in [`eval/README.md`](eval/README.md).
++`fork/dev` works from any folder. For the eval commands, see [Eval: OWASP Juice Shop](#eval-owasp-juice-shop).
  
 +The full guide with diagrams is [`fork/architecture.html`](fork/architecture.html). In Claude Code, use `/fork-change`, `/fork-sync`, `/eval-run` and `/eval-gepa`.
  

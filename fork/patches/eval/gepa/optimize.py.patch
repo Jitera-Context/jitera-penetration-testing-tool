@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/eval/gepa/optimize.py b/eval/gepa/optimize.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..3bffbe435d25a3125b1f9ca2e4ee3f6957dcddfb
+index 0000000000000000000000000000000000000000..92395f9369d1df6d8e6ad7018e3d085ba8583b57
 --- /dev/null
 +++ b/eval/gepa/optimize.py
-@@ -0,0 +1,157 @@
+@@ -0,0 +1,153 @@
 +"""Optimize the agent's eval instructions with GEPA.
 +
 +    # Verify the loop with no scans and no LLM (deterministic stubs):
@@ -26,7 +26,6 @@ index 0000000000000000000000000000000000000000..3bffbe435d25a3125b1f9ca2e4ee3f69
 +from __future__ import annotations
 +
 +import argparse
-+import os
 +import sys
 +from collections.abc import Callable
 +from pathlib import Path
@@ -35,9 +34,8 @@ index 0000000000000000000000000000000000000000..3bffbe435d25a3125b1f9ca2e4ee3f69
 +import gepa
 +import litellm
 +
-+from eval._lib import EVAL_DIR, Baseline
++from eval._lib import EVAL_DIR, MISSING_MODEL_HELP, Baseline, configured_model, prepare_settings
 +from eval.gepa.adapter import COMPONENT, JiteraGEPAAdapter, Rollout, make_tasks, scan_rollout
-+from strix.jitera import bootstrap, brand
 +
 +
 +ReflectionLM = Callable[[Any], str]
@@ -106,15 +104,13 @@ index 0000000000000000000000000000000000000000..3bffbe435d25a3125b1f9ca2e4ee3f69
 +
 +
 +def main(argv: list[str] | None = None) -> int:
-+    # Same settings as the scans: our .env, then JITERA_PENTEST_* -> STRIX_*.
-+    bootstrap.load_env_file()
-+    bootstrap.prepare_environment(os.environ, brand.JITERA)
++    prepare_settings()  # same .env and settings as the scans
 +    parser = argparse.ArgumentParser(prog="eval.gepa.optimize", description=__doc__)
 +    parser.add_argument("--baseline", default="juice-shop")
 +    parser.add_argument("--target", help="override the baseline target, e.g. a local Juice Shop")
 +    parser.add_argument("--dry-run", action="store_true", help="stub scorer + stub LM, no scans")
 +    parser.add_argument("--max-metric-calls", type=int, default=6)
-+    parser.add_argument("--reflection-model", default=os.environ.get("STRIX_LLM", ""))
++    parser.add_argument("--reflection-model", default=configured_model() or "")
 +    parser.add_argument("--seed-file", type=Path, help="start from this instruction file")
 +    parser.add_argument("--out", type=Path, help=f"default: {DEFAULT_OUT}")
 +    args = parser.parse_args(argv)
@@ -131,7 +127,7 @@ index 0000000000000000000000000000000000000000..3bffbe435d25a3125b1f9ca2e4ee3f69
 +        reflection = stub_reflection(baseline)
 +    else:
 +        if not args.reflection_model:
-+            print("eval.gepa: set STRIX_LLM or --reflection-model for a real run", file=sys.stderr)
++            print(f"eval.gepa: {MISSING_MODEL_HELP}", file=sys.stderr)
 +            return 2
 +        print(
 +            f"WARNING: each of up to {args.max_metric_calls} metric calls runs a full scan "
