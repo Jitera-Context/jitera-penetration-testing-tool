@@ -33,51 +33,50 @@ against your own systems and ask:
 - How long did it take, and who was told?
 - Did the security and infrastructure teams respond the way the playbook says?
 
-By default the tool identifies itself (a Jitera User-Agent on every request), so
-an exercise can be told apart from a real attack and traced. Making the
-simulation realistic enough to truly test detection, while keeping it
-accountable, is our edge — see below.
+By default the tool identifies itself: every request carries a Jitera
+User-Agent, so a team can tell an exercise from a real attack and trace it. The
+catch is that a scan which announces itself only tests whether you catch scans.
+The next section is about running a realistic exercise without losing that
+accountability.
 
 ## Our advantage: realistic, human-like simulation
 
-A detection test is only real if the simulated attacker is realistic. Tools
-that announce themselves as scanners — predictable requests, obvious
-signatures — tell you whether your systems catch crude automation. They don't
-tell you whether your team would catch a capable attacker.
+You can only test detection against an attacker worth detecting. A scanner with
+predictable requests and an obvious signature tells you one thing: whether you
+catch obvious scanners. It says nothing about whether your team would notice
+someone skilled.
 
-Our edge is that the tool works through real browsers and a team of agents that
-behave like people: navigating, signing in, filling forms and chaining actions
-across many concurrent sessions, the way real users — and real attackers — do.
-That realism is what makes the defense rehearsal meaningful: it exercises
-detection and response against an adversary that looks like the ones that
-matter, not a checklist scanner.
+So the tool doesn't behave like a scanner. It drives real browsers with a team
+of agents that act like people: they navigate, sign in, fill forms, and chain
+actions together across many sessions at once, the way a real user does, and the
+way a real attacker does. That is what makes a defense rehearsal worth running.
+You are testing against something that looks like the threats you actually face.
 
-This matters more over time. Attackers increasingly use AI to blend into normal
-activity and slip past simple detection. A team can't wait for a real breach to
-learn whether it would notice. A realistic, AI-driven adversary you run
-yourself — on your own systems, scope and schedule — is how you rehearse for
-that now.
+This gets more important every year. Attackers already use AI to blend into
+ordinary traffic and slip past simple rules. You don't want to find out during a
+real breach whether your team would have caught it. Running a realistic,
+AI-driven adversary yourself, on your own systems and your own schedule, is how
+you practice for that before it counts.
 
 ### Realistic, and still accountable
 
-Realism and authorization sit on different channels, so one never weakens the
-other:
+Realism and authorization don't have to fight. They live on separate channels:
 
 - **Scope and permission come first.** Only authorized targets, within an
   agreed scope and time window. Realism never widens the scope.
-- **Attribution stays available.** Even when the on-the-wire traffic is
-  deliberately unremarkable — so it genuinely tests detection — the exercise is
-  attributable out of band: a known source, a deconfliction contact, markers an
-  investigator can confirm. A simulated attack is always traceable to an
-  authorized exercise; just not necessarily in a way that tips off the very
-  detection you're testing.
+- **Attribution stays available.** The traffic can look unremarkable, so it
+  actually tests detection, while the exercise stays traceable another way: a
+  known source address, a deconfliction contact, markers an investigator can
+  confirm. A simulated attack is always traceable back to an authorized test. It
+  just doesn't have to wave a flag at the detection you're trying to measure.
 
-This refines our branding decision. By default the tool identifies itself in
-its traffic, which suits the first purpose (find and fix vulnerabilities) and
-lets defenders allowlist it. A detection exercise is the exception, where a
-loud marker would give the game away; that mode, with its out-of-band
-attribution, is a **planned capability** — see the [plans](../plans/README.md).
-Today the tool always sends a Jitera User-Agent.
+This changes how we think about the branded User-Agent. For finding and fixing
+vulnerabilities, identifying ourselves is the right call: a team can allowlist
+us and see exactly what we did. A detection exercise is the one case where that
+marker gets in the way, so it would run without it and rely on out-of-band
+attribution instead. That mode is a **planned capability**, not something the
+tool does yet — see the [plans](../plans/README.md). Today every scan still
+sends a Jitera User-Agent.
 
 ## Who it's for
 
