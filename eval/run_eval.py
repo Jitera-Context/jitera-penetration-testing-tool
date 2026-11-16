@@ -1,0 +1,135 @@
+"""Run (or score) one Juice Shop eval and gate on category coverage.
+
+    python -m eval.run_eval                     # scan the baseline target, score, gate
+    python -m eval.run_eval --from-run DIR       # score a finished run, no scan
+    python -m eval.run_eval --target URL --scan-mode quick --max-budget 5
+
+Exit codes: 0 pass, 1 regression (below the gate), 2 usage/setup error,
+3 target unreachable (not a regression — the shared demo is often down).
+"""
+
+# CLI: printing results is this module's job.
+# ruff: noqa: T201
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import tempfile
+from pathlib import Path
+from typing import Any
+
+from eval._lib import Baseline, load_findings, record_result, utc_stamp
+from eval.harness import check_reachable, run_scan
+from eval.score import Score, score_findings
+
+
+EXIT_OK = 0
+EXIT_REGRESSION = 1
+EXIT_USAGE = 2
+EXIT_UNREACHABLE = 3
+
+
+def _render(baseline: Baseline, score: Score, min_categories: int) -> str:
+    lines = [
+        f"Target        {baseline.target}",
+        f"Findings      {score.total_findings}",
+        f"Coverage      {score.covered}/{score.total} categories  (gate: >= {min_categories})",
+        "",
+    ]
+    by_id = {r.category.id: r for r in score.results}
+    for category in baseline.categories:
+        result = by_id[category.id]
+        mark = "PASS" if result.found else "miss"
+        lines.append(f"  [{mark}] {category.id:<26} {category.title}")
+    if score.unmapped:
+        lines.append("")
+        lines.append(f"  {len(score.unmapped)} finding(s) mapped to no category")
+    return "\n".join(lines)
+
+
+def _score_run(run_dir: Path, baseline: Baseline) -> Score:
+    return score_findings(load_findings(run_dir), list(baseline.categories))
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="eval.run_eval", description=__doc__)
+    parser.add_argument("--baseline", default="juice-shop")
+    parser.add_argument("--from-run", type=Path, help="score an existing run dir; no scan")
+    parser.add_argument("--target", help="override the baseline target URL")
+    parser.add_argument("--scan-mode", help="override quick|standard|deep")
+    parser.add_argument("--max-budget", type=float, help="override USD budget")
+    parser.add_argument("--min-categories", type=int, help="override the pass gate")
+    parser.add_argument("--instruction-file", help="extra instructions for the agent")
+    parser.add_argument("--json", action="store_true", help="print the result as JSON")
+    args = parser.parse_args(argv)
+
+    try:
+        baseline = Baseline.load(args.baseline)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"eval: {exc}", file=sys.stderr)
+        return EXIT_USAGE
+
+    target = args.target or baseline.target
+    scan_mode = args.scan_mode or baseline.scan_mode
+    budget = args.max_budget if args.max_budget is not None else baseline.max_budget_usd
+    min_categories = args.min_categories or baseline.min_categories
+
+    if args.from_run:
+        try:
+            score = _score_run(args.from_run, baseline)
+        except (FileNotFoundError, TypeError) as exc:
+            print(f"eval: {exc}", file=sys.stderr)
+            return EXIT_USAGE
+        source: dict[str, Any] = {"from_run": str(args.from_run)}
+    else:
+        ok, detail = check_reachable(target)
+        if not ok:
+            print(f"eval: target not reachable ({detail}): {target}", file=sys.stderr)
+            print(
+                "The shared Juice Shop demo is often down; try again or use Docker.",
+                file=sys.stderr,
+            )
+            return EXIT_UNREACHABLE
+        with tempfile.TemporaryDirectory(prefix="jitera-eval-") as tmp:
+            run = run_scan(
+                target=target,
+                scan_mode=scan_mode,
+                max_budget_usd=budget,
+                workdir=Path(tmp),
+                instruction_file=args.instruction_file,
+            )
+            if run.run_dir is None:
+                print("eval: the scan produced no run directory", file=sys.stderr)
+                print(run.stderr[-2000:], file=sys.stderr)
+                return EXIT_USAGE
+            score = _score_run(run.run_dir, baseline)
+        source = {"scan_exit_code": run.exit_code, "scan_mode": scan_mode, "budget": budget}
+
+    passed = score.passed(min_categories)
+    record = {
+        "timestamp": utc_stamp(),
+        "baseline": baseline.name,
+        "target": target,
+        "min_categories": min_categories,
+        "passed": passed,
+        **source,
+        **score.to_dict(),
+    }
+    out = record_result(record)
+
+    if args.json:
+        print(json.dumps(record, indent=2, sort_keys=True))
+    else:
+        print(_render(baseline, score, min_categories))
+        print()
+        verdict = "PASS" if passed else "REGRESSION"
+        print(f"{verdict}: {score.covered}/{score.total} categories, gate >= {min_categories}")
+        print(f"recorded: {out}")
+
+    return EXIT_OK if passed else EXIT_REGRESSION
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

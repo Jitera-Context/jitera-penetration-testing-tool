@@ -1,0 +1,22 @@
+Title: Add eval/gepa/__init__.py
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/eval/gepa/__init__.py b/eval/gepa/__init__.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..249681c015ab9b6b1de97fe0e50ff81c22f31b72
+--- /dev/null
++++ b/eval/gepa/__init__.py
+@@ -0,0 +1,12 @@
++"""GEPA optimization of the agent's eval instructions.
++
++GEPA (reflective Pareto prompt evolution) proposes variations of an instruction
++block, scores each by running the eval, reflects on what categories were missed,
++and keeps the Pareto-best. It optimizes a reusable instruction, never anything
++target-specific.
++
++The ``gepa`` package is not a runtime dependency of the product. Install it only
++for an optimization run:
++
++    uv run --frozen --with gepa==0.1.4 python -m eval.gepa.optimize --dry-run
++"""

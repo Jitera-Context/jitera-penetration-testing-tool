@@ -1,0 +1,13 @@
+Title: Add eval/results/.gitignore
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/eval/results/.gitignore b/eval/results/.gitignore
+new file mode 100644
+index 0000000000000000000000000000000000000000..081af3496bc2317f093b8cfd699eacdf1d6124b5
+--- /dev/null
++++ b/eval/results/.gitignore
+@@ -0,0 +1,3 @@
++# Run results are machine-local history, not committed.
++*
++!.gitignore

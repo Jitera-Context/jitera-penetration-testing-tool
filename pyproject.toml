@@ -73,6 +73,8 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+# Jitera fork: make the top-level eval/ package importable from tests/jitera.
+pythonpath = ["."]
 
 [tool.uv]
 # Supply-chain cooldown: resolve only distributions that have been on the index for
