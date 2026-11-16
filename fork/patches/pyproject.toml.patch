@@ -1,16 +1,16 @@
-Title: Add the `jitera` command
-Why: Engineers and the wheel start Jitera through strix.jitera.bootstrap.
+Title: Add the `jitera-pentest` command
+Why: Engineers and the wheel start Jitera through strix.jitera.bootstrap. Not `jitera`: that is the Jitera Gateway CLI.
 Upstream-PR: none
 
 diff --git a/pyproject.toml b/pyproject.toml
-index 731da7791bc80090f65861d10dc495f4dbf31ac9..64ffa74f32652f083377882bf72524204cd6b823 100644
+index 731da7791bc80090f65861d10dc495f4dbf31ac9..dfc05808e4bb8ced62d7090882ddbb431428d882 100644
 --- a/pyproject.toml
 +++ b/pyproject.toml
 @@ -56,6 +56,7 @@ dependencies = [
  
  [project.scripts]
  strix = "strix.interface.main:main"
-+jitera = "strix.jitera.bootstrap:main"
++jitera-pentest = "strix.jitera.bootstrap:main"
  
  [dependency-groups]
  dev = [

@@ -180,7 +180,7 @@ footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--lin
 ├── strix/                             <span class="n">upstream source, edited directly</span>
 │   ├── <span class="f">jitera/</span>                        <span class="n">our code (new files)</span>                 <span class="ok">✓</span>
 │   │   ├── <span class="f">brand.py</span>                   <span class="n">brand values</span>
-│   │   ├── <span class="f">bootstrap.py</span>               <span class="n">`jitera` command: defaults, hooks, then strix</span>
+│   │   ├── <span class="f">bootstrap.py</span>               <span class="n">`jitera-pentest`: defaults, hooks, then strix</span>
 │   │   ├── <span class="f">__main__.py</span>                <span class="n">binary entry</span>
 │   │   ├── <span class="f">tools/</span>  <span class="f">skills/</span>  <span class="f">commands/</span>
 │   ├── config/<span class="f">models.py</span>               <span class="n">edited: LLM attribution from brand</span>
@@ -190,7 +190,7 @@ footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--lin
 │   ├── <span class="f">jitera/</span>                        <span class="n">our tests (new files)</span>                <span class="ok">✓</span>
 │   └── <span class="u">…</span>                              <span class="n">upstream tests, unchanged</span>
 ├── <span class="f">NOTICE</span>                             <span class="n">new: credits Strix (Apache-2.0)</span>      <span class="ok">✓</span>
-├── <span class="f">pyproject.toml</span>                     <span class="n">edited: +1 line, `jitera` command</span>    <span class="ok">✓</span>
+├── <span class="f">pyproject.toml</span>                     <span class="n">edited: +1 line, `jitera-pentest`</span>    <span class="ok">✓</span>
 ├── <span class="f">strix.spec</span>                         <span class="n">edited: binary starts from jitera</span>    <span class="ok">✓</span>
 ├── <span class="u">containers/  docs/  skills/  scripts/  Makefile  uv.lock  README.md  …</span>
 │
@@ -239,7 +239,7 @@ strix/jitera/skills/vulnerabilities/idor.md</code></pre>
 <pre><code>def run(argv: list[str]) -&gt; int:
     ...
     return 0
-<span class="c"># register in COMMANDS → `jitera &lt;name&gt;`</span></code></pre>
+<span class="c"># register in COMMANDS → `jitera-pentest &lt;name&gt;`</span></code></pre>
       </div>
       <div class="figure">
         <span class="label">Edit an upstream file to use the brand</span>
@@ -248,7 +248,7 @@ strix/jitera/skills/vulnerabilities/idor.md</code></pre>
 TOOL_NAME = brand.current().name</code></pre>
       </div>
     </div>
-    <p class="muted">Brand values live in <code>strix/jitera/brand.py</code>. Upstream tests run with the Strix profile. The <code>jitera</code> command switches to ours.</p>
+    <p class="muted">Brand values live in <code>strix/jitera/brand.py</code>. Upstream tests run with the Strix profile. The <code>jitera-pentest</code> command switches to ours.</p>
   </section>
 
   <!-- 3 -->
@@ -323,7 +323,7 @@ TOOL_NAME = brand.current().name</code></pre>
         <table style="min-width:0">
           <thead><tr><th>Step</th><th>Command</th></tr></thead>
           <tbody>
-            <tr><td>1. Edit, run</td><td><code>uv run --frozen jitera …</code></td></tr>
+            <tr><td>1. Edit, run</td><td><code>uv run --frozen jitera-pentest …</code></td></tr>
             <tr><td>2. Track new files</td><td><code>git add &lt;new files&gt;</code></td></tr>
             <tr><td>3. Test</td><td><code>fork/dev test</code></td></tr>
             <tr><td>4. Record the changes</td><td><code>fork/dev save</code></td></tr>
@@ -559,7 +559,7 @@ diff --git a/strix/report/sarif.py b/strix/report/sarif.py
 
   <footer>
     <span>Tested 2026-11-16 in a throwaway copy: a clean sync of 3 upstream commits; a sync where upstream changed our SARIF line and added its own NOTICE, fixed and continued; and <code>--abort</code>.</span>
-    <span>Brand: <b>Jitera</b>, command <code>jitera</code>, User-Agent <code>Jitera/&lt;version&gt;</code> for our own calls and <code>Mozilla/5.0 (compatible; Jitera/&lt;version&gt;; +https://jitera.com)</code> for scan traffic, all from <code>strix/jitera/brand.py</code>.</span>
+    <span>Brand: <b>Jitera</b>, command <code>jitera-pentest</code> (<code>jitera</code> is the Jitera Gateway CLI), User-Agent <code>Jitera/&lt;version&gt;</code> for our own calls and <code>Mozilla/5.0 (compatible; Jitera/&lt;version&gt;; +https://jitera.com)</code> for scan traffic, all from <code>strix/jitera/brand.py</code>.</span>
   </footer>
 </main>
 </body>

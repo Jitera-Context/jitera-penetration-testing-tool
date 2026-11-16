@@ -3,7 +3,7 @@ Why: Upstream's README is Strix's product page. Listed in fork/OWNED, so sync ke
 Upstream-PR: none
 
 diff --git a/README.md b/README.md
-index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..c97245e548813139a3c2512e4bfb41fa1872b0f8 100644
+index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..a51dbd7e30a538ea641c711188988d355c93115f 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,393 +1,146 @@
@@ -119,7 +119,7 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..c97245e548813139a3c2512e4bfb41fa
 +cd jitera-penetration-testing-tool
 +uv sync --frozen
 +source .venv/bin/activate
-+jitera about
++jitera-pentest about
  ```
  
 -> [!NOTE]
@@ -172,12 +172,12 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..c97245e548813139a3c2512e4bfb41fa
 -## 🤖 Use Strix from Your Coding Agent
 -
 -Strix is agent-ready. Give Claude Code, Cursor, Codex, or any [SKILL.md-compatible](https://agentskills.io) agent the ability to run pentests, fix findings, and set up CI scanning:
-+export JITERA_LLM="openrouter/z-ai/glm-5.3"   # any LiteLLM model id
++export JITERA_PENTEST_LLM="openrouter/z-ai/glm-5.3"   # any LiteLLM model id
 +export LLM_API_KEY="your-api-key"
  
 -```bash
 -npx skills add usestrix/strix
-+jitera --target https://your-app.com
++jitera-pentest --target https://your-app.com
  ```
  
 -This installs nine skills for running pentests, fixing findings, and CI scanning, against code, web apps, APIs, and the OWASP Top 10. Agents can use the local CLI or the managed cloud with the same engine.
@@ -212,7 +212,7 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..c97245e548813139a3c2512e4bfb41fa
 -- **Authentication & Session** - JWT attacks, session fixation, credential stuffing vectors
 -- **Infrastructure & Cloud** - Misconfigurations, exposed services, cloud security issues
 -- **API Security** - Broken authentication, mass assignment, rate limiting bypass
-+Use `jitera`, not `strix`. The `strix` command is still installed, but it runs upstream's branding and telemetry.
++The command is `jitera-pentest` because `jitera` is the Jitera Gateway CLI. Use `jitera-pentest`, not `strix`: the `strix` command is still installed, but it runs upstream's branding and telemetry.
  
 -### Graph of Agents (Multi-Agent Pentesting)
 -
@@ -242,22 +242,22 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..c97245e548813139a3c2512e4bfb41fa
 -
 -The dashboard shows the findings, a live map of the agent team, and past runs. Nothing leaves your machine, and the UI ships prebuilt. `strix view` binds to `127.0.0.1` and prints a tokened link that grants access to the run, so share it carefully.
 +# Local code, a GitHub repository, or a live app
-+jitera --target ./app-directory
-+jitera --target https://github.com/org/repo
-+jitera --target https://your-app.com
++jitera-pentest --target ./app-directory
++jitera-pentest --target https://github.com/org/repo
++jitera-pentest --target https://your-app.com
  
 -See the [viewer documentation](https://docs.strix.ai/usage/viewer) for the options and for reaching the viewer from another machine.
 +# An API contract plus the live base URL
-+jitera --target ./openapi.yaml --target https://api.your-app.com
++jitera-pentest --target ./openapi.yaml --target https://api.your-app.com
  
 ----
 +# Authenticated (grey-box) testing
-+jitera --target https://your-app.com --instruction "Log in as user:pass before testing"
++jitera-pentest --target https://your-app.com --instruction "Log in as user:pass before testing"
  
 -## Usage Examples
 +# Several targets, or a file of targets
-+jitera -t https://github.com/org/app -t https://your-app.com
-+jitera --target-list ./targets.txt
++jitera-pentest -t https://github.com/org/app -t https://your-app.com
++jitera-pentest --target-list ./targets.txt
  
 -### Basic Usage
 -
@@ -271,7 +271,7 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..c97245e548813139a3c2512e4bfb41fa
 -# Black-box web application assessment
 -strix --target https://your-app.com
 +# Headless, for CI and servers: quick scan, capped spend, fail on high or worse
-+jitera -n --target ./ --scan-mode quick --max-budget 10 --fail-on high
++jitera-pentest -n --target ./ --scan-mode quick --max-budget 10 --fail-on high
  ```
  
 -### API Testing (OpenAPI / Swagger / Postman)
@@ -309,8 +309,8 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..c97245e548813139a3c2512e4bfb41fa
 -
 -# Targets from a file, one target per non-empty, non-comment line
 -strix --target-list ./targets.txt
-+jitera view                 # most recent run
-+jitera view my-run-name     # a specific run
++jitera-pentest view                # most recent run
++jitera-pentest view my-run-name    # a specific run
  ```
  
 -See the [CLI reference](https://docs.strix.ai/usage/cli) for every option, including scan modes, diff scope, instruction files, and budgets.
@@ -322,27 +322,27 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..c97245e548813139a3c2512e4bfb41fa
  
  ```bash
 -strix -n --target https://your-app.com
-+jitera about                    # version and attribution
-+jitera auth login chatgpt       # run on a ChatGPT subscription instead of an API key
-+jitera --resume my-run-name     # continue a stopped scan
-+jitera completions zsh          # shell completion (bash and fish too)
++jitera-pentest about                 # version and attribution
++jitera-pentest auth login chatgpt    # run on a ChatGPT subscription instead of an API key
++jitera-pentest --resume my-run-name  # continue a stopped scan
++jitera-pentest completions zsh       # shell completion (bash and fish too)
  ```
  
 -### CI/CD (GitHub Actions)
 +## Configuration
  
 -Strix can be added to your pipeline to run a security test on pull requests with a lightweight GitHub Actions workflow:
-+Every upstream `STRIX_*` setting works. You can also write it as `JITERA_*`, and the `jitera` command copies it to the `STRIX_*` name.
++Every upstream `STRIX_*` setting works. You can also write it as `JITERA_PENTEST_*`, and the `jitera-pentest` command copies it to the `STRIX_*` name.
  
 -```yaml
 -name: strix-penetration-test
 +| Variable | Purpose |
 +|---|---|
-+| `JITERA_LLM` | Model id, for example `openrouter/z-ai/glm-5.3` |
++| `JITERA_PENTEST_LLM` | Model id, for example `openrouter/z-ai/glm-5.3` |
 +| `LLM_API_KEY` | API key for that provider |
 +| `LLM_API_BASE` | Base URL for a local model (Ollama, LM Studio) |
 +| `PERPLEXITY_API_KEY` or `EXA_API_KEY` | Optional web search for the agents |
-+| `JITERA_IMAGE` | Sandbox image. Default: upstream's `ghcr.io/usestrix/strix-sandbox:1.4.1` |
++| `JITERA_PENTEST_IMAGE` | Sandbox image. Default: upstream's `ghcr.io/usestrix/strix-sandbox:1.4.1` |
  
 -on:
 -  pull_request:
@@ -361,7 +361,7 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..c97245e548813139a3c2512e4bfb41fa
 -        run: curl -sSL https://strix.ai/install | bash
 +| | Strix | Jitera |
 +|---|---|---|
-+| Command | `strix` | `jitera` |
++| Command | `strix` | `jitera-pentest` |
 +| User-Agent of our own calls | `python-requests/…` | `Jitera/<version> (+https://jitera.com)` |
 +| User-Agent of scan traffic | A generic Chrome browser | `Mozilla/5.0 (compatible; Jitera/<version>; +https://jitera.com)` on proxy replays, the sandbox browser, and requests the agent writes |
 +| Telemetry | On, sent to Strix | Off by default |

@@ -1,4 +1,4 @@
-"""Entry point of the ``jitera`` command.
+"""Entry point of the ``jitera-pentest`` command.
 
 Order matters: activate the Jitera brand and environment defaults first, then
 register our tools and skills with upstream's hooks, then hand over to the
@@ -49,11 +49,17 @@ def brand_environment(profile: brand.Brand) -> dict[str, str]:
     }
 
 
-def prepare_environment(env: MutableMapping[str, str]) -> None:
-    """Copy JITERA_* variables to STRIX_* and apply our defaults."""
-    for key in [k for k in env if k.startswith("JITERA_")]:
-        env.setdefault("STRIX_" + key.removeprefix("JITERA_"), env[key])
-    for key, value in {**ENV_DEFAULTS, **brand_environment(brand.current())}.items():
+def prepare_environment(env: MutableMapping[str, str], profile: brand.Brand | None = None) -> None:
+    """Copy our prefixed settings (JITERA_PENTEST_*) to STRIX_* and apply our defaults.
+
+    Only our own prefix is copied, never a bare JITERA_*, which other Jitera
+    tools such as the Jitera Gateway use.
+    """
+    profile = profile or brand.current()
+    if profile.env_prefix != "STRIX_":
+        for key in [k for k in env if k.startswith(profile.env_prefix)]:
+            env.setdefault("STRIX_" + key.removeprefix(profile.env_prefix), env[key])
+    for key, value in {**ENV_DEFAULTS, **brand_environment(profile)}.items():
         env.setdefault(key, value)
 
 

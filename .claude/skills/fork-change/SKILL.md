@@ -28,7 +28,7 @@ Prefer `strix/jitera/` plus upstream's hooks. Small edits to upstream files mean
 
 ## Loop
 
-1. Edit files. Run with `uv run --frozen jitera ...`.
+1. Edit files. Run with `uv run --frozen jitera-pentest ...`.
 2. `git add` any new file. `fork/dev save` only records tracked files, and `fork/dev status` lists untracked ones.
 3. `fork/dev test`
 4. `fork/dev save`: writes, updates or removes patches and stages them.
@@ -41,7 +41,7 @@ If a patch file conflicts while merging branches, resolve the code, then run `fo
 ## Rules
 
 - To use brand values in an upstream file, put `from strix.jitera import brand  # noqa: E402  (Jitera fork)` on its own line right above the first use. Then read `brand.current().name` etc.
-- Upstream tests run with the `UPSTREAM` profile; only the `jitera` command activates `JITERA`. Keep upstream tests green without editing them.
+- Upstream tests run with the `UPSTREAM` profile; only the `jitera-pentest` command activates `JITERA`. Keep upstream tests green without editing them.
 - Never rename the `strix` package, `STRIX_*` env vars, `~/.strix`, the Go module path or class names.
 - Traffic sent to scan targets identifies as Jitera: use `brand.current().scan_user_agent(<upstream default>)`.
   The agent prompt tells the agent to send it too. Never add any other identifying marker.

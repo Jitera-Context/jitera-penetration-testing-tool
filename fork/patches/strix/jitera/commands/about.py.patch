@@ -4,11 +4,11 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/commands/about.py b/strix/jitera/commands/about.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..0f2846daab16a379b1eba623b7ea35a0687a98e7
+index 0000000000000000000000000000000000000000..4626ae5e30f57d59d2c51292f50d8565cb721398
 --- /dev/null
 +++ b/strix/jitera/commands/about.py
 @@ -0,0 +1,21 @@
-+"""``jitera about``: product name, version, and what it is built on."""
++"""``jitera-pentest about``: product name, version, and what it is built on."""
 +
 +from __future__ import annotations
 +
@@ -20,7 +20,7 @@ index 0000000000000000000000000000000000000000..0f2846daab16a379b1eba623b7ea35a0
 +
 +def run(argv: list[str]) -> int:
 +    if argv:
-+        sys.stderr.write("usage: jitera about\n")
++        sys.stderr.write(f"usage: {brand.current().command} about\n")
 +        return 2
 +    profile = brand.current()
 +    sys.stdout.write(

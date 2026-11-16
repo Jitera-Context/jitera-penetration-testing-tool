@@ -4,14 +4,14 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_patches.py b/tests/jitera/test_patches.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..6fec8f2c89d8d80daa4ee04a4860bdb00f7baa0e
+index 0000000000000000000000000000000000000000..c0346a0da3caf6a0588af1fc97413f592196bc23
 --- /dev/null
 +++ b/tests/jitera/test_patches.py
 @@ -0,0 +1,131 @@
 +"""The edited upstream code follows the active brand profile.
 +
 +Each check runs in a fresh interpreter so module-level values are computed under
-+the profile we choose, the way the ``jitera`` command runs, without touching
++the profile we choose, the way the ``jitera-pentest`` command runs, without touching
 +this test process.
 +"""
 +
@@ -134,8 +134,8 @@ index 0000000000000000000000000000000000000000..6fec8f2c89d8d80daa4ee04a4860bdb0
 +        check=False,
 +        timeout=120,
 +    )
-+    assert "jitera --target https://example.com" in result.stdout
++    assert "jitera-pentest --target https://example.com" in result.stdout
 +    assert "Strix Cloud" not in result.stdout
 +    assert "Jitera Multi-Agent" in result.stdout
 +    assert "strix cloud" not in result.stdout
-+    assert "jitera view [RUN]" in result.stdout
++    assert "jitera-pentest view [RUN]" in result.stdout

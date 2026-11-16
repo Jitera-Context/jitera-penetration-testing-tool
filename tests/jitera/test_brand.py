@@ -55,4 +55,6 @@ def test_subcommand_help_points_at_our_command_without_cloud() -> None:
     text = "Additional commands:\n  strix cloud ...  Cloud\n  strix view [RUN]  View\n"
     assert brand.rebrand_commands(text) == text
     brand.activate(brand.JITERA)
-    assert brand.rebrand_commands(text) == "Additional commands:\n  jitera view [RUN]  View\n"
+    assert (
+        brand.rebrand_commands(text) == "Additional commands:\n  jitera-pentest view [RUN]  View\n"
+    )

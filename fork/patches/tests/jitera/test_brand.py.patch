@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_brand.py b/tests/jitera/test_brand.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..4129902ac4b159926a49ab01fe2376f746e18e32
+index 0000000000000000000000000000000000000000..1f4ffbf1593d355d6c080b479ec3fabc65711967
 --- /dev/null
 +++ b/tests/jitera/test_brand.py
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,60 @@
 +from __future__ import annotations
 +
 +from strix.jitera import bootstrap, brand
@@ -65,4 +65,6 @@ index 0000000000000000000000000000000000000000..4129902ac4b159926a49ab01fe2376f7
 +    text = "Additional commands:\n  strix cloud ...  Cloud\n  strix view [RUN]  View\n"
 +    assert brand.rebrand_commands(text) == text
 +    brand.activate(brand.JITERA)
-+    assert brand.rebrand_commands(text) == "Additional commands:\n  jitera view [RUN]  View\n"
++    assert (
++        brand.rebrand_commands(text) == "Additional commands:\n  jitera-pentest view [RUN]  View\n"
++    )

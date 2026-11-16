@@ -1,7 +1,7 @@
 """Brand values: the only place product names, links and User-Agent text live.
 
 Upstream files read the active profile through ``current()``. The profile is
-``UPSTREAM`` unless the ``jitera`` command activates ``JITERA``, so upstream's
+``UPSTREAM`` unless the ``jitera-pentest`` command activates ``JITERA``, so upstream's
 own tests keep seeing the Strix values.
 
 This module imports nothing from ``strix`` so it can be activated before any
@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 class Brand:
     name: str  # product name shown to people
     command: str  # CLI command
+    env_prefix: str  # our settings prefix, copied to STRIX_* by the command
     homepage: str
     docs_url: str
     release_repo: str  # GitHub owner/repo that publishes releases
@@ -64,6 +65,7 @@ def package_version() -> str:
 UPSTREAM = Brand(
     name="Strix",
     command="strix",
+    env_prefix="STRIX_",
     homepage="https://strix.ai",
     docs_url="https://docs.strix.ai",
     release_repo="usestrix/strix",
@@ -75,7 +77,8 @@ UPSTREAM = Brand(
 
 JITERA = Brand(
     name="Jitera",
-    command="jitera",
+    command="jitera-pentest",  # `jitera` is the Jitera Gateway CLI
+    env_prefix="JITERA_PENTEST_",
     homepage="https://jitera.com",
     docs_url="https://jitera.com",
     release_repo="Jitera-Context/jitera-penetration-testing-tool",
@@ -120,7 +123,7 @@ def rebrand_commands(text: str) -> str:
     """Point upstream's ``strix <subcommand>`` help lines at our command.
 
     Lines for Strix Cloud are dropped when the profile has no upstream promo,
-    because the ``jitera`` command blocks ``cloud``.
+    because the ``jitera-pentest`` command blocks ``cloud``.
     """
     profile = current()
     if profile is UPSTREAM:
