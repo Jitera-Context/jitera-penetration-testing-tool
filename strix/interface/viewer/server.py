@@ -144,9 +144,12 @@ class _ViewerState:
         self.cookie_name = SESSION_COOKIE_PREFIX
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def _make_handler(state: _ViewerState) -> type[BaseHTTPRequestHandler]:
     class ViewerHandler(BaseHTTPRequestHandler):
-        server_version = "StrixViewer/1.0"
+        server_version = f"{brand.current().user_agent_token}Viewer/1.0"
 
         def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
             logger.debug("viewer %s - %s", self.address_string(), format % args)

@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/bootstrap.py b/strix/jitera/bootstrap.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..2b8941e3142996145761b297d9662a61d6ed9cd3
+index 0000000000000000000000000000000000000000..15dc0e491b93241e446b6e09622b67f5bf25aef2
 --- /dev/null
 +++ b/strix/jitera/bootstrap.py
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,115 @@
 +"""Entry point of the ``jitera`` command.
 +
 +Order matters: activate the Jitera brand and environment defaults first, then
@@ -24,9 +24,9 @@ index 0000000000000000000000000000000000000000..2b8941e3142996145761b297d9662a61
 +
 +import os
 +import sys
-+from importlib.metadata import PackageNotFoundError, version
 +from pathlib import Path
 +from typing import TYPE_CHECKING
++from urllib.parse import urlparse
 +
 +from strix.jitera import brand
 +
@@ -50,11 +50,20 @@ index 0000000000000000000000000000000000000000..2b8941e3142996145761b297d9662a61
 +}
 +
 +
++def brand_environment(profile: brand.Brand) -> dict[str, str]:
++    """Brand values for the Go terminal UI, which inherits this environment."""
++    return {
++        "STRIX_BRAND_NAME": profile.name,
++        "STRIX_BRAND_URL": urlparse(profile.homepage).netloc or profile.homepage,
++        "STRIX_BRAND_TAGLINE": profile.tagline,
++    }
++
++
 +def prepare_environment(env: MutableMapping[str, str]) -> None:
 +    """Copy JITERA_* variables to STRIX_* and apply our defaults."""
 +    for key in [k for k in env if k.startswith("JITERA_")]:
 +        env.setdefault("STRIX_" + key.removeprefix("JITERA_"), env[key])
-+    for key, value in ENV_DEFAULTS.items():
++    for key, value in {**ENV_DEFAULTS, **brand_environment(brand.current())}.items():
 +        env.setdefault(key, value)
 +
 +
@@ -66,13 +75,6 @@ index 0000000000000000000000000000000000000000..2b8941e3142996145761b297d9662a61
 +    return None
 +
 +
-+def package_version() -> str:
-+    try:
-+        return version("strix-agent")
-+    except PackageNotFoundError:
-+        return "dev"
-+
-+
 +def install_user_agent() -> None:
 +    """Name our product on host-side HTTP calls made with ``requests``.
 +
@@ -81,7 +83,7 @@ index 0000000000000000000000000000000000000000..2b8941e3142996145761b297d9662a61
 +    """
 +    import requests.utils
 +
-+    agent = brand.current().user_agent(package_version())
++    agent = brand.current().user_agent()
 +
 +    def _user_agent(name: str = "python-requests") -> str:  # noqa: ARG001
 +        return agent

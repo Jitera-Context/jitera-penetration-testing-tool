@@ -1,0 +1,28 @@
+Title: Add strix/interface/viewer/frontend/src/lib/brand.ts
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/strix/interface/viewer/frontend/src/lib/brand.ts b/strix/interface/viewer/frontend/src/lib/brand.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..72b9351d3599662ffef8c10ac17ce3d93794f3ef
+--- /dev/null
++++ b/strix/interface/viewer/frontend/src/lib/brand.ts
+@@ -0,0 +1,18 @@
++// Brand for the local viewer. It is compiled into the bundle (`make viewer`),
++// so the committed bundle is always the Jitera build.
++export interface Brand {
++  name: string;
++  homepage: string;
++  // One-letter mark shown where upstream shows its logo.
++  mark: string;
++  // Upstream's Strix Cloud services: upsell CTAs, upgrade prompts, the email
++  // report relay and the feedback relay. Off for Jitera: we don't offer them.
++  upstreamCloud: boolean;
++}
++
++export const BRAND: Brand = {
++  name: "Jitera",
++  homepage: "https://jitera.com",
++  mark: "J",
++  upstreamCloud: false,
++};

@@ -11,3 +11,5 @@
 ^strix/jitera/commands/about\.py:.*Built on Strix
 # Our own messages explaining why upstream's cloud and self-update are blocked.
 ^strix/jitera/bootstrap\.py:[0-9]+: +"(cloud|--update)":
+# Upstream's LLM provider list still applies to us; the installer links to it.
+^scripts/install\.sh:[0-9]+:.*llm-providers/overview

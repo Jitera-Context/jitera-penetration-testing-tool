@@ -1,0 +1,26 @@
+Title: Give the agent prompt the scan User-Agent
+Why: The prompt rule below needs the value.
+Upstream-PR: none
+
+diff --git a/strix/agents/prompt.py b/strix/agents/prompt.py
+index 2eb45bf18189129320a62facfc17eb3c4954db1c..0f2b769e3698265160c34f8624e9dc37c5bb5504 100644
+--- a/strix/agents/prompt.py
++++ b/strix/agents/prompt.py
+@@ -75,6 +75,9 @@ def _resolve_skills(
+     return deduped
+ 
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ def render_system_prompt(
+     *,
+     skills: list[str] | None = None,
+@@ -131,6 +134,7 @@ def render_system_prompt(
+         # Skills every agent of this kind loads come first, so siblings share them
+         # as a cached prefix; the ones the caller asked for vary and go after.
+         rendered = env.get_template("system_prompt.jinja").render(
++            scan_user_agent=brand.current().scan_user_agent(""),
+             shared_skill_names=[name for name in skill_content if name in shared],
+             requested_skill_names=[name for name in skill_content if name not in shared],
+             available_skills=get_available_skills(),

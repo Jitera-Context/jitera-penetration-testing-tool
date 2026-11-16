@@ -36,7 +36,8 @@ import {
   type LoadedRun,
   type RunsPayload,
 } from "@/data/serverSource";
-import { SIGNUP_URL, DEMO_URL, ctaUrl, trackCta } from "@/lib/cta";
+import { SIGNUP_URL, DEMO_URL, HOME_URL, ctaUrl, trackCta } from "@/lib/cta";
+import { BRAND } from "@/lib/brand";
 import { runTitle } from "@/lib/target-utils";
 import Sidebar from "@/components/Sidebar";
 import PastRunsView from "@/components/PastRunsView";
@@ -49,7 +50,7 @@ import { ProInlineCta } from "@/components/ProCta";
 export type View = "overview" | "issues" | "agents" | "history" | "email" | "feedback";
 
 const TRUST_BANNER =
-  "Your findings stay on your machine. They're rendered here locally in your browser and never uploaded or stored by Strix.";
+  `Your findings stay on your machine. They're rendered here locally in your browser and never uploaded or stored by ${BRAND.name}.`;
 
 const SEVERITY_ORDER: VulnerabilitySeverity[] = ["critical", "high", "medium", "low"];
 const POLL_MS = 500;
@@ -290,15 +291,21 @@ export default function App() {
         <div className="border-b border-[#222]">
           <div className="max-w-[88rem] mx-auto px-3 sm:px-6 py-4 flex items-center gap-1.5">
             <a
-              href={ctaUrl("https://app.strix.ai", "logo")}
+              href={ctaUrl(HOME_URL, "logo")}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackCta("logo", "topbar")}
               className="flex items-center gap-1.5 opacity-90 transition-opacity hover:opacity-100 lg:hidden"
-              title="Open Strix Cloud"
+              title={BRAND.upstreamCloud ? "Open Strix Cloud" : BRAND.name}
             >
-              <img src="./logo.png" alt="Strix" className="w-10 h-8 object-cover" />
-              <div className="text-base text-white font-medium tracking-tight">Strix</div>
+              {BRAND.upstreamCloud ? (
+                <img src="./logo.png" alt="Strix" className="w-10 h-8 object-cover" />
+              ) : (
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-sm font-bold text-black">
+                  {BRAND.mark}
+                </span>
+              )}
+              <div className="text-base text-white font-medium tracking-tight">{BRAND.name}</div>
             </a>
             {run && <LiveIndicator finished={run.finished} />}
             <div className="ml-auto flex items-center gap-3">
@@ -310,6 +317,7 @@ export default function App() {
                   onSelect={selectRun}
                 />
               )}
+              {BRAND.upstreamCloud && (
               <a
                 href={ctaUrl(SIGNUP_URL, "run_in_cloud")}
                 target="_blank"
@@ -320,6 +328,7 @@ export default function App() {
                 Run in the cloud
                 <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
               </a>
+              )}
             </div>
           </div>
         </div>
@@ -701,13 +710,13 @@ function OverviewTab({
 
       {/* Primary CTA: the one primary on Overview. Hidden until the run is
           finished, since a live scan would only email a partial report. */}
-      {finished && (
+      {finished && BRAND.upstreamCloud && (
         <div className="animate-card-in">
           <EmailReportCta onOpenEmail={onOpenEmail} />
         </div>
       )}
 
-      {finished && (
+      {finished && BRAND.upstreamCloud && (
         <div className="animate-card-in rounded-xl border border-[#222] bg-[rgba(255,255,255,0.02)] p-5">
           <p className="text-sm font-semibold text-white">Strix Cloud</p>
           <p className="mt-0.5 text-xs text-[#666]">Run your next pentest in Strix Cloud.</p>
@@ -813,6 +822,7 @@ function AgentsTab({ run, canSteer }: { run: LoadedRun; canSteer: boolean }) {
       {steerable && <ScanPromptComposer agents={agents} />}
 
       {/* Re-run always routes to Strix Cloud. */}
+      {BRAND.upstreamCloud && (
       <div className="rounded-xl border border-[#222] bg-[rgba(255,255,255,0.02)] p-5">
         <p className="text-sm font-semibold text-white">Run this pentest with more depth</p>
         <p className="mt-0.5 text-xs text-[#666]">Run this pentest again in Strix Cloud.</p>
@@ -835,6 +845,7 @@ function AgentsTab({ run, canSteer }: { run: LoadedRun; canSteer: boolean }) {
           />
         </div>
       </div>
+      )}
 
       <AgentDetailModal
         open={selectedAgent !== null}

@@ -1,0 +1,31 @@
+Title: Proxy replays send the Jitera scan User-Agent by default
+Why: Clients identify and allowlist our authorized scan traffic. An explicit User-Agent is kept.
+Upstream-PR: none
+
+diff --git a/strix/tools/proxy/caido_api.py b/strix/tools/proxy/caido_api.py
+index af81b50089febc52e9c8aa08ff77312b42555d11..69442c6a6b6712d987e77a495d24ad367150f3a2 100644
+--- a/strix/tools/proxy/caido_api.py
++++ b/strix/tools/proxy/caido_api.py
+@@ -170,6 +170,9 @@ async def get_request_with_client(
+ _FRAMING_HEADERS = frozenset({"content-length", "transfer-encoding"})
+ 
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ def build_raw_request(
+     *,
+     method: str,
+@@ -191,8 +194,10 @@ def build_raw_request(
+     final_headers.setdefault("Host", parsed.netloc)
+     final_headers.setdefault(
+         "User-Agent",
+-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+-        "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
++        brand.current().scan_user_agent(
++            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
++            "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
++        ),
+     )
+     # Framing headers inherited from the captured request describe the ORIGINAL
+     # body; once the body is modified for replay they are stale. We always send a

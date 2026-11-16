@@ -42,6 +42,7 @@ If a patch file conflicts while merging branches, resolve the code, then run `fo
 - To use brand values in an upstream file, put `from strix.jitera import brand  # noqa: E402  (Jitera fork)` on its own line right above the first use. Then read `brand.current().name` etc.
 - Upstream tests run with the `UPSTREAM` profile; only the `jitera` command activates `JITERA`. Keep upstream tests green without editing them.
 - Never rename the `strix` package, `STRIX_*` env vars, `~/.strix`, the Go module path or class names.
-- Traffic sent to scan targets keeps a neutral User-Agent.
+- Traffic sent to scan targets identifies as Jitera: use `brand.current().scan_user_agent(<upstream default>)`.
+  The agent prompt tells the agent to send it too. Never add any other identifying marker.
 - Always run uv with `--frozen`. An old uv rewrites `uv.lock`; never commit an unexpected `uv.lock` change.
 - Generated files (`strix/interface/viewer/static/`, `uv.lock`) are never patched. Rebuild them (`make viewer`, `uv lock`).

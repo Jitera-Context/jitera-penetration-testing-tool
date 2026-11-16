@@ -1,8 +1,12 @@
+import { BRAND } from "@/lib/brand";
+
 // All upsell / sign-up CTAs route anonymous local-viewer users to the public
 // cloud sign-up. Open in a new tab so the local results stay put.
-export const SIGNUP_URL = "https://app.strix.ai/api/auth/signup";
-export const DEMO_URL = "https://strix.ai/demo";
-export const PRICING_URL = "https://strix.ai/pricing";
+// Jitera fork: without upstream's cloud, every CTA goes to our homepage.
+export const SIGNUP_URL = BRAND.upstreamCloud ? "https://app.strix.ai/api/auth/signup" : BRAND.homepage;
+export const DEMO_URL = BRAND.upstreamCloud ? "https://strix.ai/demo" : BRAND.homepage;
+export const PRICING_URL = BRAND.upstreamCloud ? "https://strix.ai/pricing" : BRAND.homepage;
+export const HOME_URL = BRAND.upstreamCloud ? "https://app.strix.ai" : BRAND.homepage;
 
 // Attribution params appended to every outbound CTA link so the destination
 // analytics can see the local viewer drove the click, with utm_content carrying
@@ -11,6 +15,7 @@ const CTA_PARAMS =
   "ref=oss_viewer&utm_source=oss_viewer&utm_medium=local_viewer&utm_campaign=oss_viewer";
 
 export function ctaUrl(base: string, slug: string): string {
+  if (!BRAND.upstreamCloud) return base;
   const sep = base.includes("?") ? "&" : "?";
   return `${base}${sep}${CTA_PARAMS}&utm_content=${encodeURIComponent(slug)}`;
 }

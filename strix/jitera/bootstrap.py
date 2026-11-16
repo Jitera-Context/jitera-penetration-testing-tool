@@ -14,9 +14,9 @@ from __future__ import annotations
 
 import os
 import sys
-from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 from strix.jitera import brand
 
@@ -40,11 +40,20 @@ BLOCKED: dict[str, str] = {
 }
 
 
+def brand_environment(profile: brand.Brand) -> dict[str, str]:
+    """Brand values for the Go terminal UI, which inherits this environment."""
+    return {
+        "STRIX_BRAND_NAME": profile.name,
+        "STRIX_BRAND_URL": urlparse(profile.homepage).netloc or profile.homepage,
+        "STRIX_BRAND_TAGLINE": profile.tagline,
+    }
+
+
 def prepare_environment(env: MutableMapping[str, str]) -> None:
     """Copy JITERA_* variables to STRIX_* and apply our defaults."""
     for key in [k for k in env if k.startswith("JITERA_")]:
         env.setdefault("STRIX_" + key.removeprefix("JITERA_"), env[key])
-    for key, value in ENV_DEFAULTS.items():
+    for key, value in {**ENV_DEFAULTS, **brand_environment(brand.current())}.items():
         env.setdefault(key, value)
 
 
@@ -56,13 +65,6 @@ def blocked_reason(argv: Sequence[str]) -> str | None:
     return None
 
 
-def package_version() -> str:
-    try:
-        return version("strix-agent")
-    except PackageNotFoundError:
-        return "dev"
-
-
 def install_user_agent() -> None:
     """Name our product on host-side HTTP calls made with ``requests``.
 
@@ -71,7 +73,7 @@ def install_user_agent() -> None:
     """
     import requests.utils
 
-    agent = brand.current().user_agent(package_version())
+    agent = brand.current().user_agent()
 
     def _user_agent(name: str = "python-requests") -> str:  # noqa: ARG001
         return agent

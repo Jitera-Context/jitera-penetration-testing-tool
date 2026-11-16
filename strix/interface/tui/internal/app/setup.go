@@ -156,7 +156,7 @@ func (m *Model) resizeViewport() {
 		// composer gets the short prompt instead.
 		m.input.Placeholder = setupPlaceholder
 		if contentWidth-6 < lipgloss.Width(setupPlaceholder) {
-			m.input.Placeholder = setupPlaceholderShort
+			m.input.Placeholder = Branded(setupPlaceholderShort)
 		}
 		m.syncInputHeight()
 		m.viewport.Width = max(10, contentWidth)
@@ -368,10 +368,10 @@ func (m Model) setupHeaderView(fit setupFit) string {
 			rows = append(rows, "")
 		}
 	case logoCompact:
-		rows = append(rows, center.Render(lipgloss.NewStyle().Bold(true).Foreground(brightGreen).Render("STRIX")))
+		rows = append(rows, center.Render(lipgloss.NewStyle().Bold(true).Foreground(brightGreen).Render(strings.ToUpper(brandName()))))
 	}
 	if fit.tagline {
-		rows = append(rows, center.Render(render.Dim().Render("Open-source AI hackers for your apps")))
+		rows = append(rows, center.Render(render.Dim().Render(brandTagline())))
 	}
 	return strings.Join(rows, "\n")
 }
@@ -388,7 +388,7 @@ const banner = ` ███████╗████████╗████
 // the full block so centering cannot ripple the letterforms out of alignment.
 var wordmarkOnce = sync.OnceValue(func() string {
 	green := lipgloss.NewStyle().Foreground(green)
-	lines := strings.Split(banner, "\n")
+	lines := strings.Split(brandBanner(), "\n")
 	rows := make([]string, len(lines))
 	for index, line := range lines {
 		rows[index] = green.Render(line + strings.Repeat(" ", wordmarkWidth()-lipgloss.Width(line)))
@@ -401,7 +401,7 @@ func wordmark() string { return wordmarkOnce() }
 // wordmarkWidth is the cell width of the widest banner row.
 var wordmarkWidth = sync.OnceValue(func() int {
 	block := 0
-	for _, line := range strings.Split(banner, "\n") {
+	for _, line := range strings.Split(brandBanner(), "\n") {
 		block = max(block, lipgloss.Width(line))
 	}
 	return block

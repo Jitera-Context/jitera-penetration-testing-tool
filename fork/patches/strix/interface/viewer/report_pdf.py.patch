@@ -1,0 +1,56 @@
+Title: PDF report mark, wordmark, title, author and file name follow the brand
+Why: Reports were titled 'Strix Security Report' and named strix-report-*.pdf.
+Upstream-PR: none
+
+diff --git a/strix/interface/viewer/report_pdf.py b/strix/interface/viewer/report_pdf.py
+index b749f2706c31dca08daab2f137934371420cf17a..1348f9c36fdbbbdbcec09622397f30589300b0a7 100644
+--- a/strix/interface/viewer/report_pdf.py
++++ b/strix/interface/viewer/report_pdf.py
+@@ -118,6 +118,9 @@ class _NumberedCanvas(pdfcanvas.Canvas):  # type: ignore[misc]  # reportlab base
+         self.drawCentredString(_PAGE_W / 2, 14 * mm, f"Page {page} of {total}")
+ 
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ class _LogoMark(Flowable):  # type: ignore[misc]  # reportlab base is untyped
+     """The rounded-square Strix mark drawn inline (no raster asset to ship)."""
+ 
+@@ -134,7 +137,7 @@ class _LogoMark(Flowable):  # type: ignore[misc]  # reportlab base is untyped
+         c.roundRect(0, 0, s, s, s * 0.28, fill=1, stroke=0)
+         c.setFillColor(colors.white)
+         c.setFont(_SANS_BOLD, s * 0.56)
+-        c.drawCentredString(s / 2, s * 0.27, "S")
++        c.drawCentredString(s / 2, s * 0.27, brand.current().name[0])
+ 
+ 
+ def _styles() -> dict[str, ParagraphStyle]:
+@@ -357,7 +360,7 @@ def _cover(
+     styles: dict[str, ParagraphStyle], record: dict[str, Any], run_name: str
+ ) -> list[Flowable]:
+     header = Table(
+-        [[_LogoMark(30), Paragraph("Strix", styles["wordmark"])]],
++        [[_LogoMark(30), Paragraph(brand.current().name, styles["wordmark"])]],
+         colWidths=[38, _PAGE_W - 40 * mm - 38],
+     )
+     header.setStyle(
+@@ -645,8 +648,8 @@ def generate_report_pdf(run_dir: Path) -> bytes:
+     doc = SimpleDocTemplate(
+         buffer,
+         pagesize=A4,
+-        title="Strix Security Report",
+-        author="Strix",
++        title=f"{brand.current().name} Security Report",
++        author=brand.current().name,
+         leftMargin=20 * mm,
+         rightMargin=20 * mm,
+         topMargin=22 * mm,
+@@ -693,7 +696,7 @@ def build_encrypted_report(run_dir: Path) -> tuple[bytes, str, str]:
+     pdf_bytes = generate_report_pdf(run_dir)
+     password = generate_password()
+     encrypted = encrypt_pdf(pdf_bytes, password)
+-    filename = f"strix-report-{run_name}.pdf"
++    filename = f"{brand.current().command}-report-{run_name}.pdf"
+     return encrypted, password, filename
+ 
+ 

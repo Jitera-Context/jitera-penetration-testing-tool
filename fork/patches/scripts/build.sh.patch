@@ -1,0 +1,17 @@
+Title: Build script banner says Jitera
+Why: Printed 'Strix Build Script'.
+Upstream-PR: none
+
+diff --git a/scripts/build.sh b/scripts/build.sh
+index 6a6c29e34a54381a6629fafd9c9c2b4f27e46a4f..c715ad0f7276b6b370b754f4d73c7bb4a5295f9a 100755
+--- a/scripts/build.sh
++++ b/scripts/build.sh
+@@ -10,7 +10,7 @@ YELLOW='\033[1;33m'
+ BLUE='\033[0;34m'
+ NC='\033[0m' # No Color
+ 
+-echo -e "${BLUE}🦉 Strix Build Script${NC}"
++echo -e "${BLUE}Jitera Build Script${NC}"
+ echo "================================"
+ 
+ OS="$(uname -s)"

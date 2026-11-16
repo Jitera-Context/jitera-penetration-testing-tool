@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/commands/about.py b/strix/jitera/commands/about.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..7be1573ad83890039616d38087a0bcd2353b147d
+index 0000000000000000000000000000000000000000..0f2846daab16a379b1eba623b7ea35a0687a98e7
 --- /dev/null
 +++ b/strix/jitera/commands/about.py
 @@ -0,0 +1,21 @@
@@ -15,7 +15,7 @@ index 0000000000000000000000000000000000000000..7be1573ad83890039616d38087a0bcd2
 +import sys
 +
 +from strix.jitera import brand
-+from strix.jitera.bootstrap import package_version
++from strix.jitera.brand import package_version
 +
 +
 +def run(argv: list[str]) -> int:

@@ -329,8 +329,12 @@ def _logo_img_tag() -> str:
     return f'<img class="logo" src="data:image/png;base64,{encoded}" alt="" />'
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def _render_callback_html() -> str:
-    return _CALLBACK_HTML.replace("<!--LOGO-->", _logo_img_tag())
+    logo = _logo_img_tag() if brand.current() is brand.UPSTREAM else ""
+    return brand.rebrand(_CALLBACK_HTML).replace("<!--LOGO-->", logo)
 
 
 _CALLBACK_HTML = """<!doctype html>

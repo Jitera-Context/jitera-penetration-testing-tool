@@ -1,0 +1,28 @@
+Title: Missing-TUI error names the brand
+Why: Told users to reinstall Strix.
+Upstream-PR: none
+
+diff --git a/strix/interface/tui/runtime.py b/strix/interface/tui/runtime.py
+index 9688109b050f743c1144318f864f17226b4defef..6c5f0e08a9d5e4b8adad77659c18e05455f9508d 100644
+--- a/strix/interface/tui/runtime.py
++++ b/strix/interface/tui/runtime.py
+@@ -66,6 +66,9 @@ def _open_output_sink() -> TextIO:
+     return Path(os.devnull).open("a", buffering=1, encoding="utf-8")
+ 
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ class GoTuiRuntime:
+     def __init__(self, args: argparse.Namespace) -> None:
+         self.args = args
+@@ -394,7 +397,8 @@ class GoTuiRuntime:
+         if packaged.is_file():
+             return [str(packaged)]
+         raise RuntimeError(
+-            "Bubble Tea TUI binary not found. Reinstall Strix from an official platform wheel."
++            "Bubble Tea TUI binary not found. "
++            f"Reinstall {brand.current().name} from an official platform wheel."
+         )
+ 
+     @staticmethod

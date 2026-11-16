@@ -1,0 +1,22 @@
+Title: Viewer Server header names the brand
+Why: Responses said Server: StrixViewer/1.0.
+Upstream-PR: none
+
+diff --git a/strix/interface/viewer/server.py b/strix/interface/viewer/server.py
+index 9fb320ba9a10bf85d58160fdd2c826bd1f0cfb2b..96814c2ed292fc28dd435acd5f9ef065b14f8dc4 100644
+--- a/strix/interface/viewer/server.py
++++ b/strix/interface/viewer/server.py
+@@ -144,9 +144,12 @@ class _ViewerState:
+         self.cookie_name = SESSION_COOKIE_PREFIX
+ 
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ def _make_handler(state: _ViewerState) -> type[BaseHTTPRequestHandler]:
+     class ViewerHandler(BaseHTTPRequestHandler):
+-        server_version = "StrixViewer/1.0"
++        server_version = f"{brand.current().user_agent_token}Viewer/1.0"
+ 
+         def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
+             logger.debug("viewer %s - %s", self.address_string(), format % args)

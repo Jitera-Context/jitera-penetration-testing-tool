@@ -108,6 +108,9 @@ def _subscription_error_hint(exc: BaseException) -> str | None:
     return None
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 async def warm_up_llm() -> None:
     from strix.config.models import (
         configure_sdk_model_defaults,
@@ -146,7 +149,7 @@ async def warm_up_llm() -> None:
             console.print(
                 Panel(
                     warn_text,
-                    title="[bold white]STRIX",
+                    title=f"[bold white]{brand.current().name.upper()}",
                     title_align="left",
                     border_style="yellow",
                     padding=(1, 2),
@@ -229,7 +232,7 @@ def display_completion_message(args: argparse.Namespace, results_path: Path) -> 
     view_text.append("\n")
     view_text.append("View", style="dim")
     view_text.append("    ")
-    view_text.append(f"strix view {args.run_name}", style="#22c55e")
+    view_text.append(f"{brand.current().command} view {args.run_name}", style="#22c55e")
     panel_parts.extend(["\n", view_text])
 
     if not scan_completed:
@@ -237,7 +240,7 @@ def display_completion_message(args: argparse.Namespace, results_path: Path) -> 
         resume_text.append("\n")
         resume_text.append("Resume", style="dim")
         resume_text.append("  ")
-        resume_text.append(f"strix --resume {args.run_name}", style="#22c55e")
+        resume_text.append(f"{brand.current().command} --resume {args.run_name}", style="#22c55e")
         panel_parts.extend(["\n", resume_text])
 
     panel_content = Text.assemble(*panel_parts)
@@ -246,7 +249,7 @@ def display_completion_message(args: argparse.Namespace, results_path: Path) -> 
 
     panel = Panel(
         panel_content,
-        title="[bold white]STRIX",
+        title=f"[bold white]{brand.current().name.upper()}",
         title_align="left",
         border_style=border_style,
         padding=(1, 2),
@@ -255,15 +258,13 @@ def display_completion_message(args: argparse.Namespace, results_path: Path) -> 
     console.print("\n")
     console.print(panel)
     console.print()
-    console.print(
-        "[#60a5fa]strix.ai[/]  [dim]·[/]  "
-        "[#60a5fa]docs.strix.ai[/]  [dim]·[/]  "
-        "[#60a5fa]discord.gg/strix-ai[/]"
-    )
-    if not args.non_interactive:
+    profile = brand.current()
+    console.print("  [dim]·[/]  ".join(f"[#60a5fa]{link}[/]" for link in profile.links))
+    if not args.non_interactive and profile.promo:
         console.print(
-            "[dim]Run a pentest in Strix Cloud[/]  [#60a5fa]app.strix.ai[/]  [dim]·[/]  "
-            "[dim]Enterprise[/]  [#60a5fa]strix.ai/demo[/]"
+            "  [dim]·[/]  ".join(
+                f"[dim]{label}[/]  [#60a5fa]{url}[/]" for label, url in profile.promo
+            )
         )
     console.print()
     if not args.non_interactive:
@@ -302,7 +303,7 @@ def _print_error_panel(title: str, message: str) -> None:
     error_text.append(message, style="white")
     panel = Panel(
         error_text,
-        title="[bold white]STRIX",
+        title=f"[bold white]{brand.current().name.upper()}",
         title_align="left",
         border_style="red",
         padding=(1, 2),
@@ -332,7 +333,7 @@ def _print_model_connection_error(exc: BaseException) -> None:
 
     panel = Panel(
         error_text,
-        title="[bold white]STRIX",
+        title=f"[bold white]{brand.current().name.upper()}",
         title_align="left",
         border_style=border_style,
         padding=(1, 2),
@@ -348,7 +349,10 @@ def _print_cli_error(message: str) -> None:
     )
 
 
-HEADLESS_HINT = "If Strix runs without a terminal (CI, nohup, pipes), pass -n to run headless."
+HEADLESS_HINT = (
+    f"If {brand.current().name} runs without a terminal (CI, nohup, pipes), "
+    "pass -n to run headless."
+)
 
 
 def _fall_back_to_headless(args: argparse.Namespace) -> None:
@@ -438,7 +442,7 @@ def main() -> None:
         try:
             parse_arguments()
         except SystemExit as exc:
-            Console().print(_ROOT_SUBCOMMAND_HELP.strip(), markup=False)
+            Console().print(brand.rebrand_commands(_ROOT_SUBCOMMAND_HELP).strip(), markup=False)
             raise SystemExit(exc.code) from None
 
     # `strix view [<run>]` is a viewer-only subcommand, dispatched before the

@@ -75,6 +75,9 @@ def _resolve_skills(
     return deduped
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def render_system_prompt(
     *,
     skills: list[str] | None = None,
@@ -131,6 +134,7 @@ def render_system_prompt(
         # Skills every agent of this kind loads come first, so siblings share them
         # as a cached prefix; the ones the caller asked for vary and go after.
         rendered = env.get_template("system_prompt.jinja").render(
+            scan_user_agent=brand.current().scan_user_agent(""),
             shared_skill_names=[name for name in skill_content if name in shared],
             requested_skill_names=[name for name in skill_content if name not in shared],
             available_skills=get_available_skills(),

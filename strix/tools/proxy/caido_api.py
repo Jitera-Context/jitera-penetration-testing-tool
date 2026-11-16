@@ -170,6 +170,9 @@ async def get_request_with_client(
 _FRAMING_HEADERS = frozenset({"content-length", "transfer-encoding"})
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def build_raw_request(
     *,
     method: str,
@@ -191,8 +194,10 @@ def build_raw_request(
     final_headers.setdefault("Host", parsed.netloc)
     final_headers.setdefault(
         "User-Agent",
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        brand.current().scan_user_agent(
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+        ),
     )
     # Framing headers inherited from the captured request describe the ORIGINAL
     # body; once the body is modified for replay they are stale. We always send a
