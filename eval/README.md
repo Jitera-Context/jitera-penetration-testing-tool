@@ -16,10 +16,9 @@ Each run is recorded in `results/` (`<timestamp>.json`, `latest.json`, and an ap
 
 ## Run it
 
-```bash
-export JITERA_PENTEST_LLM="openrouter/z-ai/glm-5.3"
-export LLM_API_KEY="your-api-key"
+Set your model and key in the checkout's `.env` first (`cp .env.example .env`). The eval and GEPA read it too.
 
+```bash
 fork/dev eval --check                         # is the target up? (no scan, no cost)
 fork/dev eval                                 # scan, score, gate
 fork/dev eval --from-run DIR                  # score a finished run, no scan
@@ -71,7 +70,7 @@ the real run, then validating the result with the eval before adopting it.
 
 - The best instruction is written to `gepa/optimized_instructions.txt`. Try it with `run_eval --instruction-file eval/gepa/optimized_instructions.txt` before adopting it.
 - GEPA checks its budget between iterations, so it can make a few more calls than `--max-metric-calls` (the dry run made 8 against a cap of 6). Size the cap and the per-scan budget with that in mind.
-- The reflection model is `STRIX_LLM` (set via `JITERA_PENTEST_LLM`), or `--reflection-model`.
+- The reflection model is `JITERA_PENTEST_LLM` from `.env` (or your shell), or `--reflection-model`.
 
 ## Files
 

@@ -27,6 +27,7 @@ import litellm
 
 from eval._lib import EVAL_DIR, Baseline
 from eval.gepa.adapter import COMPONENT, JiteraGEPAAdapter, Rollout, make_tasks, scan_rollout
+from strix.jitera import bootstrap, brand
 
 
 ReflectionLM = Callable[[Any], str]
@@ -95,6 +96,9 @@ def litellm_reflection(model: str) -> ReflectionLM:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Same settings as the scans: our .env, then JITERA_PENTEST_* -> STRIX_*.
+    bootstrap.load_env_file()
+    bootstrap.prepare_environment(os.environ, brand.JITERA)
     parser = argparse.ArgumentParser(prog="eval.gepa.optimize", description=__doc__)
     parser.add_argument("--baseline", default="juice-shop")
     parser.add_argument("--target", help="override the baseline target, e.g. a local Juice Shop")

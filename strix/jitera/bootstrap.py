@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
-from strix.jitera import brand
+from strix.jitera import brand, dotenv
 
 
 if TYPE_CHECKING:
@@ -99,9 +99,18 @@ def register_extensions() -> None:
         register_agent_tools(*tools)
 
 
+def load_env_file() -> None:
+    """Read our .env (see strix/jitera/dotenv.py). The real environment wins."""
+    path = dotenv.default_env_file()
+    if os.environ.get(dotenv.ENV_FILE_VAR) and not path.is_file():
+        sys.stderr.write(f"{dotenv.ENV_FILE_VAR} points to a missing file: {path}\n")
+    dotenv.load(path, os.environ)
+
+
 def main(argv: Sequence[str] | None = None) -> None:
     args = list(sys.argv[1:] if argv is None else argv)
     brand.activate(brand.JITERA)  # before any upstream module is imported
+    load_env_file()
     prepare_environment(os.environ)
 
     reason = blocked_reason(args)

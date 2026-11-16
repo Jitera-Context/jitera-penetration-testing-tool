@@ -19,6 +19,7 @@ description: Write or change code in the Jitera fork of Strix (branding, User-Ag
 | Pentest knowledge | `strix/jitera/skills/<category>/<name>.md`. Upstream's path replaces upstream's skill |
 | CLI subcommand | `strix/jitera/commands/<name>.py` with `run(argv) -> int`, registered in `COMMANDS` |
 | Default for a `STRIX_*` setting | `ENV_DEFAULTS` in `strix/jitera/bootstrap.py` |
+| A setting users should know about | document it in `.env.example` |
 | Brand value (name, URL, User-Agent) | `strix/jitera/brand.py` |
 | Behaviour upstream has no hook for | edit the upstream file in place, as small as possible |
 | An upstream file we replace entirely (e.g. `README.md`) | edit it, and list it in `fork/OWNED` so sync keeps ours |

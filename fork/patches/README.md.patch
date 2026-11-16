@@ -3,10 +3,10 @@ Why: Upstream's README is Strix's product page. Listed in fork/OWNED, so sync ke
 Upstream-PR: none
 
 diff --git a/README.md b/README.md
-index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..41ca1f0ece37ee4373266c62cb300fb31fff6420 100644
+index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..6483fabf28e67412263743567f96327382bb0d11 100644
 --- a/README.md
 +++ b/README.md
-@@ -1,393 +1,150 @@
+@@ -1,393 +1,165 @@
 -<p align="center">
 -  <a href="https://strix.ai/">
 -    <img src="https://github.com/usestrix/.github/raw/main/imgs/cover.png" alt="Strix Banner" width="100%">
@@ -119,6 +119,7 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..41ca1f0ece37ee4373266c62cb300fb3
 +cd jitera-penetration-testing-tool
 +uv sync --frozen
 +source .venv/bin/activate
++cp .env.example .env      # then fill in your model and API key
 +jitera-pentest about
  ```
  
@@ -129,22 +130,18 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..41ca1f0ece37ee4373266c62cb300fb3
 -### Updating
 +## Quick start
  
- ```bash
+-```bash
 -# Self-update the standalone binary to the latest release
 -strix --update
-+export JITERA_PENTEST_LLM="openrouter/z-ai/glm-5.3"   # any LiteLLM model id
-+export LLM_API_KEY="your-api-key"
- 
+-
 -# ...or re-run the installer
 -curl -sSL https://strix.ai/install | bash
-+jitera-pentest --target https://your-app.com
- ```
- 
+-```
+-
 -Installed with pipx, uv, or pip? `strix --update` prints the matching upgrade command instead (`pipx upgrade strix-agent`, `uv tool upgrade strix-agent`, `pip install --upgrade strix-agent`). Strix also shows a notice with the right command when a new version is available.
 -
 ----
-+The command is `jitera-pentest` because `jitera` is the Jitera Gateway CLI. Use `jitera-pentest`, not `strix`: the `strix` command is still installed, but it runs upstream's branding and telemetry.
- 
+-
 -## Ways to Run Strix
 -
 -- **Open Source** - free, runs locally with Docker and your own LLM key. [Quick Start](https://docs.strix.ai/quickstart)
@@ -176,12 +173,14 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..41ca1f0ece37ee4373266c62cb300fb3
 -## 🤖 Use Strix from Your Coding Agent
 -
 -Strix is agent-ready. Give Claude Code, Cursor, Codex, or any [SKILL.md-compatible](https://agentskills.io) agent the ability to run pentests, fix findings, and set up CI scanning:
-+## Usage
++Set your model and key in `.env` (copied from `.env.example`):
  
  ```bash
 -npx skills add usestrix/strix
--```
--
++JITERA_PENTEST_LLM=openrouter/z-ai/glm-5.3   # any LiteLLM model id
++LLM_API_KEY=your-api-key
+ ```
+ 
 -This installs nine skills for running pentests, fixing findings, and CI scanning, against code, web apps, APIs, and the OWASP Top 10. Agents can use the local CLI or the managed cloud with the same engine.
 -
 -See [`AGENTS.md`](AGENTS.md) for the quick reference, [docs.strix.ai/llms.txt](https://docs.strix.ai/llms.txt) for the CLI, and [docs.app.strix.ai](https://docs.app.strix.ai) for the API.
@@ -222,25 +221,15 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..41ca1f0ece37ee4373266c62cb300fb3
 -- **Distributed Pentesting** - Specialized AI agents for recon, exploitation, and post-exploitation
 -- **Scalable Security Testing** - Parallel execution across multiple targets for fast, comprehensive coverage
 -- **Dynamic Coordination** - Agents share discoveries, chain vulnerabilities, and collaborate like a red team
-+# Local code, a GitHub repository, or a live app
-+jitera-pentest --target ./app-directory
-+jitera-pentest --target https://github.com/org/repo
-+jitera-pentest --target https://your-app.com
- 
+-
 ----
-+# An API contract plus the live base URL
-+jitera-pentest --target ./openapi.yaml --target https://api.your-app.com
- 
+-
 -## 🖥️ Local Web Viewer
-+# Authenticated (grey-box) testing
-+jitera-pentest --target https://your-app.com --instruction "Log in as user:pass before testing"
- 
+-
 -Every scan writes its results to disk as it runs. Bring them up in a local dashboard with a single command:
-+# Several targets, or a file of targets
-+jitera-pentest -t https://github.com/org/app -t https://your-app.com
-+jitera-pentest --target-list ./targets.txt
++Then scan:
  
--```bash
+ ```bash
 -# Open the most recent run
 -strix view
 -
@@ -249,25 +238,40 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..41ca1f0ece37ee4373266c62cb300fb3
 -
 -# Expose the viewer on all IPv4 interfaces at a fixed port
 -strix view --host 0.0.0.0 --port 8080 --no-open
--```
--
++jitera-pentest --target https://your-app.com
+ ```
+ 
 -The dashboard shows the findings, a live map of the agent team, and past runs. Nothing leaves your machine, and the UI ships prebuilt. `strix view` binds to `127.0.0.1` and prints a tokened link that grants access to the run, so share it carefully.
--
++The command is `jitera-pentest` because `jitera` is the Jitera Gateway CLI. Use `jitera-pentest`, not `strix`: the `strix` command is still installed, but it runs upstream's branding and telemetry.
+ 
 -See the [viewer documentation](https://docs.strix.ai/usage/viewer) for the options and for reaching the viewer from another machine.
--
++## Usage
+ 
 ----
 -
 -## Usage Examples
--
++```bash
++# Local code, a GitHub repository, or a live app
++jitera-pentest --target ./app-directory
++jitera-pentest --target https://github.com/org/repo
++jitera-pentest --target https://your-app.com
+ 
 -### Basic Usage
--
++# An API contract plus the live base URL
++jitera-pentest --target ./openapi.yaml --target https://api.your-app.com
+ 
 -```bash
 -# Scan a local codebase
 -strix --target ./app-directory
--
++# Authenticated (grey-box) testing
++jitera-pentest --target https://your-app.com --instruction "Log in as user:pass before testing"
+ 
 -# Security review of a GitHub repository
 -strix --target https://github.com/org/repo
--
++# Several targets, or a file of targets
++jitera-pentest -t https://github.com/org/app -t https://your-app.com
++jitera-pentest --target-list ./targets.txt
+ 
 -# Black-box web application assessment
 -strix --target https://your-app.com
 +# Headless, for CI and servers: quick scan, capped spend, fail on high or worse
@@ -322,18 +326,30 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..41ca1f0ece37ee4373266c62cb300fb3
  
  ```bash
 -strix -n --target https://your-app.com
--```
--
++jitera-pentest about                 # version and attribution
++jitera-pentest auth login chatgpt    # run on a ChatGPT subscription instead of an API key
++jitera-pentest --resume my-run-name  # continue a stopped scan
++jitera-pentest completions zsh       # shell completion (bash and fish too)
+ ```
+ 
 -### CI/CD (GitHub Actions)
--
++## Configuration
+ 
 -Strix can be added to your pipeline to run a security test on pull requests with a lightweight GitHub Actions workflow:
--
++Put settings in `.env` at the root of this checkout. [`.env.example`](.env.example) lists the common ones with explanations. `jitera-pentest` reads that file on every run, from any folder:
+ 
 -```yaml
 -name: strix-penetration-test
--
++- Variables already set in your shell win over the file.
++- Empty values in the file are ignored.
++- `.env` is git-ignored, so keys are never committed.
++- It never reads the `.env` of the folder you run it in. That's usually the project you're scanning, which may hold unrelated keys.
++- To keep the file somewhere else (for example with the packaged binary), set `JITERA_PENTEST_ENV_FILE=/path/to/file` in your shell.
+ 
 -on:
 -  pull_request:
--
++Every upstream `STRIX_*` setting works. You can also write it as `JITERA_PENTEST_*`, and the `jitera-pentest` command copies it to the `STRIX_*` name.
+ 
 -jobs:
 -  security-scan:
 -    runs-on: ubuntu-latest
@@ -341,35 +357,6 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..41ca1f0ece37ee4373266c62cb300fb3
 -      - uses: actions/checkout@v6
 -        with:
 -          fetch-depth: 0
--
--      - name: Install Strix
--        run: curl -sSL https://strix.ai/install | bash
--
--      - name: Run Strix
--        env:
--          STRIX_LLM: ${{ secrets.STRIX_LLM }}
--          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
--
--        run: strix -n -t ./ --scan-mode quick
-+jitera-pentest about                 # version and attribution
-+jitera-pentest auth login chatgpt    # run on a ChatGPT subscription instead of an API key
-+jitera-pentest --resume my-run-name  # continue a stopped scan
-+jitera-pentest completions zsh       # shell completion (bash and fish too)
- ```
- 
--> [!TIP]
--> In CI pull request runs, Strix automatically scopes quick reviews to changed files, which is why the
--> checkout above fetches full history. See the
--> [CI/CD documentation](https://docs.strix.ai/integrations/github-actions) for the details.
-+## Configuration
- 
--### Configuration
-+Every upstream `STRIX_*` setting works. You can also write it as `JITERA_PENTEST_*`, and the `jitera-pentest` command copies it to the `STRIX_*` name.
- 
--```bash
--export STRIX_LLM="vercel_ai_gateway/zai/glm-5.3"   # Vercel AI Gateway
--# export STRIX_LLM="openrouter/z-ai/glm-5.3"       # OpenRouter
--export LLM_API_KEY="your-api-key"
 +| Variable | Purpose |
 +|---|---|
 +| `JITERA_PENTEST_LLM` | Model id, for example `openrouter/z-ai/glm-5.3` |
@@ -378,17 +365,25 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..41ca1f0ece37ee4373266c62cb300fb3
 +| `PERPLEXITY_API_KEY` or `EXA_API_KEY` | Optional web search for the agents |
 +| `JITERA_PENTEST_IMAGE` | Sandbox image. Default: upstream's `ghcr.io/usestrix/strix-sandbox:1.4.1` |
  
--# Optional
--export LLM_API_BASE="your-api-base-url"  # if using a local model, e.g. Ollama, LMStudio
--```
-+Settings are saved in `~/.strix/cli-config.json`. To give the agents extra tools, list MCP servers in `~/.strix/mcp-servers.json`. The [upstream documentation](https://docs.strix.ai/) describes every option.
+-      - name: Install Strix
+-        run: curl -sSL https://strix.ai/install | bash
++The tool also remembers settings in `~/.strix/cli-config.json`; your shell and `.env` win over it. To give the agents extra tools, list MCP servers in `~/.strix/mcp-servers.json`. The [upstream documentation](https://docs.strix.ai/) describes every option.
  
--> [!NOTE]
--> Strix automatically saves your configuration to `~/.strix/cli-config.json`, so you don't have to re-enter it on every run.
--> See the [configuration reference](https://docs.strix.ai/advanced/configuration) for every environment variable.
+-      - name: Run Strix
+-        env:
+-          STRIX_LLM: ${{ secrets.STRIX_LLM }}
+-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
 +## What's different from Strix
  
--#### Sign in with a ChatGPT subscription
+-        run: strix -n -t ./ --scan-mode quick
+-```
+-
+-> [!TIP]
+-> In CI pull request runs, Strix automatically scopes quick reviews to changed files, which is why the
+-> checkout above fetches full history. See the
+-> [CI/CD documentation](https://docs.strix.ai/integrations/github-actions) for the details.
+-
+-### Configuration
 +| | Strix | Jitera |
 +|---|---|---|
 +| Command | `strix` | `jitera-pentest` |
@@ -399,25 +394,45 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..41ca1f0ece37ee4373266c62cb300fb3
 +| Viewer | Strix Cloud upsells, email and feedback relays | Hidden |
 +| CLI, terminal UI, reports, viewer | Strix | Jitera |
  
--Instead of a metered API key, you can run Strix on your ChatGPT Plus/Pro subscription:
+-```bash
+-export STRIX_LLM="vercel_ai_gateway/zai/glm-5.3"   # Vercel AI Gateway
+-# export STRIX_LLM="openrouter/z-ai/glm-5.3"       # OpenRouter
+-export LLM_API_KEY="your-api-key"
+-
+-# Optional
+-export LLM_API_BASE="your-api-base-url"  # if using a local model, e.g. Ollama, LMStudio
+-```
 +Customers can recognize our authorized scan traffic by its User-Agent.
  
--```bash
--strix auth login chatgpt             # sign in with your ChatGPT account
--export STRIX_LLM="chatgpt/gpt-5.4"   # chatgpt/<model> runs on the subscription
--strix auth status                    # show the active sign-in, or logout to forget it
--```
+-> [!NOTE]
+-> Strix automatically saves your configuration to `~/.strix/cli-config.json`, so you don't have to re-enter it on every run.
+-> See the [configuration reference](https://docs.strix.ai/advanced/configuration) for every environment variable.
 +## Developing
  
--#### Use the managed platform: `strix cloud`
+-#### Sign in with a ChatGPT subscription
 +This repository is a fork kept easy to sync with upstream:
  
--Run scans on [app.strix.ai](https://app.strix.ai) from the terminal, without Docker or an LLM key:
+-Instead of a metered API key, you can run Strix on your ChatGPT Plus/Pro subscription:
 +- Edit the source directly. Our own code lives in `strix/jitera/`, our tests in `tests/jitera/`.
 +- `fork/dev save` records every change since the upstream checkpoint (`fork/CHECKPOINT`) as patches in `fork/patches/`. Commit the code and its patches together.
 +- `fork/dev sync` takes a new upstream: back to the checkpoint, remove our changes, take the latest upstream, re-apply the patches.
  
  ```bash
+-strix auth login chatgpt             # sign in with your ChatGPT account
+-export STRIX_LLM="chatgpt/gpt-5.4"   # chatgpt/<model> runs on the subscription
+-strix auth status                    # show the active sign-in, or logout to forget it
++fork/dev help       # every command
++fork/dev status     # checkpoint, how far upstream moved, patches out of date
++fork/dev test       # brand audit, lint, type check, tests
++fork/dev eval       # OWASP Juice Shop eval: did the scanner regress?
++fork/dev gepa       # optimize the agent's instructions with GEPA
+ ```
+ 
+-#### Use the managed platform: `strix cloud`
+-
+-Run scans on [app.strix.ai](https://app.strix.ai) from the terminal, without Docker or an LLM key:
+-
+-```bash
 -strix cloud login                                  # browser sign-in, one credential per install
 -strix cloud scans start --source . --yes --wait    # scan local code, approving the upload
 -strix cloud scans start --engagement-type live_test --domain-ids <uuid> --wait
@@ -442,13 +457,8 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..41ca1f0ece37ee4373266c62cb300fb3
 -    "allowed_tools": ["list_issues"]
 -  }
 -]
-+fork/dev help       # every command
-+fork/dev status     # checkpoint, how far upstream moved, patches out of date
-+fork/dev test       # brand audit, lint, type check, tests
-+fork/dev eval       # OWASP Juice Shop eval: did the scanner regress?
-+fork/dev gepa       # optimize the agent's instructions with GEPA
- ```
- 
+-```
+-
 -Each server's tools are namespaced by `name`, for example `github_list_issues`. See the [MCP documentation](https://docs.strix.ai/integrations/mcp) for the full schema, tool filtering, and `stdio` servers.
 -
 -**Recommended models for best results:**

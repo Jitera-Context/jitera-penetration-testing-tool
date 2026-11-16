@@ -14,8 +14,9 @@ covered. Details: `eval/README.md`.
 - A real scan takes minutes to hours and spends LLM money. Unless the user
   already asked for a real scan, say so and confirm before starting one.
   Scoring an existing run (`--from-run`) is free.
-- Needs `JITERA_PENTEST_LLM` (or `STRIX_LLM`) and `LLM_API_KEY`, and Docker
-  running for the sandbox.
+- Needs `JITERA_PENTEST_LLM` and `LLM_API_KEY`, normally in the checkout's
+  `.env` (`cp .env.example .env`), and Docker running for the sandbox. Never
+  print or commit the key.
 - Only scan Juice Shop: the baseline's target (OWASP's public demo) or a local
   instance. Never point the eval at anything else.
 

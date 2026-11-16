@@ -29,6 +29,7 @@ git clone git@github.com:Jitera-Context/jitera-penetration-testing-tool.git
 cd jitera-penetration-testing-tool
 uv sync --frozen
 source .venv/bin/activate
+cp .env.example .env      # then fill in your model and API key
 jitera-pentest about
 ```
 
@@ -36,10 +37,16 @@ Prebuilt binaries will be published on this repository's releases once the relea
 
 ## Quick start
 
-```bash
-export JITERA_PENTEST_LLM="openrouter/z-ai/glm-5.3"   # any LiteLLM model id
-export LLM_API_KEY="your-api-key"
+Set your model and key in `.env` (copied from `.env.example`):
 
+```bash
+JITERA_PENTEST_LLM=openrouter/z-ai/glm-5.3   # any LiteLLM model id
+LLM_API_KEY=your-api-key
+```
+
+Then scan:
+
+```bash
 jitera-pentest --target https://your-app.com
 ```
 
@@ -99,6 +106,14 @@ jitera-pentest completions zsh       # shell completion (bash and fish too)
 
 ## Configuration
 
+Put settings in `.env` at the root of this checkout. [`.env.example`](.env.example) lists the common ones with explanations. `jitera-pentest` reads that file on every run, from any folder:
+
+- Variables already set in your shell win over the file.
+- Empty values in the file are ignored.
+- `.env` is git-ignored, so keys are never committed.
+- It never reads the `.env` of the folder you run it in. That's usually the project you're scanning, which may hold unrelated keys.
+- To keep the file somewhere else (for example with the packaged binary), set `JITERA_PENTEST_ENV_FILE=/path/to/file` in your shell.
+
 Every upstream `STRIX_*` setting works. You can also write it as `JITERA_PENTEST_*`, and the `jitera-pentest` command copies it to the `STRIX_*` name.
 
 | Variable | Purpose |
@@ -109,7 +124,7 @@ Every upstream `STRIX_*` setting works. You can also write it as `JITERA_PENTEST
 | `PERPLEXITY_API_KEY` or `EXA_API_KEY` | Optional web search for the agents |
 | `JITERA_PENTEST_IMAGE` | Sandbox image. Default: upstream's `ghcr.io/usestrix/strix-sandbox:1.4.1` |
 
-Settings are saved in `~/.strix/cli-config.json`. To give the agents extra tools, list MCP servers in `~/.strix/mcp-servers.json`. The [upstream documentation](https://docs.strix.ai/) describes every option.
+The tool also remembers settings in `~/.strix/cli-config.json`; your shell and `.env` win over it. To give the agents extra tools, list MCP servers in `~/.strix/mcp-servers.json`. The [upstream documentation](https://docs.strix.ai/) describes every option.
 
 ## What's different from Strix
 
