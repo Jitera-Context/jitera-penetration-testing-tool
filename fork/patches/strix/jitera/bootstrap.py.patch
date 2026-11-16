@@ -4,11 +4,11 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/bootstrap.py b/strix/jitera/bootstrap.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..15dc0e491b93241e446b6e09622b67f5bf25aef2
+index 0000000000000000000000000000000000000000..071fd88c017ddd0b32d63da17a10d5c334412b10
 --- /dev/null
 +++ b/strix/jitera/bootstrap.py
-@@ -0,0 +1,115 @@
-+"""Entry point of the ``jitera`` command.
+@@ -0,0 +1,121 @@
++"""Entry point of the ``jitera-pentest`` command.
 +
 +Order matters: activate the Jitera brand and environment defaults first, then
 +register our tools and skills with upstream's hooks, then hand over to the
@@ -59,11 +59,17 @@ index 0000000000000000000000000000000000000000..15dc0e491b93241e446b6e09622b67f5
 +    }
 +
 +
-+def prepare_environment(env: MutableMapping[str, str]) -> None:
-+    """Copy JITERA_* variables to STRIX_* and apply our defaults."""
-+    for key in [k for k in env if k.startswith("JITERA_")]:
-+        env.setdefault("STRIX_" + key.removeprefix("JITERA_"), env[key])
-+    for key, value in {**ENV_DEFAULTS, **brand_environment(brand.current())}.items():
++def prepare_environment(env: MutableMapping[str, str], profile: brand.Brand | None = None) -> None:
++    """Copy our prefixed settings (JITERA_PENTEST_*) to STRIX_* and apply our defaults.
++
++    Only our own prefix is copied, never a bare JITERA_*, which other Jitera
++    tools such as the Jitera Gateway use.
++    """
++    profile = profile or brand.current()
++    if profile.env_prefix != "STRIX_":
++        for key in [k for k in env if k.startswith(profile.env_prefix)]:
++            env.setdefault("STRIX_" + key.removeprefix(profile.env_prefix), env[key])
++    for key, value in {**ENV_DEFAULTS, **brand_environment(profile)}.items():
 +        env.setdefault(key, value)
 +
 +

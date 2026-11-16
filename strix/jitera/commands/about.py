@@ -1,4 +1,4 @@
-"""``jitera about``: product name, version, and what it is built on."""
+"""``jitera-pentest about``: product name, version, and what it is built on."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from strix.jitera.brand import package_version
 
 def run(argv: list[str]) -> int:
     if argv:
-        sys.stderr.write("usage: jitera about\n")
+        sys.stderr.write(f"usage: {brand.current().command} about\n")
         return 2
     profile = brand.current()
     sys.stdout.write(

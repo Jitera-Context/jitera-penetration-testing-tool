@@ -29,7 +29,7 @@ git clone git@github.com:Jitera-Context/jitera-penetration-testing-tool.git
 cd jitera-penetration-testing-tool
 uv sync --frozen
 source .venv/bin/activate
-jitera about
+jitera-pentest about
 ```
 
 Prebuilt binaries will be published on this repository's releases once the release pipeline is in place.
@@ -37,34 +37,34 @@ Prebuilt binaries will be published on this repository's releases once the relea
 ## Quick start
 
 ```bash
-export JITERA_LLM="openrouter/z-ai/glm-5.3"   # any LiteLLM model id
+export JITERA_PENTEST_LLM="openrouter/z-ai/glm-5.3"   # any LiteLLM model id
 export LLM_API_KEY="your-api-key"
 
-jitera --target https://your-app.com
+jitera-pentest --target https://your-app.com
 ```
 
-Use `jitera`, not `strix`. The `strix` command is still installed, but it runs upstream's branding and telemetry.
+The command is `jitera-pentest` because `jitera` is the Jitera Gateway CLI. Use `jitera-pentest`, not `strix`: the `strix` command is still installed, but it runs upstream's branding and telemetry.
 
 ## Usage
 
 ```bash
 # Local code, a GitHub repository, or a live app
-jitera --target ./app-directory
-jitera --target https://github.com/org/repo
-jitera --target https://your-app.com
+jitera-pentest --target ./app-directory
+jitera-pentest --target https://github.com/org/repo
+jitera-pentest --target https://your-app.com
 
 # An API contract plus the live base URL
-jitera --target ./openapi.yaml --target https://api.your-app.com
+jitera-pentest --target ./openapi.yaml --target https://api.your-app.com
 
 # Authenticated (grey-box) testing
-jitera --target https://your-app.com --instruction "Log in as user:pass before testing"
+jitera-pentest --target https://your-app.com --instruction "Log in as user:pass before testing"
 
 # Several targets, or a file of targets
-jitera -t https://github.com/org/app -t https://your-app.com
-jitera --target-list ./targets.txt
+jitera-pentest -t https://github.com/org/app -t https://your-app.com
+jitera-pentest --target-list ./targets.txt
 
 # Headless, for CI and servers: quick scan, capped spend, fail on high or worse
-jitera -n --target ./ --scan-mode quick --max-budget 10 --fail-on high
+jitera-pentest -n --target ./ --scan-mode quick --max-budget 10 --fail-on high
 ```
 
 Scan modes are `quick`, `standard` and `deep` (the default). In headless mode the exit code is `0` when no findings were reported, `1` on a fatal error, and `2` when findings were reported (with `--fail-on`, only findings at or above that severity count).
@@ -84,30 +84,30 @@ Each scan writes to `strix_runs/<run-name>/`:
 Open them in the local viewer:
 
 ```bash
-jitera view                 # most recent run
-jitera view my-run-name     # a specific run
+jitera-pentest view                # most recent run
+jitera-pentest view my-run-name    # a specific run
 ```
 
 ### Other commands
 
 ```bash
-jitera about                    # version and attribution
-jitera auth login chatgpt       # run on a ChatGPT subscription instead of an API key
-jitera --resume my-run-name     # continue a stopped scan
-jitera completions zsh          # shell completion (bash and fish too)
+jitera-pentest about                 # version and attribution
+jitera-pentest auth login chatgpt    # run on a ChatGPT subscription instead of an API key
+jitera-pentest --resume my-run-name  # continue a stopped scan
+jitera-pentest completions zsh       # shell completion (bash and fish too)
 ```
 
 ## Configuration
 
-Every upstream `STRIX_*` setting works. You can also write it as `JITERA_*`, and the `jitera` command copies it to the `STRIX_*` name.
+Every upstream `STRIX_*` setting works. You can also write it as `JITERA_PENTEST_*`, and the `jitera-pentest` command copies it to the `STRIX_*` name.
 
 | Variable | Purpose |
 |---|---|
-| `JITERA_LLM` | Model id, for example `openrouter/z-ai/glm-5.3` |
+| `JITERA_PENTEST_LLM` | Model id, for example `openrouter/z-ai/glm-5.3` |
 | `LLM_API_KEY` | API key for that provider |
 | `LLM_API_BASE` | Base URL for a local model (Ollama, LM Studio) |
 | `PERPLEXITY_API_KEY` or `EXA_API_KEY` | Optional web search for the agents |
-| `JITERA_IMAGE` | Sandbox image. Default: upstream's `ghcr.io/usestrix/strix-sandbox:1.4.1` |
+| `JITERA_PENTEST_IMAGE` | Sandbox image. Default: upstream's `ghcr.io/usestrix/strix-sandbox:1.4.1` |
 
 Settings are saved in `~/.strix/cli-config.json`. To give the agents extra tools, list MCP servers in `~/.strix/mcp-servers.json`. The [upstream documentation](https://docs.strix.ai/) describes every option.
 
@@ -115,7 +115,7 @@ Settings are saved in `~/.strix/cli-config.json`. To give the agents extra tools
 
 | | Strix | Jitera |
 |---|---|---|
-| Command | `strix` | `jitera` |
+| Command | `strix` | `jitera-pentest` |
 | User-Agent of our own calls | `python-requests/…` | `Jitera/<version> (+https://jitera.com)` |
 | User-Agent of scan traffic | A generic Chrome browser | `Mozilla/5.0 (compatible; Jitera/<version>; +https://jitera.com)` on proxy replays, the sandbox browser, and requests the agent writes |
 | Telemetry | On, sent to Strix | Off by default |

@@ -56,7 +56,7 @@ dependencies = [
 
 [project.scripts]
 strix = "strix.interface.main:main"
-jitera = "strix.jitera.bootstrap:main"
+jitera-pentest = "strix.jitera.bootstrap:main"
 
 [dependency-groups]
 dev = [

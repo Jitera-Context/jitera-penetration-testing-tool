@@ -12,11 +12,18 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def test_jitera_variables_are_copied_to_strix_names() -> None:
-    env = {"JITERA_LLM": "openai/gpt-x", "STRIX_IMAGE": "explicit"}
-    bootstrap.prepare_environment(env)
+def test_our_prefixed_variables_are_copied_to_strix_names() -> None:
+    env = {"JITERA_PENTEST_LLM": "openai/gpt-x", "STRIX_IMAGE": "explicit"}
+    bootstrap.prepare_environment(env, brand.JITERA)
     assert env["STRIX_LLM"] == "openai/gpt-x"
     assert env["STRIX_IMAGE"] == "explicit"
+
+
+def test_other_jitera_tools_variables_are_left_alone() -> None:
+    env = {"JITERA_PROFILE": "gateway", "JITERA_CLAUDE_MANAGED_SETTINGS_X": "1"}
+    bootstrap.prepare_environment(env, brand.JITERA)
+    assert "STRIX_PROFILE" not in env
+    assert not any(key.startswith("STRIX_CLAUDE") for key in env)
 
 
 def test_defaults_never_override_explicit_values() -> None:

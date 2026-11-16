@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_bootstrap.py b/tests/jitera/test_bootstrap.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..09bdfab3462b6c9770f671bf52224c5fdea1b1c2
+index 0000000000000000000000000000000000000000..ec4b7c51f6612620e19112335031d26e99c97c4a
 --- /dev/null
 +++ b/tests/jitera/test_bootstrap.py
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,67 @@
 +from __future__ import annotations
 +
 +from typing import TYPE_CHECKING
@@ -22,11 +22,18 @@ index 0000000000000000000000000000000000000000..09bdfab3462b6c9770f671bf52224c5f
 +    from pathlib import Path
 +
 +
-+def test_jitera_variables_are_copied_to_strix_names() -> None:
-+    env = {"JITERA_LLM": "openai/gpt-x", "STRIX_IMAGE": "explicit"}
-+    bootstrap.prepare_environment(env)
++def test_our_prefixed_variables_are_copied_to_strix_names() -> None:
++    env = {"JITERA_PENTEST_LLM": "openai/gpt-x", "STRIX_IMAGE": "explicit"}
++    bootstrap.prepare_environment(env, brand.JITERA)
 +    assert env["STRIX_LLM"] == "openai/gpt-x"
 +    assert env["STRIX_IMAGE"] == "explicit"
++
++
++def test_other_jitera_tools_variables_are_left_alone() -> None:
++    env = {"JITERA_PROFILE": "gateway", "JITERA_CLAUDE_MANAGED_SETTINGS_X": "1"}
++    bootstrap.prepare_environment(env, brand.JITERA)
++    assert "STRIX_PROFILE" not in env
++    assert not any(key.startswith("STRIX_CLAUDE") for key in env)
 +
 +
 +def test_defaults_never_override_explicit_values() -> None:

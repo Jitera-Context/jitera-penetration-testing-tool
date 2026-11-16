@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/skills/README.md b/strix/jitera/skills/README.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..a03bc239a0970903565ed498a0a7df94110660f5
+index 0000000000000000000000000000000000000000..9430c7fc7db7235d225d12b61b5aa3090eb7f08f
 --- /dev/null
 +++ b/strix/jitera/skills/README.md
 @@ -0,0 +1,15 @@
@@ -19,7 +19,7 @@ index 0000000000000000000000000000000000000000..a03bc239a0970903565ed498a0a7df94
 +
 +- A new path adds a skill.
 +- The same path as an upstream skill (for example `vulnerabilities/idor.md`)
-+  replaces upstream's version for `jitera` runs.
++  replaces upstream's version for `jitera-pentest` runs.
 +
 +`strix/jitera/bootstrap.py` registers this directory with upstream's
 +`strix.skills.register_skill_dir`, so no upstream file changes.

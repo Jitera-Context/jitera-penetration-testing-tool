@@ -1,7 +1,7 @@
 """The edited upstream code follows the active brand profile.
 
 Each check runs in a fresh interpreter so module-level values are computed under
-the profile we choose, the way the ``jitera`` command runs, without touching
+the profile we choose, the way the ``jitera-pentest`` command runs, without touching
 this test process.
 """
 
@@ -124,8 +124,8 @@ def test_cli_help_uses_the_jitera_command_without_upstream_cloud() -> None:
         check=False,
         timeout=120,
     )
-    assert "jitera --target https://example.com" in result.stdout
+    assert "jitera-pentest --target https://example.com" in result.stdout
     assert "Strix Cloud" not in result.stdout
     assert "Jitera Multi-Agent" in result.stdout
     assert "strix cloud" not in result.stdout
-    assert "jitera view [RUN]" in result.stdout
+    assert "jitera-pentest view [RUN]" in result.stdout
