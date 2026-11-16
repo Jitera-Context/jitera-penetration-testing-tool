@@ -486,9 +486,15 @@ def hero() -> Sheet:
         s.icon(icon, x + 32, 274)
         s.write(x + 56, 280, text, (18, 700))
         x += width + 24
-    s.write(62, 332, "Open source · built on Strix · Apache-2.0", (16, 600), color=SOFT)
+    s.write(
+        62,
+        332,
+        "A team of AI agents · real browsers · proof for every finding",
+        (16, 600),
+        color=SOFT,
+    )
 
-    # doodle: a web page, a bug under a magnifying glass, a shield
+    # drawing: a web page guarded by a shield with a padlock, and a radar that detects
     s.box(752, 58, 256, 190, FILLS["white"], radius=12)
     s.line(752, 86, 1008, 86, width=2)
     for i, role in enumerate(("app", "record", "done")):
@@ -498,7 +504,13 @@ def hero() -> Sheet:
     s.add(
         f'<rect x="818" y="65" width="172" height="14" rx="7" fill="none" stroke="{SOFT}" stroke-width="1.4"/>'
     )
-    for i, length in enumerate((120, 84, 132, 70)):
+    # https padlock in the address bar
+    s.add(
+        f'<path d="M827.5 70.5v-2.2a2.5 2.5 0 0 1 5 0v2.2" fill="none" stroke="{INK}" stroke-width="1.4"/>'
+        f'<rect x="825.5" y="70" width="9" height="6.5" rx="1.5" fill="{FILLS["done"]}" stroke="{INK}" stroke-width="1.2"/>'
+    )
+    s.line(842, 72, 900, 72, color="#d9cfb6", width=3)
+    for i, length in enumerate((84, 60, 92, 48)):
         s.line(
             772,
             112 + 22 * i,
@@ -507,25 +519,35 @@ def hero() -> Sheet:
             color="#e9dfc6" if i % 2 else "#d9cfb6",
             width=6,
         )
-    s.box(772, 204, 76, 28, FILLS["ours"], radius=8, shadow=False)
-    s.add(f'<path d="M972 186L1022 240" stroke="{INK}" stroke-width="11" stroke-linecap="round"/>')
-    s.add('<circle cx="934" cy="148" r="48" fill="#e2f0ff" opacity="0.92"/>')
-    s.circle(934, 148, 48)
-    for part in (
-        f'<path d="M931 124L924 114 M937 124L944 114" stroke="{INK}" stroke-width="2" stroke-linecap="round"/>',
-        f'<path d="M922 140L910 134 M921 150L907 150 M922 160L910 167 M946 140L958 134 M947 150L961 150 M946 160L958 167" stroke="{INK}" stroke-width="2" stroke-linecap="round"/>',
-        f'<ellipse cx="934" cy="151" rx="13" ry="16" fill="#ff8f7d" stroke="{INK}" stroke-width="2"/>',
-        f'<circle cx="934" cy="131" r="7" fill="{INK}"/>',
-        f'<path d="M934 136V166" stroke="{INK}" stroke-width="1.6"/>',
-        f'<circle cx="928" cy="146" r="2.4" fill="{INK}"/><circle cx="940" cy="149" r="2.4" fill="{INK}"/><circle cx="929" cy="158" r="2.2" fill="{INK}"/><circle cx="940" cy="160" r="2.2" fill="{INK}"/>',
-    ):
-        s.add(part)
-    for dx, dy, fill in ((4, 5, INK), (0, 0, FILLS["done"])):
+    s.box(790, 206, 76, 26, FILLS["ours"], radius=8, shadow=False)
+
+    # the shield, with a padlock
+    for dx, dy, fill in ((4, 5, INK), (0, 0, FILLS["ours"])):
         s.add(
-            f'<path transform="translate({720 + dx} {198 + dy}) scale(3)" d="{SHIELD}" fill="{fill}" stroke="{INK}" stroke-width="0.7" stroke-linejoin="round"/>'
+            f'<path transform="translate({864 + dx} {99.5 + dy}) scale(5.5)" d="{SHIELD}" fill="{fill}" stroke="{INK}" stroke-width="0.38" stroke-linejoin="round"/>'
         )
     s.add(
-        f'<path transform="translate(720 198) scale(3)" d="M9 12l2 2 4-4" fill="none" stroke="{INK}" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>'
+        f'<path transform="translate(865.2 100.4) scale(5.5)" d="{SHIELD}" fill="none" stroke="{INK}" stroke-width="0.2" stroke-opacity="0.4" stroke-linejoin="round"/>'
+    )
+    s.add(
+        f'<path d="M920 152v-7a10 10 0 0 1 20 0v7" fill="none" stroke="{INK}" stroke-width="3.2" stroke-linecap="round"/>'
+        f'<rect x="913" y="150" width="34" height="27" rx="6" fill="{FILLS["record"]}" stroke="{INK}" stroke-width="2.2"/>'
+        f'<circle cx="930" cy="160" r="3.6" fill="{INK}"/>'
+        f'<path d="M930 162v7" stroke="{INK}" stroke-width="3" stroke-linecap="round"/>'
+    )
+    s.icon("spark", 984, 116, 18)
+    s.icon("spark", 878, 196, 14)
+
+    # the radar badge: detection
+    s.add(f'<circle cx="756" cy="239" r="30" fill="{INK}" opacity="0.9"/>')
+    s.add(f'<circle cx="752" cy="234" r="30" fill="{FILLS["done"]}"/>')
+    s.circle(752, 234, 30)
+    s.add(
+        f'<circle cx="752" cy="234" r="19" fill="none" stroke="{INK}" stroke-width="1.5" stroke-opacity="0.7"/>'
+        f'<circle cx="752" cy="234" r="9" fill="none" stroke="{INK}" stroke-width="1.5" stroke-opacity="0.7"/>'
+        f'<path d="M752 234L764.9 218.7A20 20 0 0 0 750.3 214.1Z" fill="{INK}" opacity="0.18"/>'
+        f'<path d="M752 234L764.9 218.7" stroke="{INK}" stroke-width="2.2" stroke-linecap="round"/>'
+        f'<circle cx="743" cy="223" r="3.4" fill="#ff6b57" stroke="{INK}" stroke-width="1.2"/>'
     )
     return s
 
