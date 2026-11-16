@@ -15,6 +15,7 @@ that finishes or adds an item.
 | #8 | `fork/dev eval`, `eval-history`, `gepa`; `/eval-run` and `/eval-gepa` |
 | #9 | `.env.example`, and loading `.env` safely |
 | #10 | The eval reads `.env` and checks the model before scanning; README eval guide |
+| #11 | Docs: visions, architecture, plans; the rule that every feature must pass the eval |
 
 ## Next, in priority order
 
@@ -29,6 +30,14 @@ that finishes or adds an item.
 | 7 | **GEPA optimization run** | Better agent instructions, measured | A GEPA result validated by repeated evals and adopted in a PR | Required |
 
 ## Later
+
+- **Rehearse the defense (vision, part 2).** Run a simulated attack against a
+  team's own systems and record whether, and how fast, their monitoring
+  detected it. First step: decide which signals count as "detected" (see the
+  vision's open questions).
+- **The same agent rules for every coding agent.** `CLAUDE.md` covers Claude
+  Code; other agents read `AGENTS.md`, which is upstream's file. Decide whether
+  to add our rules there or list it in `fork/OWNED`.
 
 - **More eval targets.** API-focused checks, and other deliberately vulnerable
   training apps, each with its own `eval/baseline/<name>.yaml`.

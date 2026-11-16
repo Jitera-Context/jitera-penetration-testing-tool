@@ -8,6 +8,7 @@ Strix, and is developed under the eval. The why is in the [vision](../visions/RE
 | [Fork and sync](fork-and-sync.md) | How our changes are recorded, how upstream releases come in, how fixes go back upstream |
 | [Extending](extending.md) | Where new code goes, the hooks it plugs into, and the rules that keep sync cheap as we grow |
 | [Eval-driven development](eval-driven-development.md) | Why every feature must pass the eval, and how a change goes from idea to merge |
+| [Agent-led development](agent-led-development.md) | Agents own the day-to-day work and prove every change; people set direction and approve |
 
 A visual walkthrough with sequence diagrams is in
 [`fork/architecture.html`](../../fork/architecture.html) (open it in a browser).
@@ -35,7 +36,7 @@ flowchart TB
     fork --> ours
 ```
 
-## Four rules
+## Five rules
 
 1. **Upstream stays at the root and is edited in place.** Merges and patches
    match files by path, and upstream's build, CI and tests expect this layout.
@@ -48,6 +49,9 @@ flowchart TB
 4. **Every feature must pass the eval.** A behavior change isn't done until
    `fork/dev eval` passes its gate. See
    [eval-driven development](eval-driven-development.md).
+5. **Agents lead, and prove.** AI agents do the day-to-day development and attach
+   proof (verify, tests, eval) to every change; people approve. See
+   [agent-led development](agent-led-development.md).
 
 ## Where things are
 
@@ -60,3 +64,4 @@ flowchart TB
 | `docs/visions/`, `docs/architecture/`, `docs/plans/` | These docs | Yes |
 | `fork/` | Sync tooling and the patches themselves | No: it's the mechanism |
 | `.claude/skills/` | Claude Code skills for this workflow | No |
+| `CLAUDE.md` | Short rules for coding agents, pointing at these docs | Yes |

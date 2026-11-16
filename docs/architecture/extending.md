@@ -63,6 +63,7 @@ flowchart LR
 | Need | Provided by |
 |---|---|
 | One way to do everything | `fork/dev help` |
+| Agents as owners of the work | `CLAUDE.md` and [agent-led development](agent-led-development.md) |
 | Guided changes in Claude Code | `/fork-change`, `/fork-sync`, `/eval-run`, `/eval-gepa` |
 | Review that sees real code | Code is edited in place; patches are a by-product |
 | A shared definition of done | The eval gate, plus the PR template checklist |

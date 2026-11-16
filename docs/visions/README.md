@@ -1,70 +1,100 @@
 # Vision
 
-> Drafted from the goals and decisions the team has stated so far. The open
-> questions at the end are for the team to answer; update this file as the
-> vision firms up.
+## Our vision
 
-## What we are building
+Build a penetration testing tool that helps users **detect attacks before they
+happen and act on them**, and that, by **simulating real attackers**, lets
+security and infrastructure teams test how well they detect and respond to
+those risks.
+
+## What it does
 
 `jitera-pentest` is Jitera's own build of
 [Strix](https://github.com/usestrix/strix), the open-source autonomous AI
-penetration-testing tool. We fork it, maintain it internally, and run it under
-the Jitera brand, while staying close enough to upstream to take every
-improvement the Strix community ships.
+penetration-testing tool, run under the Jitera brand. It serves two purposes.
 
-## Goals
+### 1. Find the attack before an attacker does
 
-1. **Keep up with upstream easily.** However much we change, taking a new
-   upstream release stays routine: minutes of work, with conflicts limited to
-   the lines we changed.
-2. **Run as Jitera.** Our brand appears wherever people look: CLI, terminal UI,
-   reports and viewer. Our network identity appears wherever systems look: every
-   request, including scan traffic, carries a Jitera User-Agent, so customers can
-   recognize and allowlist our authorized testing.
-3. **Keep the source clean and easy to maintain.** Engineers edit the real code
-   and review real diffs on GitHub. No hidden build-time rewriting.
-4. **Let quality lead development.** The eval decides whether a change is done:
-   every feature must pass it. Results are recorded, so we know whether the tool
-   is getting better or worse over time.
-5. **Scale without slowing down.** Adding features, engineers or eval targets
-   must not make syncing harder.
+The tool's AI agents behave like a real attacker against your own applications
+and infrastructure: they map the attack surface, probe for weaknesses and prove
+each one with a working proof of concept. You see what an attacker could do
+before anyone does it, and you act on it:
+
+- validated findings, not guesses, each with severity and fix guidance;
+- reports for people (Markdown, PDF) and for pipelines (JSON, SARIF);
+- runs on demand or in CI, so new weaknesses are caught as code changes.
+
+### 2. Rehearse the defense
+
+The same simulated attacks are an exercise for the people who defend. Run them
+against your own systems and ask:
+
+- Did our monitoring and alerts notice?
+- How long did it take, and who was told?
+- Did the security and infrastructure teams respond the way the playbook says?
+
+Every request the tool sends carries a Jitera User-Agent, so defenders can tell
+an exercise apart from a real attack and trace it in their logs.
+
+## Who it's for
+
+- **Teams that own applications and infrastructure**, who want to find and fix
+  weaknesses first.
+- **Security and infrastructure teams**, who want to test their own detection
+  and response against realistic attacks.
+
+## How we build it
+
+1. **Keep up with upstream easily.** Taking a new Strix release stays routine,
+   however much we change; conflicts are limited to the lines we changed.
+2. **Run as Jitera.** Our brand wherever people look; our User-Agent on every
+   request, including scan traffic.
+3. **Keep the source clean.** Engineers and agents edit the real code and
+   review real diffs on GitHub.
+4. **Let the eval lead.** A change is done when the eval says so: every feature
+   must pass it.
+5. **Agents lead development.** AI agents own the project's day-to-day work and
+   prove every change through verify and the eval. People set direction and
+   approve. See [agent-led development](../architecture/agent-led-development.md).
+6. **Scale without slowing down.** More features, agents, people or eval
+   targets must not make syncing harder.
 
 ## Principles
 
-- **Upstream is our base, not our competitor.** We change as little upstream
-  code as we can, add our own code beside it, and contribute generic fixes back
-  so our changes shrink over time.
-- **Every change is recorded.** A checkpoint (the upstream commit we're based on)
-  plus a patch per changed file means any upstream release can be replayed
-  onto our work.
-- **Identify ourselves honestly.** Our traffic says who it is. We don't send
-  usage data to the upstream vendor, and we don't route users to its paid cloud.
-- **Measured, not assumed.** A feature is finished when the eval says so, not
-  when the code compiles.
+- **Authorized testing only.** Attack only systems you own or have written
+  permission to test, within the agreed scope. Simulation must never become
+  a real attack.
+- **Identify ourselves honestly.** Our traffic says who it is. We send no usage
+  data to the upstream vendor and don't route users to its paid cloud.
+- **Proof over claims.** Findings come with a proof of concept; changes to the
+  tool come with verify and eval results.
+- **Upstream is our base.** We change as little upstream code as we can and
+  contribute generic fixes back, so our changes shrink over time.
 
 ## Not goals
 
-- Renaming upstream internals (the `strix` package, `STRIX_*` settings). That
+- Running against systems without permission, or causing real damage.
+- Renaming upstream internals (the `strix` package, `STRIX_*` settings), which
   would turn every sync into a manual merge.
 - Using Strix Cloud or upstream's hosted services.
 - Exact, repeatable finding counts. An AI agent varies run to run, so the eval
-  measures vulnerability *categories* covered against a gate.
+  measures vulnerability *categories* against a gate.
 
 ## How we'll know it's working
 
 | Goal | Signal |
 |---|---|
-| Easy sync | `fork/dev sync` of an upstream release finishes in minutes; only our edited lines ever conflict |
-| Runs as Jitera | `fork/dev audit` shows no upstream brand or endpoints outside features we disable |
-| Clean source | `fork/dev verify` passes on `main`; the number of edited upstream files grows slowly |
-| Quality leads | `main` passes the eval gate; coverage in `fork/dev eval-history` trends up |
+| Find attacks first | The eval passes its gate, and coverage in `fork/dev eval-history` trends up |
+| Rehearse the defense | Not measured yet. Measuring whether defenders detected a simulated attack is in the [plans](../plans/README.md) |
+| Easy sync | An upstream release syncs in minutes; only our edited lines ever conflict |
+| Runs as Jitera | `fork/dev audit` shows no upstream brand or endpoints outside disabled features |
+| Agents lead, with proof | Agent PRs carry passing `fork/dev verify`, tests and, for behavior changes, an eval summary |
 | Scales | New features land in `strix/jitera/` and need few or no upstream edits |
 
-## Open questions for the team
+## Open questions
 
-- Who are the users: Jitera's internal security team, customers, or both?
-- How is it distributed: source checkout, binaries on our releases, a container?
-- Which targets besides OWASP Juice Shop define "good"? (APIs, other apps?)
-- What coverage do we commit to on the eval, once the gate is calibrated?
-- Which product features beyond upstream's are on the roadmap? See
-  [plans](../plans/README.md).
+- How is the tool distributed: source checkout, binaries, a container?
+- How should a defense rehearsal be run and scored: which signals from
+  monitoring and response count as "detected"?
+- Which targets besides OWASP Juice Shop define "good"?
+- What coverage do we commit to, once the eval gate is calibrated?
