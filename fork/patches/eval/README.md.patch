@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/eval/README.md b/eval/README.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..4c57fccc153b135a7e5abab0aa3784de8e3144f1
+index 0000000000000000000000000000000000000000..b58c367062230239948edab6f0921d80649c83a8
 --- /dev/null
 +++ b/eval/README.md
-@@ -0,0 +1,88 @@
+@@ -0,0 +1,87 @@
 +# Eval: OWASP Juice Shop
 +
 +Runs `jitera-pentest` against [OWASP Juice Shop](https://owasp.org/www-project-juice-shop/), a deliberately vulnerable app OWASP publishes for security training and tool benchmarking, and checks that the scan still finds what it should.
@@ -26,10 +26,9 @@ index 0000000000000000000000000000000000000000..4c57fccc153b135a7e5abab0aa3784de
 +
 +## Run it
 +
-+```bash
-+export JITERA_PENTEST_LLM="openrouter/z-ai/glm-5.3"
-+export LLM_API_KEY="your-api-key"
++Set your model and key in the checkout's `.env` first (`cp .env.example .env`). The eval and GEPA read it too.
 +
++```bash
 +fork/dev eval --check                         # is the target up? (no scan, no cost)
 +fork/dev eval                                 # scan, score, gate
 +fork/dev eval --from-run DIR                  # score a finished run, no scan
@@ -81,7 +80,7 @@ index 0000000000000000000000000000000000000000..4c57fccc153b135a7e5abab0aa3784de
 +
 +- The best instruction is written to `gepa/optimized_instructions.txt`. Try it with `run_eval --instruction-file eval/gepa/optimized_instructions.txt` before adopting it.
 +- GEPA checks its budget between iterations, so it can make a few more calls than `--max-metric-calls` (the dry run made 8 against a cap of 6). Size the cap and the per-scan budget with that in mind.
-+- The reflection model is `STRIX_LLM` (set via `JITERA_PENTEST_LLM`), or `--reflection-model`.
++- The reflection model is `JITERA_PENTEST_LLM` from `.env` (or your shell), or `--reflection-model`.
 +
 +## Files
 +

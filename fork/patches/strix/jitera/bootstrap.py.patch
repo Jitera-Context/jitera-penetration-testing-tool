@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/bootstrap.py b/strix/jitera/bootstrap.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..071fd88c017ddd0b32d63da17a10d5c334412b10
+index 0000000000000000000000000000000000000000..2d619d21fee363da28c8f32254135b55f06129be
 --- /dev/null
 +++ b/strix/jitera/bootstrap.py
-@@ -0,0 +1,121 @@
+@@ -0,0 +1,130 @@
 +"""Entry point of the ``jitera-pentest`` command.
 +
 +Order matters: activate the Jitera brand and environment defaults first, then
@@ -28,7 +28,7 @@ index 0000000000000000000000000000000000000000..071fd88c017ddd0b32d63da17a10d5c3
 +from typing import TYPE_CHECKING
 +from urllib.parse import urlparse
 +
-+from strix.jitera import brand
++from strix.jitera import brand, dotenv
 +
 +
 +if TYPE_CHECKING:
@@ -109,9 +109,18 @@ index 0000000000000000000000000000000000000000..071fd88c017ddd0b32d63da17a10d5c3
 +        register_agent_tools(*tools)
 +
 +
++def load_env_file() -> None:
++    """Read our .env (see strix/jitera/dotenv.py). The real environment wins."""
++    path = dotenv.default_env_file()
++    if os.environ.get(dotenv.ENV_FILE_VAR) and not path.is_file():
++        sys.stderr.write(f"{dotenv.ENV_FILE_VAR} points to a missing file: {path}\n")
++    dotenv.load(path, os.environ)
++
++
 +def main(argv: Sequence[str] | None = None) -> None:
 +    args = list(sys.argv[1:] if argv is None else argv)
 +    brand.activate(brand.JITERA)  # before any upstream module is imported
++    load_env_file()
 +    prepare_environment(os.environ)
 +
 +    reason = blocked_reason(args)

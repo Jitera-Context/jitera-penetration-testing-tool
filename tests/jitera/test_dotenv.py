@@ -1,0 +1,82 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from strix.jitera import bootstrap, brand, dotenv
+
+
+if TYPE_CHECKING:
+    import pytest
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_parse_handles_comments_quotes_and_export() -> None:
+    text = """
+# a comment
+JITERA_PENTEST_LLM=openai/gpt-5.4
+export LLM_API_KEY="sk-quoted"
+LLM_API_BASE='http://localhost:11434'
+JITERA_PENTEST_REASONING_EFFORT=high  # trailing comment
+LLM_EXTRA_HEADERS={"X-Team": "security"}
+"""
+    assert dotenv.parse(text) == {
+        "JITERA_PENTEST_LLM": "openai/gpt-5.4",
+        "LLM_API_KEY": "sk-quoted",
+        "LLM_API_BASE": "http://localhost:11434",
+        "JITERA_PENTEST_REASONING_EFFORT": "high",
+        "LLM_EXTRA_HEADERS": '{"X-Team": "security"}',
+    }
+
+
+def test_parse_skips_empty_values_and_bad_keys() -> None:
+    # An empty value must not reach the environment: upstream treats an empty
+    # variable as "clear the saved setting".
+    assert dotenv.parse("LLM_API_KEY=\nJITERA_PENTEST_LLM=\n1BAD=x\nnot a line\n") == {}
+
+
+def test_load_never_overrides_the_real_environment(tmp_path: Path) -> None:
+    env_file = tmp_path / ".env"
+    env_file.write_text("LLM_API_KEY=from-file\nLLM_API_BASE=http://file\n")
+    env = {"LLM_API_KEY": "from-shell"}
+    assert dotenv.load(env_file, env) == ["LLM_API_BASE"]
+    assert env == {"LLM_API_KEY": "from-shell", "LLM_API_BASE": "http://file"}
+
+
+def test_load_of_a_missing_file_is_a_no_op(tmp_path: Path) -> None:
+    env: dict[str, str] = {}
+    assert dotenv.load(tmp_path / "missing.env", env) == []
+    assert env == {}
+
+
+def test_default_file_is_this_checkouts_env_not_the_current_folder(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.delenv(dotenv.ENV_FILE_VAR, raising=False)
+    monkeypatch.chdir(tmp_path)  # e.g. inside a project being scanned
+    assert dotenv.default_env_file() == REPO_ROOT / ".env"
+
+
+def test_env_file_variable_overrides_the_location(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    custom = tmp_path / "my.env"
+    monkeypatch.setenv(dotenv.ENV_FILE_VAR, str(custom))
+    assert dotenv.default_env_file() == custom
+
+
+def test_example_file_settings_reach_strix_names(tmp_path: Path) -> None:
+    env_file = tmp_path / ".env"
+    env_file.write_text("JITERA_PENTEST_LLM=openai/gpt-5.4\nLLM_API_KEY=sk-test\n")
+    env: dict[str, str] = {}
+    dotenv.load(env_file, env)
+    bootstrap.prepare_environment(env, brand.JITERA)
+    assert env["STRIX_LLM"] == "openai/gpt-5.4"
+    assert env["LLM_API_KEY"] == "sk-test"
+
+
+def test_the_shipped_example_has_no_values_filled_in() -> None:
+    # Copying .env.example as-is must not set anything (no fake key, no model).
+    assert dotenv.parse((REPO_ROOT / ".env.example").read_text()) == {}
