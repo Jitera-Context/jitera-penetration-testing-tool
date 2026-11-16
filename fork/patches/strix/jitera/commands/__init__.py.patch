@@ -1,0 +1,31 @@
+Title: Add strix/jitera/commands/__init__.py
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/strix/jitera/commands/__init__.py b/strix/jitera/commands/__init__.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..1d27cfe849c64cf6ef61332dec664fd12cb2466d
+--- /dev/null
++++ b/strix/jitera/commands/__init__.py
+@@ -0,0 +1,21 @@
++"""Subcommands of the ``jitera`` CLI that upstream Strix does not have.
++
++Add a module with ``def run(argv: list[str]) -> int`` and register it in
++``COMMANDS``. ``jitera <name> ...`` then runs it instead of the Strix CLI.
++Upstream already uses: view, auth, completion(s), cloud.
++"""
++
++from __future__ import annotations
++
++from typing import TYPE_CHECKING
++
++from strix.jitera.commands import about
++
++
++if TYPE_CHECKING:
++    from collections.abc import Callable
++
++
++COMMANDS: dict[str, Callable[[list[str]], int]] = {
++    "about": about.run,
++}

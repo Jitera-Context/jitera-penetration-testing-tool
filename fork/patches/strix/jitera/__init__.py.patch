@@ -1,0 +1,16 @@
+Title: Add strix/jitera/__init__.py
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/strix/jitera/__init__.py b/strix/jitera/__init__.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..ac5d5ab3dd61c48b588e1cdfd3dbb5556b9c0193
+--- /dev/null
++++ b/strix/jitera/__init__.py
+@@ -0,0 +1,6 @@
++"""Jitera's own code inside the Strix source tree.
++
++Every file here is new compared with upstream, so ``fork/dev save`` records it
++as a patch like any other change. ``strix.jitera.bootstrap`` plugs it into
++Strix through upstream's own hooks.
++"""

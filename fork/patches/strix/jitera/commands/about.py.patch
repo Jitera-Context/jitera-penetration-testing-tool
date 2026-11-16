@@ -1,0 +1,31 @@
+Title: Add strix/jitera/commands/about.py
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/strix/jitera/commands/about.py b/strix/jitera/commands/about.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..7be1573ad83890039616d38087a0bcd2353b147d
+--- /dev/null
++++ b/strix/jitera/commands/about.py
+@@ -0,0 +1,21 @@
++"""``jitera about``: product name, version, and what it is built on."""
++
++from __future__ import annotations
++
++import sys
++
++from strix.jitera import brand
++from strix.jitera.bootstrap import package_version
++
++
++def run(argv: list[str]) -> int:
++    if argv:
++        sys.stderr.write("usage: jitera about\n")
++        return 2
++    profile = brand.current()
++    sys.stdout.write(
++        f"{profile.name} {package_version()}\n"
++        f"{profile.homepage}\n"
++        f"Built on Strix (https://github.com/usestrix/strix), Apache-2.0.\n",
++    )
++    return 0

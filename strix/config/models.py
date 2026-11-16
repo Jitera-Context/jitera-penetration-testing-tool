@@ -884,9 +884,12 @@ def _openrouter_error_type(error: object) -> object:
     return None
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 APP_ATTRIBUTION_HEADERS = {
-    "HTTP-Referer": "https://strix.ai",
-    "X-Title": "Strix",
+    "HTTP-Referer": brand.current().homepage,
+    "X-Title": brand.current().name,
 }
 
 OPENROUTER_ATTRIBUTION_HEADERS = {

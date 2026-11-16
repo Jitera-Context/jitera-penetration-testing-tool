@@ -1,0 +1,17 @@
+Title: Binary starts from strix/jitera/__main__.py
+Why: The PyInstaller binary must run our bootstrap before the Strix CLI.
+Upstream-PR: none
+
+diff --git a/strix.spec b/strix.spec
+index 987d8b96c020ad43b19ecfd2bdf6cd86ab338477..850ef1ec7b0a63d2eefcd3b44c5a3a8b9389f4b0 100644
+--- a/strix.spec
++++ b/strix.spec
+@@ -244,7 +244,7 @@ excludes = [
+ ]
+ 
+ a = Analysis(
+-    ['strix/interface/main.py'],
++    ['strix/jitera/__main__.py'],  # Jitera fork: start from our entry point
+     pathex=[str(project_root)],
+     binaries=binaries,
+     datas=datas,
