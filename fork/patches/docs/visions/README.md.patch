@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/docs/visions/README.md b/docs/visions/README.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..131c6ec0e9f3db645e746f6a2e8119ff4c03f306
+index 0000000000000000000000000000000000000000..0dea04b35d6a0169c9c49059978258541b6d6d70
 --- /dev/null
 +++ b/docs/visions/README.md
 @@ -0,0 +1,146 @@
@@ -31,7 +31,7 @@ index 0000000000000000000000000000000000000000..131c6ec0e9f3db645e746f6a2e8119ff
 +before anyone does it, and you act on it:
 +
 +- validated findings, not guesses, each with severity and fix guidance;
-+- reports for people (Markdown, PDF) and for pipelines (JSON, SARIF);
++- reports for people (Markdown) and for pipelines (JSON, CSV, SARIF);
 +- runs on demand or in CI, so new weaknesses are caught as code changes.
 +
 +### 2. Rehearse the defense
