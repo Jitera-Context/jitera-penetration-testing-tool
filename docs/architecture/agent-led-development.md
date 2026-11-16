@@ -1,0 +1,81 @@
+# Agent-led development
+
+**AI agents own this project's development, and they prove every change.**
+Agents do the day-to-day work end to end. People set the direction and approve
+what ships. Nothing is accepted on a description alone: every change arrives
+with evidence from `fork/dev verify`, the tests and, for behavior changes, the
+eval.
+
+## Who does what
+
+| Agents (owners of the work) | People (owners of the direction) |
+|---|---|
+| Pick work from [plans](../plans/README.md) and keep the plans current | Set the [vision](../visions/README.md) and priorities |
+| Design within this architecture; write code, tests and docs | Review and approve pull requests |
+| Run verify, tests and the eval, and report the results | Approve spending: paid scans, GEPA runs, CI budget |
+| Sync upstream and fix failed patches | Own credentials (`.env`, CI secrets) and target authorization |
+| Open pull requests with the evidence attached | Decide merges, and changes to the eval gate |
+
+## Proof over claims
+
+| Change | Proof the agent attaches |
+|---|---|
+| Any change | `fork/dev verify` passes, and `fork/dev test` passes (or each failure is shown to fail on upstream too) |
+| Agent behavior, and every upstream sync | `fork/dev eval` passes its gate on a fresh scan, with the summary pasted ([eval-driven development](eval-driven-development.md)) |
+| Brand or network identity | `fork/dev audit` is no worse than before |
+| Docs | Links resolve; every claim checked against the code |
+
+## The loop
+
+```mermaid
+flowchart TB
+    direction["People: vision and priorities"] --> pick["Agent picks a plan item"]
+    pick --> build["Agent implements<br/>(/fork-change, /fork-sync)"]
+    build --> prove["Agent proves it:<br/>fork/dev verify, fork/dev test,<br/>fork/dev eval for behavior changes"]
+    prove --> ok{"All proof passes?"}
+    ok -- no --> build
+    ok -- yes --> pr["Agent opens a PR with the evidence"]
+    pr --> review["People review and approve"]
+    review --> merge["Merge (a merge commit for syncs)"]
+    merge --> plans["Agent updates docs/plans"]
+    plans --> pick
+```
+
+## What agents do alone, and what they ask about
+
+| Agents go ahead | Agents ask first |
+|---|---|
+| Read code, design, write code, tests and docs | Pushing to `main`, or merging any PR |
+| Run free checks: `verify`, `test`, `audit`, `eval --check`, `eval --from-run`, `gepa --dry-run` | Anything that costs money: real scans, real GEPA runs |
+| Commit and push to their own branch, and open PRs, when asked to ship | Lowering the eval gate, or editing the baseline to make a run pass |
+| Fix failed patches during a sync | Adding or changing dependencies (`uv.lock`) |
+| Update `docs/plans` and the other docs | Touching credentials or `.env` |
+|  | Scanning anything except the authorized eval targets |
+
+## Reporting rules
+
+Evidence is only useful when it's honest:
+
+- **Say what ran and what didn't.** "Tests pass" means they ran. If a real scan
+  couldn't run (target down, no model configured), say so.
+- **Paste real output**, not a summary written from memory.
+- **Prove "pre-existing".** Before calling a failure pre-existing, run the same
+  test on untouched upstream at the checkpoint and show it fails there too.
+- **Report uncertainty plainly.** An unverified claim is labeled as unverified.
+
+## What agents work from
+
+| Need | Where |
+|---|---|
+| Rules loaded automatically | [`CLAUDE.md`](../../CLAUDE.md) at the repo root |
+| Every command | `fork/dev help` |
+| Guided workflows | `/fork-change`, `/fork-sync`, `/eval-run`, `/eval-gepa` |
+| Why and how | `docs/visions/`, `docs/architecture/`, `docs/plans/` |
+| A PR checklist with the proof sections | `.github/pull_request_template.md` |
+
+## Enforcement today and next
+
+| Today | Next |
+|---|---|
+| People check the evidence in the PR template | CI runs verify, tests and a quick eval on every agent PR, and blocks merges that fail (plans items 3 and 4) |
+| Agents follow `CLAUDE.md` and the skills | The same rules for other coding agents, through `AGENTS.md` |

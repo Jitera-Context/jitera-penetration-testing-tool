@@ -54,7 +54,9 @@ flowchart TB
 4. **Run the eval on a fresh scan.** `fork/dev eval --check` first confirms the
    target is up and a model is configured.
 5. **Open the PR with the evidence:** the summary `fork/dev eval` prints
-   (coverage, gate, missed categories) and the scan mode and cost.
+   (coverage, gate, missed categories) and the scan mode and cost. Most changes
+   here are made by agents, and this evidence is how they prove their work
+   ([agent-led development](agent-led-development.md)).
 6. **Review checks the evidence** as well as the code, using the
    [PR template](../../.github/pull_request_template.md) checklist.
 

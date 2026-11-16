@@ -3,7 +3,7 @@ Why: Upstream's README is Strix's product page. Listed in fork/OWNED, so sync ke
 Upstream-PR: none
 
 diff --git a/README.md b/README.md
-index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..d2ac7ff3bde75ea24df8a314d5dabaa09a11fd04 100644
+index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..807889a7df1021c9952710b771c585d5bf6a2a50 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,393 +1,208 @@
@@ -491,8 +491,8 @@ index 2cabdb1c9aa0f5d2c42955935f0bca0ed175dd5c..d2ac7ff3bde75ea24df8a314d5dabaa0
 -Full documentation is available at **[docs.strix.ai](https://docs.strix.ai)** - including detailed guides for usage, CI/CD integrations, skills, and advanced configuration.
 +| Folder | What's in it |
 +|---|---|
-+| [`docs/visions/`](docs/visions/README.md) | What we're building and why: goals, principles, open questions |
-+| [`docs/architecture/`](docs/architecture/README.md) | How it's built to scale and stay in sync with upstream, and why every feature must pass the eval |
++| [`docs/visions/`](docs/visions/README.md) | Detect attacks before they happen, and rehearse how defenders respond: goals, principles, open questions |
++| [`docs/architecture/`](docs/architecture/README.md) | How it's built to scale and stay in sync with upstream; every feature must pass the eval; agents lead development and prove every change |
 +| [`docs/plans/`](docs/plans/README.md) | What's done, what's next, and open decisions |
  
 -## Contributing

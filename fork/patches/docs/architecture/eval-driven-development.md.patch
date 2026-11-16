@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/docs/architecture/eval-driven-development.md b/docs/architecture/eval-driven-development.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..c6ec74d5ebd32a43df99bba42d993215fa3ec094
+index 0000000000000000000000000000000000000000..b5cbf07ac015002a846ba64fe3a10da0387da0e5
 --- /dev/null
 +++ b/docs/architecture/eval-driven-development.md
-@@ -0,0 +1,109 @@
+@@ -0,0 +1,111 @@
 +# Eval-driven development
 +
 +**Every feature must pass the eval before it merges.** For an AI pentest
@@ -64,7 +64,9 @@ index 0000000000000000000000000000000000000000..c6ec74d5ebd32a43df99bba42d993215
 +4. **Run the eval on a fresh scan.** `fork/dev eval --check` first confirms the
 +   target is up and a model is configured.
 +5. **Open the PR with the evidence:** the summary `fork/dev eval` prints
-+   (coverage, gate, missed categories) and the scan mode and cost.
++   (coverage, gate, missed categories) and the scan mode and cost. Most changes
++   here are made by agents, and this evidence is how they prove their work
++   ([agent-led development](agent-led-development.md)).
 +6. **Review checks the evidence** as well as the code, using the
 +   [PR template](../../.github/pull_request_template.md) checklist.
 +

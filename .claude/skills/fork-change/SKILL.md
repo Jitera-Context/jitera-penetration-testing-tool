@@ -39,6 +39,9 @@ Prefer `strix/jitera/` plus upstream's hooks. Small edits to upstream files mean
    For an edited upstream file, replace the `Title:` / `Why:` TODO lines in its patch.
    New files get a header automatically.
 5. Commit the code and its patches together. CI runs `fork/dev verify`, which fails if they differ.
+6. You own the change: attach the proof (real `verify`, `test` and, for behavior
+   changes, eval output) to the PR, and say what you didn't run. Ask before
+   merging. See `docs/architecture/agent-led-development.md`.
 
 If a patch file conflicts while merging branches, resolve the code, then run `fork/dev save`. Never edit a patch by hand.
 

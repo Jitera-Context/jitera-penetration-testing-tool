@@ -1,0 +1,43 @@
+# jitera-pentest: instructions for coding agents
+
+You own this project's day-to-day development, and you prove every change.
+People set direction and approve what ships. The full rules are in the docs;
+this file is the short version.
+
+Read first:
+
+- [`docs/visions/README.md`](docs/visions/README.md): what we're building and why
+- [`docs/architecture/agent-led-development.md`](docs/architecture/agent-led-development.md): what you own, what proof to attach, what to ask about
+- [`docs/architecture/eval-driven-development.md`](docs/architecture/eval-driven-development.md): every feature must pass the eval
+- [`docs/architecture/fork-and-sync.md`](docs/architecture/fork-and-sync.md) and [`extending.md`](docs/architecture/extending.md): how changes are recorded and where code goes
+- [`docs/plans/README.md`](docs/plans/README.md): what to work on next; keep it current
+
+## Prove every change
+
+- `fork/dev verify` and `fork/dev test` pass. A failure is "pre-existing" only
+  after you've shown it fails on untouched upstream at `fork/CHECKPOINT` too.
+- Behavior changes (prompts, skills, tools, scan flow, runtime, LLM settings,
+  scan traffic) and every upstream sync: `fork/dev eval` passes on a fresh scan.
+- Put real output in the PR (`.github/pull_request_template.md`), and say what
+  you didn't run and why.
+
+## Ask before
+
+- pushing to `main` or merging any PR;
+- anything that costs money: real scans, real GEPA runs;
+- lowering the eval gate, or editing the baseline to make a run pass;
+- adding or changing dependencies (`uv.lock`), or touching `.env` and credentials;
+- scanning anything but the authorized eval targets.
+
+## How to work
+
+- `fork/dev help` lists every command. Skills: `/fork-change`, `/fork-sync`,
+  `/eval-run`, `/eval-gepa`.
+- Edit the source in place. Never rename upstream internals (the `strix`
+  package, `STRIX_*` settings). Our code goes in `strix/jitera/`, our tests in
+  `tests/jitera/`.
+- `fork/dev save`, then commit the code and its patches together. Sync PRs
+  merge with a merge commit, never a squash.
+- Run uv with `--frozen`.
+- `AGENTS.md` is upstream's Strix guide. In this fork, the command is
+  `jitera-pentest`, settings use `JITERA_PENTEST_*`, and `cloud` is blocked.

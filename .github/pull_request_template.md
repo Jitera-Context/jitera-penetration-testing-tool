@@ -2,6 +2,18 @@
 
 <!-- What changes, and why. Link the plan item if there is one (docs/plans). -->
 
+## Proof
+
+Paste real output, not a summary. Say what you didn't run, and why.
+See docs/architecture/agent-led-development.md.
+
+- [ ] `fork/dev verify` passes
+- [ ] `fork/dev test` passes, or each failure is shown to fail on untouched upstream too
+
+```text
+<!-- paste fork/dev verify and fork/dev test results -->
+```
+
 ## Eval
 
 Every feature must pass the eval (docs/architecture/eval-driven-development.md).
@@ -17,7 +29,6 @@ Every feature must pass the eval (docs/architecture/eval-driven-development.md).
 
 ## Fork workflow
 
-- [ ] `fork/dev test` passes
-- [ ] `fork/dev save` run; code and patches committed together (`fork/dev verify` passes)
+- [ ] `fork/dev save` run; code and patches committed together
 - [ ] New patches to upstream files have a real `Title:` and `Why:`
 - [ ] A sync PR will be merged with **Create a merge commit**
