@@ -1,0 +1,23 @@
+Title: LLM attribution headers come from the brand profile
+Why: OpenRouter / Vercel AI Gateway should show our product, not Strix.
+Upstream-PR: none
+
+diff --git a/strix/config/models.py b/strix/config/models.py
+index 102d132cfd0ef63772c88b2c2c750602f4136772..6a8097a7675d843c8a9bf2e9191b381cb3715bfc 100644
+--- a/strix/config/models.py
++++ b/strix/config/models.py
+@@ -884,9 +884,12 @@ def _openrouter_error_type(error: object) -> object:
+     return None
+ 
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ APP_ATTRIBUTION_HEADERS = {
+-    "HTTP-Referer": "https://strix.ai",
+-    "X-Title": "Strix",
++    "HTTP-Referer": brand.current().homepage,
++    "X-Title": brand.current().name,
+ }
+ 
+ OPENROUTER_ATTRIBUTION_HEADERS = {

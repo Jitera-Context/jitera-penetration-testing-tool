@@ -1,0 +1,13 @@
+# Extended regexes, one per line, matched against "path:line:text" audit hits.
+# A matching hit is accepted and no longer reported. Keep each entry narrow and
+# say why it is allowed.
+
+# Upstream attribution we keep on purpose (Apache-2.0 §4: retain notices).
+# ^strix/example\.py:[0-9]+:.*Based on Strix
+
+# Our brand file keeps the upstream profile on purpose: upstream tests run with it.
+^strix/jitera/brand\.py:
+# Required attribution to upstream (Apache-2.0).
+^strix/jitera/commands/about\.py:.*Built on Strix
+# Our own messages explaining why upstream's cloud and self-update are blocked.
+^strix/jitera/bootstrap\.py:[0-9]+: +"(cloud|--update)":

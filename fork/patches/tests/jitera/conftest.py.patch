@@ -1,0 +1,28 @@
+Title: Add tests/jitera/conftest.py
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/tests/jitera/conftest.py b/tests/jitera/conftest.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..0902a312f2a9acdb0411de9788749cc54c1fbe5b
+--- /dev/null
++++ b/tests/jitera/conftest.py
+@@ -0,0 +1,18 @@
++from __future__ import annotations
++
++from typing import TYPE_CHECKING
++
++import pytest
++
++from strix.jitera import brand
++
++
++if TYPE_CHECKING:
++    from collections.abc import Iterator
++
++
++@pytest.fixture(autouse=True)
++def _restore_brand() -> Iterator[None]:
++    """Tests may activate JITERA; put UPSTREAM back so upstream tests are unaffected."""
++    yield
++    brand.activate(brand.UPSTREAM)

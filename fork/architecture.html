@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jitera Fork Blueprint</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap">
+<style>
+/* One reading column. Colours carry meaning everywhere:
+   blue = ours, amber = patch / checkpoint (the sync record), slate = upstream. */
+:root {
+  --bg: #f5f6f9;
+  --surface: #ffffff;
+  --ink: #141821;
+  --muted: #5a6375;
+  --line: #d6dbe4;
+  --code-bg: #eef1f6;
+  --fork: #2952cc;
+  --fork-soft: #e5ebfb;
+  --patch: #9a5a00;
+  --patch-soft: #fbefd9;
+  --up: #687183;
+  --up-soft: #e9ecf1;
+  --ok: #1d7448;
+  --ok-soft: #e1f2e8;
+  --bad: #b8322a;
+  --bad-soft: #fbe6e4;
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1116; --surface: #151a22; --ink: #e6e9ef; --muted: #9ba4b4; --line: #2b323d;
+    --code-bg: #11161d; --fork: #86a2ff; --fork-soft: #1a2446; --patch: #e3a548; --patch-soft: #33260f;
+    --up: #a3abb9; --up-soft: #1d232c; --ok: #59c98f; --ok-soft: #11291d; --bad: #ff8478; --bad-soft: #3a1a17;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1116; --surface: #151a22; --ink: #e6e9ef; --muted: #9ba4b4; --line: #2b323d;
+  --code-bg: #11161d; --fork: #86a2ff; --fork-soft: #1a2446; --patch: #e3a548; --patch-soft: #33260f;
+  --up: #a3abb9; --up-soft: #1d232c; --ok: #59c98f; --ok-soft: #11291d; --bad: #ff8478; --bad-soft: #3a1a17;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 1rem; line-height: 1.55; }
+main {
+  max-width: 880px; margin: 0 auto;
+  padding-block: 48px 88px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 64px;
+}
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h1 { font-size: clamp(1.9rem, 5vw, 2.4rem); }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.05rem; }
+p { margin: 0; max-width: 66ch; }
+code { font-family: var(--font-mono); font-size: .86em; background: var(--code-bg); padding: .08em .35em; border-radius: 4px; }
+.eyebrow { font-family: var(--font-mono); font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+section, header { display: grid; gap: 20px; }
+.head { display: grid; gap: 6px; }
+.head .eyebrow { color: var(--fork); }
+
+.model { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); gap: 10px; counter-reset: m; list-style: none; margin: 0; padding: 0; }
+.model li { counter-increment: m; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; font-size: .92rem; }
+.model li::before { content: counter(m); width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--fork-soft); color: var(--fork); font-family: var(--font-mono); font-size: .78rem; font-weight: 500; }
+.model li strong { font-size: .98rem; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: .72rem; padding: 2px 9px; border-radius: 999px; white-space: nowrap; font-weight: 500; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.chip.up { color: var(--up); background: var(--up-soft); }
+.chip.patch { color: var(--patch); background: var(--patch-soft); }
+.chip.fork { color: var(--fork); background: var(--fork-soft); }
+.chip.ok { color: var(--ok); background: var(--ok-soft); }
+
+/* folder tree */
+.tree { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: .8rem; line-height: 1.75; }
+.tree code, pre code { background: none; padding: 0; font-size: inherit; white-space: pre; }
+.tree .f { color: var(--fork); font-weight: 500; }
+.tree .p { color: var(--patch); font-weight: 500; }
+.tree .u { color: var(--up); }
+.tree .n { color: var(--muted); }
+.tree .ok { color: var(--ok); }
+
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 10px; }
+.rule { border-radius: 10px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; font-size: .92rem; }
+.rule.f { background: var(--fork-soft); }
+.rule.p { background: var(--patch-soft); }
+.rule.u { background: var(--up-soft); }
+
+/* code */
+pre { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-family: var(--font-mono); font-size: .78rem; line-height: 1.6; }
+.figure { display: grid; gap: 6px; min-width: 0; }
+.label { font-family: var(--font-mono); font-size: .74rem; color: var(--muted); }
+.hd { color: var(--patch); }
+.add { color: var(--ok); }
+.del { color: var(--bad); }
+.c { color: var(--muted); }
+.examples { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 14px; }
+
+/* tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: .9rem; }
+th, td { text-align: left; vertical-align: top; padding: 9px 14px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+th { font-family: var(--font-mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 500; background: var(--bg); white-space: nowrap; }
+td:first-child code { white-space: nowrap; }
+tr.group td { background: var(--bg); font-family: var(--font-mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); padding-block: 6px; }
+
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px; align-items: start; }
+.warn { font-size: .92rem; border-left: 3px solid var(--patch); padding: 2px 0 2px 12px; max-width: 70ch; }
+footer { color: var(--muted); font-size: .82rem; border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 4px; }
+
+/* sequence diagrams (generated by fork/scripts/render-diagrams.py) */
+.seq { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 10px; }
+.seq svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.seq .hd { stroke: none; }
+.seq .hd-dev { fill: var(--code-bg); }
+.seq .hd-fork { fill: var(--fork-soft); }
+.seq .hd-patch { fill: var(--patch-soft); }
+.seq .hd-up { fill: var(--up-soft); }
+.seq .hd-ok { fill: var(--ok-soft); }
+.seq .pl { fill: var(--ink); font-family: var(--font-display); font-size: 13px; font-weight: 600; }
+.seq .ps { fill: var(--muted); font-family: var(--font-mono); font-size: 10.5px; }
+.seq .life { stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.seq .m { stroke: var(--ink); stroke-width: 1.4; fill: none; }
+.seq .m-ret { stroke: var(--muted); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+.seq .m-ok { stroke: var(--ok); stroke-width: 1.6; fill: none; }
+.seq .m-bad { stroke: var(--bad); stroke-width: 1.6; fill: none; }
+.seq .ml { fill: var(--ink); font-family: var(--font-mono); font-size: 11.5px; }
+.seq .ml-ret { fill: var(--muted); font-family: var(--font-mono); font-size: 11.5px; }
+.seq .ml-ok { fill: var(--ok); font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; }
+.seq .ml-bad { fill: var(--bad); font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; }
+.seq .num { fill: var(--fork); font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; }
+.seq .a { fill: var(--ink); }
+.seq .a-ret { fill: var(--muted); }
+.seq .a-ok { fill: var(--ok); }
+.seq .a-bad { fill: var(--bad); }
+.seq .frame { fill: none; stroke: var(--muted); stroke-width: 1; }
+.seq .frame-sep { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 6 4; }
+.seq .tab { fill: var(--bg); stroke: var(--muted); stroke-width: 1; }
+.seq .tabt { fill: var(--ink); font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; }
+.seq .guard { fill: var(--muted); font-family: var(--font-mono); font-size: 10.5px; }
+.seq .note { fill: var(--patch-soft); stroke: none; }
+.seq .notet { fill: var(--ink); font-family: var(--font-body); font-size: 11.5px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Jitera · fork of usestrix/strix</span>
+    <h1>Jitera Fork Blueprint</h1>
+    <ol class="model">
+      <li><strong>Edit the source</strong><span>Change files directly in the repo. GitHub shows the real code, so review is easy.</span></li>
+      <li><strong>Keep patches</strong><span><code>fork/dev save</code> records every change as a patch, used only for syncing.</span></li>
+      <li><strong>Store the checkpoint</strong><span><code>fork/CHECKPOINT</code> holds the upstream commit hash our changes are based on.</span></li>
+      <li><strong>Sync</strong><span>Back to the checkpoint, remove our changes, take the latest upstream, re-apply the patches, fix any that fail.</span></li>
+    </ol>
+    <div class="legend">
+      <span class="chip fork">ours</span>
+      <span class="chip patch">sync record: patches, checkpoint</span>
+      <span class="chip up">upstream Strix</span>
+      <span class="chip ok">✓ exists now</span>
+    </div>
+  </header>
+
+  <!-- 1 -->
+  <section id="structure">
+    <div class="head"><span class="eyebrow">1</span><h2>Folder structure</h2></div>
+<pre class="tree"><code>jitera-penetration-testing-tool/
+├── strix/                             <span class="n">upstream source, edited directly</span>
+│   ├── <span class="f">jitera/</span>                        <span class="n">our code (new files)</span>                 <span class="ok">✓</span>
+│   │   ├── <span class="f">brand.py</span>                   <span class="n">brand values</span>
+│   │   ├── <span class="f">bootstrap.py</span>               <span class="n">`jitera` command: defaults, hooks, then strix</span>
+│   │   ├── <span class="f">__main__.py</span>                <span class="n">binary entry</span>
+│   │   ├── <span class="f">tools/</span>  <span class="f">skills/</span>  <span class="f">commands/</span>
+│   ├── config/<span class="f">models.py</span>               <span class="n">edited: LLM attribution from brand</span>
+│   ├── report/<span class="f">sarif.py</span>                <span class="n">edited: SARIF tool name from brand</span>
+│   └── <span class="u">…</span>                              <span class="n">upstream, unchanged</span>
+├── tests/
+│   ├── <span class="f">jitera/</span>                        <span class="n">our tests (new files)</span>                <span class="ok">✓</span>
+│   └── <span class="u">…</span>                              <span class="n">upstream tests, unchanged</span>
+├── <span class="f">NOTICE</span>                             <span class="n">new: credits Strix (Apache-2.0)</span>      <span class="ok">✓</span>
+├── <span class="f">pyproject.toml</span>                     <span class="n">edited: +1 line, `jitera` command</span>    <span class="ok">✓</span>
+├── <span class="f">strix.spec</span>                         <span class="n">edited: binary starts from jitera</span>    <span class="ok">✓</span>
+├── <span class="u">containers/  docs/  skills/  scripts/  Makefile  uv.lock  README.md  …</span>
+│
+│   <span class="n">── sync record and tooling (never patched, never touched by sync) ──</span>
+├── <span class="p">fork/</span>
+│   ├── <span class="p">CHECKPOINT</span>                     <span class="n">upstream commit hash we are based on</span> <span class="ok">✓</span>
+│   ├── <span class="p">patches/</span>                       <span class="n">one patch per changed file, same path</span> <span class="ok">✓</span>
+│   │   ├── <span class="p">strix/config/models.py.patch</span>     <span class="n">edit</span>
+│   │   ├── <span class="p">strix/jitera/brand.py.patch</span>      <span class="n">new file</span>
+│   │   └── <span class="p">…</span>                              <span class="n">18 patches today</span>
+│   ├── <span class="p">dev</span>                            <span class="n">all commands</span>                         <span class="ok">✓</span>
+│   ├── <span class="p">scripts/</span>                       <span class="n">sync, brand audit, diagrams</span>          <span class="ok">✓</span>
+│   └── <span class="p">architecture.html</span>              <span class="n">this page</span>                            <span class="ok">✓</span>
+└── <span class="p">.claude/skills/</span>                    <span class="n">/fork-change, /fork-sync</span>             <span class="ok">✓</span></code></pre>
+    <div class="rules">
+      <div class="rule f"><strong>Code: edit in place</strong><span>Edited, new and deleted files all live in the normal source tree.</span></div>
+      <div class="rule p"><strong>Patches: everything since the checkpoint</strong><span>New files too. <code>fork/dev save</code> writes them. Never edit a patch by hand.</span></div>
+      <div class="rule u"><strong>CI keeps them in step</strong><span><code>fork/dev verify</code> fails a PR whose patches don’t match its code.</span></div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="write">
+    <div class="head"><span class="eyebrow">2</span><h2>How to write code</h2><p class="muted">Any file can change. New features usually go in <code>strix/jitera/</code> and plug in through upstream’s hooks, which keeps edits to upstream files small.</p></div>
+    <div class="examples">
+      <div class="figure">
+        <span class="label">Agent tool · strix/jitera/tools/ticket.py</span>
+<pre><code>from agents import function_tool
+
+@function_tool(timeout=30)
+async def create_ticket(title: str, body: str) -&gt; str:
+    """File a confirmed finding in our tracker."""
+    ...
+<span class="c"># then return it from get_tools() in tools/__init__.py</span></code></pre>
+      </div>
+      <div class="figure">
+        <span class="label">Skill · strix/jitera/skills/&lt;category&gt;/&lt;name&gt;.md</span>
+<pre><code><span class="c"># new path       → new skill</span>
+<span class="c"># upstream path  → replaces upstream's skill</span>
+strix/jitera/skills/custom/jitera_sso.md
+strix/jitera/skills/vulnerabilities/idor.md</code></pre>
+      </div>
+      <div class="figure">
+        <span class="label">CLI command · strix/jitera/commands/</span>
+<pre><code>def run(argv: list[str]) -&gt; int:
+    ...
+    return 0
+<span class="c"># register in COMMANDS → `jitera &lt;name&gt;`</span></code></pre>
+      </div>
+      <div class="figure">
+        <span class="label">Edit an upstream file to use the brand</span>
+<pre><code>from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+TOOL_NAME = brand.current().name</code></pre>
+      </div>
+    </div>
+    <p class="muted">Brand values live in <code>strix/jitera/brand.py</code>. Upstream tests run with the Strix profile. The <code>jitera</code> command switches to ours.</p>
+  </section>
+
+  <!-- 3 -->
+  <section id="patches">
+    <div class="head"><span class="eyebrow">3</span><h2>How code becomes patches</h2></div>
+    <div class="figure">
+      <span class="label">Sequence: develop</span>
+      <div class="seq"><!--SEQGEN:develop-->
+<svg viewBox="0 0 782 488" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Develop: edit the source, test, save patches, commit code and patches, CI verify">
+<defs>
+<marker id="develop-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a" d="M0,0 L10,5 L0,10 z"/></marker>
+<marker id="develop-m-ret" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a-ret" d="M0,0 L10,5 L0,10 z"/></marker>
+<marker id="develop-m-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+<marker id="develop-m-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+</defs>
+<rect class="hd hd-dev" x="24.0" y="16" width="134" height="48" rx="8"/>
+<text class="pl" x="91.0" y="37" text-anchor="middle">Developer</text>
+<text class="ps" x="91.0" y="53" text-anchor="middle">you</text>
+<line class="life" x1="91.0" y1="64" x2="91.0" y2="480"/>
+<rect class="hd hd-up" x="174.0" y="16" width="134" height="48" rx="8"/>
+<text class="pl" x="241.0" y="37" text-anchor="middle">Repo source</text>
+<text class="ps" x="241.0" y="53" text-anchor="middle">files you edit</text>
+<line class="life" x1="241.0" y1="64" x2="241.0" y2="480"/>
+<rect class="hd hd-fork" x="324.0" y="16" width="134" height="48" rx="8"/>
+<text class="pl" x="391.0" y="37" text-anchor="middle">fork/dev</text>
+<text class="ps" x="391.0" y="53" text-anchor="middle">command runner</text>
+<line class="life" x1="391.0" y1="64" x2="391.0" y2="480"/>
+<rect class="hd hd-patch" x="474.0" y="16" width="134" height="48" rx="8"/>
+<text class="pl" x="541.0" y="37" text-anchor="middle">fork/patches</text>
+<text class="ps" x="541.0" y="53" text-anchor="middle">*.patch in git</text>
+<line class="life" x1="541.0" y1="64" x2="541.0" y2="480"/>
+<rect class="hd hd-ok" x="624.0" y="16" width="134" height="48" rx="8"/>
+<text class="pl" x="691.0" y="37" text-anchor="middle">GitHub + CI</text>
+<text class="ps" x="691.0" y="53" text-anchor="middle">PR review</text>
+<line class="life" x1="691.0" y1="64" x2="691.0" y2="480"/>
+<rect class="note" x="39.0" y="99" width="254.0" height="26" rx="5"/>
+<text class="notet" x="166.0" y="116" text-anchor="middle">Edit any file in the source</text>
+<line class="m" x1="94.0" y1="150" x2="387.0" y2="150" marker-end="url(#develop-m)"/>
+<text class="num" x="216.8" y="143">1</text>
+<text class="ml" x="237.6" y="143">test</text>
+<line class="m" x1="388.0" y1="184" x2="245.0" y2="184" marker-end="url(#develop-m)"/>
+<text class="num" x="264.2" y="177">2</text>
+<text class="ml" x="284.9" y="177">lint + tests</text>
+<line class="m-ret" x1="388.0" y1="218" x2="95.0" y2="218" marker-end="url(#develop-m-ret)"/>
+<text class="num" x="206.5" y="211">3</text>
+<text class="ml-ret" x="227.2" y="211">results</text>
+<line class="m" x1="94.0" y1="252" x2="387.0" y2="252" marker-end="url(#develop-m)"/>
+<text class="num" x="216.8" y="245">4</text>
+<text class="ml" x="237.6" y="245">save</text>
+<line class="m" x1="388.0" y1="286" x2="245.0" y2="286" marker-end="url(#develop-m)"/>
+<text class="num" x="253.9" y="279">5</text>
+<text class="ml" x="274.6" y="279">diff checkpoint</text>
+<line class="m" x1="394.0" y1="320" x2="537.0" y2="320" marker-end="url(#develop-m)"/>
+<text class="num" x="414.2" y="313">6</text>
+<text class="ml" x="434.9" y="313">write .patch</text>
+<line class="m" x1="94.0" y1="354" x2="687.0" y2="354" marker-end="url(#develop-m)"/>
+<text class="num" x="277.1" y="347">7</text>
+<text class="ml" x="297.8" y="347">commit code + patches, open PR</text>
+<rect class="note" x="489.0" y="367" width="254.0" height="26" rx="5"/>
+<text class="notet" x="616.0" y="384" text-anchor="middle">Reviewers read the code diff</text>
+<path class="m" d="M694.0 410 h28 v16 h-26" marker-end="url(#develop-m)"/>
+<text class="num" x="556.8" y="422">8</text>
+<text class="ml" x="577.5" y="422">fork/dev verify</text>
+<line class="m-ok" x1="688.0" y1="462" x2="95.0" y2="462" marker-end="url(#develop-m-ok)"/>
+<text class="num" x="297.9" y="455">9</text>
+<text class="ml-ok" x="318.6" y="455">✓ patches match the code</text>
+</svg>
+<!--/SEQGEN:develop--></div>
+    </div>
+    <div class="two">
+      <div class="table-wrap">
+        <table style="min-width:0">
+          <thead><tr><th>Step</th><th>Command</th></tr></thead>
+          <tbody>
+            <tr><td>1. Edit, run</td><td><code>uv run --frozen jitera …</code></td></tr>
+            <tr><td>2. Track new files</td><td><code>git add &lt;new files&gt;</code></td></tr>
+            <tr><td>3. Test</td><td><code>fork/dev test</code></td></tr>
+            <tr><td>4. Record the changes</td><td><code>fork/dev save</code></td></tr>
+            <tr><td>5. For an edited upstream file, write <code>Title</code> / <code>Why</code></td><td>patch header</td></tr>
+            <tr><td>6. Commit code and patches</td><td><code>git commit</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="figure">
+        <span class="label">fork/patches/strix/report/sarif.py.patch (real)</span>
+<pre><code><span class="hd">Title: SARIF tool name and URL come from the brand profile
+Why: Code-scanning results should show our tool name.
+Upstream-PR: none</span>
+
+diff --git a/strix/report/sarif.py b/strix/report/sarif.py
+--- a/strix/report/sarif.py
++++ b/strix/report/sarif.py
+@@ -62,8 +62,11 @@
+ SARIF_VERSION = "2.1.0"
+<span class="del">-TOOL_NAME = "Strix"</span>
+<span class="del">-TOOL_INFORMATION_URI = "https://strix.ai"</span>
+<span class="add">+from strix.jitera import brand  # noqa: E402  (Jitera fork)</span>
+<span class="add">+</span>
+<span class="add">+</span>
+<span class="add">+TOOL_NAME = brand.current().name</span>
+<span class="add">+TOOL_INFORMATION_URI = brand.current().homepage</span></code></pre>
+      </div>
+    </div>
+    <p class="warn">A new file’s patch gets its header automatically. If a patch file conflicts when merging branches, fix the code and run <code>fork/dev save</code>.</p>
+  </section>
+
+  <!-- 4 -->
+  <section id="sync">
+    <div class="head">
+      <span class="eyebrow">4</span><h2>How sync works</h2>
+      <p class="muted">Weekly, or on each upstream release. The result is one merge commit on a <code>sync/</code> branch, reviewed as a PR.</p>
+    </div>
+    <div class="figure">
+      <span class="label">Sequence: sync</span>
+      <div class="seq"><!--SEQGEN:sync-->
+<svg viewBox="0 0 872 672" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sync: back to checkpoint, remove our changes, take latest upstream, re-apply patches">
+<defs>
+<marker id="sync-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a" d="M0,0 L10,5 L0,10 z"/></marker>
+<marker id="sync-m-ret" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a-ret" d="M0,0 L10,5 L0,10 z"/></marker>
+<marker id="sync-m-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+<marker id="sync-m-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+</defs>
+<rect class="hd hd-dev" x="24.0" y="16" width="124" height="48" rx="8"/>
+<text class="pl" x="86.0" y="37" text-anchor="middle">Maintainer</text>
+<text class="ps" x="86.0" y="53" text-anchor="middle">you</text>
+<line class="life" x1="86.0" y1="64" x2="86.0" y2="664"/>
+<rect class="hd hd-fork" x="164.0" y="16" width="124" height="48" rx="8"/>
+<text class="pl" x="226.0" y="37" text-anchor="middle">fork/dev sync</text>
+<text class="ps" x="226.0" y="53" text-anchor="middle">sync-upstream.sh</text>
+<line class="life" x1="226.0" y1="64" x2="226.0" y2="664"/>
+<rect class="hd hd-up" x="304.0" y="16" width="124" height="48" rx="8"/>
+<text class="pl" x="366.0" y="37" text-anchor="middle">Upstream</text>
+<text class="ps" x="366.0" y="53" text-anchor="middle">usestrix/strix</text>
+<line class="life" x1="366.0" y1="64" x2="366.0" y2="664"/>
+<rect class="hd hd-fork" x="444.0" y="16" width="124" height="48" rx="8"/>
+<text class="pl" x="506.0" y="37" text-anchor="middle">Sync branch</text>
+<text class="ps" x="506.0" y="53" text-anchor="middle">sync/upstream-*</text>
+<line class="life" x1="506.0" y1="64" x2="506.0" y2="664"/>
+<rect class="hd hd-patch" x="584.0" y="16" width="124" height="48" rx="8"/>
+<text class="pl" x="646.0" y="37" text-anchor="middle">Working tree</text>
+<text class="ps" x="646.0" y="53" text-anchor="middle">files on disk</text>
+<line class="life" x1="646.0" y1="64" x2="646.0" y2="664"/>
+<rect class="hd hd-ok" x="724.0" y="16" width="124" height="48" rx="8"/>
+<text class="pl" x="786.0" y="37" text-anchor="middle">GitHub + CI</text>
+<text class="ps" x="786.0" y="53" text-anchor="middle">PR review</text>
+<line class="life" x1="786.0" y1="64" x2="786.0" y2="664"/>
+<line class="m" x1="89.0" y1="120" x2="222.0" y2="120" marker-end="url(#sync-m)"/>
+<text class="num" x="107.7" y="113">1</text>
+<text class="ml" x="128.4" y="113">sync v1.7.2</text>
+<line class="m" x1="229.0" y1="154" x2="362.0" y2="154" marker-end="url(#sync-m)"/>
+<text class="num" x="237.3" y="147">2</text>
+<text class="ml" x="258.1" y="147">fetch upstream</text>
+<line class="m-ret" x1="363.0" y1="188" x2="230.0" y2="188" marker-end="url(#sync-m-ret)"/>
+<text class="num" x="264.9" y="181">3</text>
+<text class="ml-ret" x="285.6" y="181">v1.7.2</text>
+<line class="m" x1="229.0" y1="222" x2="502.0" y2="222" marker-end="url(#sync-m)"/>
+<text class="num" x="300.4" y="215">4</text>
+<text class="ml" x="321.1" y="215">branch from main</text>
+<line class="m" x1="229.0" y1="256" x2="642.0" y2="256" marker-end="url(#sync-m)"/>
+<text class="num" x="363.6" y="249">5</text>
+<text class="ml" x="384.2" y="249">back to checkpoint</text>
+<rect class="note" x="174.0" y="269" width="524.0" height="26" rx="5"/>
+<text class="notet" x="436.0" y="286" text-anchor="middle">All patched changes removed: pure upstream</text>
+<line class="m" x1="229.0" y1="320" x2="502.0" y2="320" marker-end="url(#sync-m)"/>
+<text class="num" x="290.1" y="313">6</text>
+<text class="ml" x="310.8" y="313">take v1.7.2 (clean)</text>
+<line class="m" x1="229.0" y1="354" x2="642.0" y2="354" marker-end="url(#sync-m)"/>
+<text class="num" x="342.9" y="347">7</text>
+<text class="ml" x="363.6" y="347">re-apply patches (3-way)</text>
+<rect class="frame" x="20" y="364" width="832" height="136" rx="4"/>
+<path class="tab" d="M20 364 h40 v14 l-6 6 h-34 z"/>
+<text class="tabt" x="28" y="378">alt</text>
+<text class="guard" x="68" y="378">[a patch fails]</text>
+<line class="m-bad" x1="643.0" y1="416" x2="90.0" y2="416" marker-end="url(#sync-m-bad)"/>
+<text class="num" x="286.6" y="409">8</text>
+<text class="ml-bad" x="307.3" y="409">✗ CONFLICT in &lt;file&gt;</text>
+<line class="m" x1="89.0" y1="450" x2="642.0" y2="450" marker-end="url(#sync-m)"/>
+<text class="num" x="314.2" y="443">9</text>
+<text class="ml" x="334.9" y="443">fix the code</text>
+<line class="m" x1="89.0" y1="484" x2="222.0" y2="484" marker-end="url(#sync-m)"/>
+<text class="num" x="93.9" y="477">10</text>
+<text class="ml" x="114.6" y="477">sync --continue</text>
+<line class="m" x1="229.0" y1="534" x2="502.0" y2="534" marker-end="url(#sync-m)"/>
+<text class="num" x="255.6" y="527">11</text>
+<text class="ml" x="276.3" y="527">move checkpoint, merge commit</text>
+<line class="m" x1="89.0" y1="568" x2="782.0" y2="568" marker-end="url(#sync-m)"/>
+<text class="num" x="360.1" y="561">12</text>
+<text class="ml" x="380.8" y="561">push + PR into main</text>
+<path class="m" d="M789.0 594 h28 v16 h-26" marker-end="url(#sync-m)"/>
+<text class="num" x="651.8" y="606">13</text>
+<text class="ml" x="672.5" y="606">fork/dev verify</text>
+<line class="m-ok" x1="783.0" y1="646" x2="90.0" y2="646" marker-end="url(#sync-m-ok)"/>
+<text class="num" x="325.6" y="639">14</text>
+<text class="ml-ok" x="346.3" y="639">✓ merge commit (never squash)</text>
+</svg>
+<!--/SEQGEN:sync--></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Sync says</th><th>Meaning</th><th>Do this</th></tr></thead>
+        <tbody>
+          <tr><td><code>✓ applied</code></td><td>Upstream didn’t touch our lines</td><td>Nothing</td></tr>
+          <tr><td><code>✗ CONFLICT</code></td><td>Upstream changed the same lines, or added a file we also added</td><td>In the file, keep upstream’s new code (<code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; ours</code>) and re-apply our change (<code>&gt;&gt;&gt;&gt;&gt;&gt;&gt; theirs</code>). Then <code>fork/dev sync --continue</code></td></tr>
+          <tr><td><code>✗ FAILED</code></td><td>The file moved or was deleted upstream</td><td>Redo our change where the code lives now, <code>git add</code> new files, then <code>fork/dev sync --continue</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="warn">Merge sync PRs with <b>Create a merge commit</b>. A squash or rebase drops the checkpoint commit from history, and <code>fork/dev verify</code> will fail. Git remembers each conflict fix (<code>rerere</code>) for the next sync.</p>
+  </section>
+
+  <!-- 5 -->
+  <section id="build">
+    <div class="head"><span class="eyebrow">5</span><h2>How build works</h2><p class="muted">The code in git already contains our changes. The build checks that the patches match, then builds.</p></div>
+    <div class="figure">
+      <span class="label">Sequence: build and release</span>
+      <div class="seq"><!--SEQGEN:build-->
+<svg viewBox="0 0 782 390" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Build and release: the code in git is already patched">
+<defs>
+<marker id="build-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a" d="M0,0 L10,5 L0,10 z"/></marker>
+<marker id="build-m-ret" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a-ret" d="M0,0 L10,5 L0,10 z"/></marker>
+<marker id="build-m-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+<marker id="build-m-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="a-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+</defs>
+<rect class="hd hd-dev" x="24.0" y="16" width="134" height="48" rx="8"/>
+<text class="pl" x="91.0" y="37" text-anchor="middle">Maintainer</text>
+<text class="ps" x="91.0" y="53" text-anchor="middle">you</text>
+<line class="life" x1="91.0" y1="64" x2="91.0" y2="382"/>
+<rect class="hd hd-ok" x="174.0" y="16" width="134" height="48" rx="8"/>
+<text class="pl" x="241.0" y="37" text-anchor="middle">CI runner</text>
+<text class="ps" x="241.0" y="53" text-anchor="middle">fork-release.yml</text>
+<line class="life" x1="241.0" y1="64" x2="241.0" y2="382"/>
+<rect class="hd hd-fork" x="324.0" y="16" width="134" height="48" rx="8"/>
+<text class="pl" x="391.0" y="37" text-anchor="middle">fork/dev</text>
+<text class="ps" x="391.0" y="53" text-anchor="middle">command runner</text>
+<line class="life" x1="391.0" y1="64" x2="391.0" y2="382"/>
+<rect class="hd hd-up" x="474.0" y="16" width="134" height="48" rx="8"/>
+<text class="pl" x="541.0" y="37" text-anchor="middle">Build tools</text>
+<text class="ps" x="541.0" y="53" text-anchor="middle">uv, PyInstaller</text>
+<line class="life" x1="541.0" y1="64" x2="541.0" y2="382"/>
+<rect class="hd hd-fork" x="624.0" y="16" width="134" height="48" rx="8"/>
+<text class="pl" x="691.0" y="37" text-anchor="middle">GitHub Releases</text>
+<text class="ps" x="691.0" y="53" text-anchor="middle">our repo</text>
+<line class="life" x1="691.0" y1="64" x2="691.0" y2="382"/>
+<line class="m" x1="94.0" y1="120" x2="237.0" y2="120" marker-end="url(#build-m)"/>
+<text class="num" x="128.1" y="113">1</text>
+<text class="ml" x="148.8" y="113">push tag</text>
+<rect class="note" x="189.0" y="133" width="404.0" height="26" rx="5"/>
+<text class="notet" x="391.0" y="150" text-anchor="middle">Checkout with full history. Code is already patched.</text>
+<line class="m" x1="244.0" y1="184" x2="387.0" y2="184" marker-end="url(#build-m)"/>
+<text class="num" x="264.2" y="177">2</text>
+<text class="ml" x="284.9" y="177">build binary</text>
+<path class="m" d="M394.0 210 h28 v16 h-26" marker-end="url(#build-m)"/>
+<text class="num" x="429.0" y="222">3</text>
+<text class="ml" x="449.7" y="222">verify</text>
+<line class="m" x1="394.0" y1="262" x2="537.0" y2="262" marker-end="url(#build-m)"/>
+<text class="num" x="400.4" y="255">4</text>
+<text class="ml" x="421.1" y="255">scripts/build.sh</text>
+<line class="m-ret" x1="538.0" y1="296" x2="245.0" y2="296" marker-end="url(#build-m-ret)"/>
+<text class="num" x="325.4" y="289">5</text>
+<text class="ml-ret" x="346.1" y="289">wheel + binaries</text>
+<line class="m" x1="244.0" y1="330" x2="687.0" y2="330" marker-end="url(#build-m)"/>
+<text class="num" x="410.8" y="323">6</text>
+<text class="ml" x="431.5" y="323">upload assets</text>
+<line class="m-ok" x1="688.0" y1="364" x2="95.0" y2="364" marker-end="url(#build-m-ok)"/>
+<text class="num" x="287.5" y="357">7</text>
+<text class="ml-ok" x="308.2" y="357">✓ v1.7.2-jitera.1 published</text>
+</svg>
+<!--/SEQGEN:build--></div>
+    </div>
+    <p class="muted">Locally: <code>fork/dev build</code> (wheel) or <code>fork/dev build binary</code>.</p>
+  </section>
+
+  <!-- 6 -->
+  <section id="tools">
+    <div class="head"><span class="eyebrow">6</span><h2>Commands and skills</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr class="group"><td colspan="2">Daily work</td></tr>
+          <tr><td><code>fork/dev save</code></td><td>Record every change since the checkpoint in <code>fork/patches/</code> (staged)</td></tr>
+          <tr><td><code>fork/dev test</code></td><td>Brand audit, lint changed files, type-check <code>strix/jitera</code>, all tests</td></tr>
+          <tr><td><code>fork/dev status</code></td><td>Checkpoint, how far upstream moved, patches out of date, untracked files</td></tr>
+          <tr><td><code>fork/dev patches</code></td><td>List patches: new / edit / deleted, size, title</td></tr>
+          <tr class="group"><td colspan="2">Upstream</td></tr>
+          <tr><td><code>fork/dev sync [tag]</code></td><td>Back to checkpoint, remove our changes, take latest, re-apply patches</td></tr>
+          <tr><td><code>fork/dev sync --continue</code></td><td>Finish after fixing failed patches. Moves the checkpoint</td></tr>
+          <tr><td><code>fork/dev sync --abort</code></td><td>Drop an unfinished sync</td></tr>
+          <tr class="group"><td colspan="2">Checks and build</td></tr>
+          <tr><td><code>fork/dev verify</code></td><td>CI guard: patches match the code, checkpoint in history</td></tr>
+          <tr><td><code>fork/dev audit</code></td><td>Find Strix brand left in network calls and visible text</td></tr>
+          <tr><td><code>fork/dev build [binary]</code></td><td>Verify, then build the wheel or binary</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Claude Code skill</th><th>Use it to</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><code>/fork-change</code></td><td>Write code: where it goes, test, save patches, commit</td><td><span class="chip ok">ready</span></td></tr>
+          <tr><td><code>/fork-sync</code></td><td>Take an upstream release: sync, fix failed patches, open the PR</td><td><span class="chip ok">ready</span></td></tr>
+          <tr><td><code>/fork-release</code></td><td>Tag, build, publish to our releases</td><td><span class="chip up">later</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <span>Tested 2026-11-16 in a throwaway copy: a clean sync of 3 upstream commits; a sync where upstream changed our SARIF line and added its own NOTICE, fixed and continued; and <code>--abort</code>.</span>
+    <span>Brand values in <code>strix/jitera/brand.py</code> are placeholders until the product name, CLI name and website are final.</span>
+  </footer>
+</main>
+</body>
+</html>

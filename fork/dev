@@ -1,0 +1,310 @@
+#!/usr/bin/env bash
+# Developer commands for the Jitera fork of Strix.
+#
+# - Engineers edit the source directly; git and GitHub show the changed code.
+# - fork/CHECKPOINT holds the upstream commit hash our changes are based on.
+# - fork/patches/<path>.patch records EVERY change since that checkpoint
+#   (edited, new and deleted files). Sync uses them: back to the checkpoint,
+#   remove our changes, take the latest upstream, re-apply the patches.
+# - fork/ and .claude/ are the maintenance tooling itself: never patched.
+#
+# Daily loop:  edit code -> test -> fork/dev save -> git commit (code + patches)
+# Run `fork/dev help` for every command.
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+PATCH_DIR="fork/patches"
+CHECKPOINT_FILE="fork/CHECKPOINT"
+# Maintenance tooling: kept out of the patches and untouched by sync.
+TOOLING_RE='^(fork/|\.claude/)'
+# Generated files: never patched, rebuilt instead (make viewer, uv lock).
+GENERATED_RE='^(strix/interface/viewer/static/|uv\.lock$)'
+TODO_HEADER='Title: TODO one line: what this patch changes
+Why: TODO why Jitera needs it
+Upstream-PR: none'
+
+die() { echo "fork/dev: $*" >&2; exit 1; }
+
+checkpoint() {
+  [[ -f "$CHECKPOINT_FILE" ]] || die "$CHECKPOINT_FILE is missing (it holds the upstream commit our changes are based on)."
+  awk 'NR==1 {print $1}' "$CHECKPOINT_FILE"
+}
+
+in_checkpoint() { git cat-file -e "$(checkpoint):$1" 2>/dev/null; }
+
+# Every tracked file that differs from the checkpoint (edited, new, deleted),
+# except tooling and generated files.
+changed_files() {
+  local f
+  git diff "$(checkpoint)" --name-only --no-renames | while IFS= read -r f; do
+    [[ "$f" =~ $TOOLING_RE || "$f" =~ $GENERATED_RE ]] && continue
+    printf '%s\n' "$f"
+  done
+}
+
+untracked_files() {
+  git ls-files --others --exclude-standard | grep -vE "$TOOLING_RE" | grep -vE "$GENERATED_RE" || true
+}
+
+list_patches() {
+  [[ -d "$PATCH_DIR" ]] || return 0
+  find "$PATCH_DIR" -type f -name '*.patch' | sort
+}
+
+patch_path() { printf '%s/%s.patch' "$PATCH_DIR" "$1"; }
+patch_target() { local p="${1#"$PATCH_DIR"/}"; printf '%s' "${p%.patch}"; }
+patch_title() { sed -n 's/^Title: //p' "$1" | head -1; }
+
+# Write the patch for one file, keeping the header of an existing patch.
+write_patch() {
+  local file="$1" out="$2" existing header=""
+  existing="$(patch_path "$file")"
+  if [[ -f "$existing" ]]; then
+    header="$(sed '/^diff --git /,$d' "$existing")"
+  fi
+  if [[ -z "${header//[[:space:]]/}" ]]; then
+    if in_checkpoint "$file"; then
+      header="$TODO_HEADER"
+    else
+      header="Title: Add $file
+Why: Jitera code with no upstream version
+Upstream-PR: none"
+    fi
+  fi
+  mkdir -p "$(dirname "$out")"
+  { printf '%s\n\n' "$header"; git diff --full-index --binary --no-renames "$(checkpoint)" -- "$file"; } >"$out"
+}
+
+has_conflict_markers() { [[ -f "$1" ]] && grep -qE '^(<<<<<<<|>>>>>>>)( |$)' "$1"; }
+
+# Files whose patch is missing or outdated, and patches that are no longer needed.
+stale_patches() {
+  local files f p tmp
+  files="$(changed_files)"
+  tmp="$(mktemp)"
+  if [[ -n "$files" ]]; then
+    while IFS= read -r f; do
+      write_patch "$f" "$tmp"
+      cmp -s "$tmp" "$(patch_path "$f")" || printf '%s\n' "$f"
+    done <<<"$files"
+  fi
+  rm -f "$tmp"
+  while IFS= read -r p; do
+    [[ -n "$p" ]] || continue
+    grep -qxF -- "$(patch_target "$p")" <<<"$files" || printf '%s (patch no longer needed)\n' "$(patch_target "$p")"
+  done < <(list_patches)
+}
+
+warn_untracked() {
+  local u
+  u="$(untracked_files)"
+  [[ -z "$u" ]] && return 0
+  echo "Not tracked by git, so not in the patches (git add them if they belong to the change):"
+  printf '%s\n' "$u" | sed 's/^/  /'
+}
+
+cmd_save() {
+  local files f p target written=0 removed=0
+  files="$(changed_files)"
+  if [[ -n "$files" ]]; then
+    while IFS= read -r f; do
+      if has_conflict_markers "$f"; then die "resolve the conflict markers in $f before saving."; fi
+    done <<<"$files"
+    while IFS= read -r f; do
+      write_patch "$f" "$(patch_path "$f").tmp"
+      mv "$(patch_path "$f").tmp" "$(patch_path "$f")"
+      written=$((written + 1))
+    done <<<"$files"
+  fi
+  while IFS= read -r p; do
+    [[ -n "$p" ]] || continue
+    target="$(patch_target "$p")"
+    if ! grep -qxF -- "$target" <<<"$files"; then
+      rm -f "$p"
+      removed=$((removed + 1))
+      echo "  - removed    $p (file is back to upstream)"
+    fi
+  done < <(list_patches)
+  [[ -d "$PATCH_DIR" ]] && find "$PATCH_DIR" -type d -empty -delete
+  git add -A -- "$PATCH_DIR" 2>/dev/null || true
+  echo "Saved $written patch(es), removed $removed. Staged: $PATCH_DIR"
+  warn_untracked
+  grep -rl '^Title: TODO' "$PATCH_DIR" 2>/dev/null | sed 's/^/  fill in Title\/Why: /' || true
+  echo "Next: commit the code and its patches together."
+}
+
+cmd_apply() {
+  local p target out applied=0 already=0 conflicts=0 failed=0
+  while IFS= read -r p; do
+    [[ -n "$p" ]] || continue
+    target="$(patch_target "$p")"
+    if git apply --reverse --check "$p" 2>/dev/null; then
+      already=$((already + 1))
+      continue
+    fi
+    if out="$(git apply --3way "$p" 2>&1)"; then
+      applied=$((applied + 1))
+      echo "  ✓ applied    $target"
+    elif grep -q 'with conflicts' <<<"$out"; then
+      conflicts=$((conflicts + 1))
+      echo "  ✗ CONFLICT   $target"
+    else
+      failed=$((failed + 1))
+      echo "  ✗ FAILED     $target"
+      printf '%s\n' "$out" | sed 's/^/      /'
+    fi
+  done < <(list_patches)
+
+  echo "Patches: $applied applied, $already already applied, $conflicts conflict(s), $failed failed."
+  if (( conflicts + failed > 0 )); then
+    cat <<'EOF'
+
+Patch failed. Fix the code; the patch is refreshed from it afterwards:
+  CONFLICT  open the file and resolve each block between <<<<<<< ours (new upstream)
+            and >>>>>>> theirs (our patch): keep upstream's new code, re-apply our change.
+  FAILED    the file moved, was deleted, or now also exists upstream: re-make our change
+            where the code lives now (git add any file you create).
+EOF
+    return 1
+  fi
+}
+
+# Back to the checkpoint: remove every patched change from the working tree.
+cmd_unapply() {
+  local base files stale f n=0
+  base="$(checkpoint)"
+  files="$(changed_files)"
+  if [[ -z "$files" ]]; then
+    echo "Already at checkpoint $(git rev-parse --short "$base")."
+    return 0
+  fi
+  stale="$(stale_patches)"
+  if [[ -n "$stale" && "${1:-}" != "--force" ]]; then
+    printf 'Not saved as patches yet:\n%s\n' "$(printf '%s\n' "$stale" | sed 's/^/  /')" >&2
+    die "run fork/dev save first, or fork/dev unapply --force to discard them."
+  fi
+  while IFS= read -r f; do
+    if in_checkpoint "$f"; then
+      git checkout -q "$base" -- "$f"
+    else
+      git rm -q -f -- "$f"
+    fi
+    n=$((n + 1))
+  done <<<"$files"
+  echo "Back to checkpoint $(git rev-parse --short "$base"): removed our changes from $n file(s)."
+}
+
+cmd_patches() {
+  local p n=0 stat kind
+  while IFS= read -r p; do
+    [[ -n "$p" ]] || continue
+    n=$((n + 1))
+    stat="$(awk '/^diff --git /{d=1} d&&/^\+[^+]/{a++} d&&/^-[^-]/{r++} END{printf "+%d -%d", a, r}' "$p")"
+    if grep -q '^new file mode' "$p"; then kind="new"
+    elif grep -q '^deleted file mode' "$p"; then kind="deleted"
+    else kind="edit"; fi
+    printf '  %-7s %-46s %-10s %s\n' "$kind" "$(patch_target "$p")" "$stat" "$(patch_title "$p")"
+  done < <(list_patches)
+  (( n > 0 )) || echo "No patches yet. Change a file, then run fork/dev save."
+}
+
+cmd_status() {
+  local base stale
+  base="$(checkpoint)"
+  echo "checkpoint      $(git log -1 --format='%h %ad' --date=short "$base" 2>/dev/null || echo "$base") (upstream commit our changes are based on)"
+  if git rev-parse --verify --quiet upstream/main >/dev/null; then
+    echo "upstream ahead  $(git rev-list --count "$base..upstream/main") commit(s) (fork/dev sync to take them)"
+  fi
+  echo "patches         $(list_patches | grep -c . || true) in $PATCH_DIR"
+  stale="$(stale_patches)"
+  if [[ -n "$stale" ]]; then
+    echo "out of date     run fork/dev save:"
+    printf '%s\n' "$stale" | sed 's/^/                  /'
+  else
+    echo "out of date     none"
+  fi
+  warn_untracked
+}
+
+cmd_verify() {
+  local base stale p
+  base="$(checkpoint)"
+  git merge-base --is-ancestor "$base" HEAD \
+    || die "checkpoint $(git rev-parse --short "$base") is not in this branch's history. Was a sync PR squashed? Sync PRs must be merged with a merge commit."
+  stale="$(stale_patches)"
+  if [[ -n "$stale" ]]; then
+    printf 'Patches do not match the code (run fork/dev save and commit):\n%s\n' "$(printf '%s\n' "$stale" | sed 's/^/  /')" >&2
+    exit 1
+  fi
+  while IFS= read -r p; do
+    [[ -n "$p" ]] || continue
+    if grep -q '^Title: TODO' "$p"; then die "$p still has a TODO header (Title/Why)."; fi
+  done < <(list_patches)
+  echo "verify: $(list_patches | grep -c . || true) patch(es) match the code, checkpoint $(git rev-parse --short "$base") is in history."
+}
+
+cmd_test() {
+  local py=() f
+  fork/scripts/brand-audit.sh
+  while IFS= read -r f; do
+    [[ "$f" == *.py && -f "$f" ]] && py+=("$f")
+  done < <(changed_files)
+  if (( ${#py[@]} )); then
+    uv run --frozen ruff check "${py[@]}"
+    uv run --frozen ruff format --check "${py[@]}"
+  fi
+  [[ -d strix/jitera ]] && uv run --frozen mypy strix/jitera
+  uv run --frozen pytest -q tests "$@"
+}
+
+cmd_build() {
+  local target="${1:-wheel}"
+  cmd_verify
+  case "$target" in
+    wheel) make wheel ;;
+    binary) scripts/build.sh ;;
+    *) die "unknown build target: $target (use wheel or binary)" ;;
+  esac
+}
+
+cmd_help() {
+  cat <<'EOF'
+Daily work
+  fork/dev save            record every change since the checkpoint in fork/patches/ (staged)
+  fork/dev status          checkpoint, how far upstream moved, patches out of date
+  fork/dev patches         list patches: new / edit / deleted, size, title
+  fork/dev test [args]     brand audit, lint changed files, mypy strix/jitera, pytest
+
+Upstream
+  fork/dev sync [vX.Y.Z]   back to checkpoint, remove our changes, take latest upstream,
+                           re-apply patches, move the checkpoint
+  fork/dev sync --continue finish a sync after fixing failed patches
+  fork/dev sync --abort    drop an unfinished sync
+
+Checks and build
+  fork/dev verify          CI guard: patches match the code, checkpoint in history
+  fork/dev audit [--list]  report Strix brand left in network calls and visible text
+  fork/dev build [binary]  verify, then build the wheel (default) or the binary
+
+Low level (used by sync)
+  fork/dev unapply         back to the checkpoint: remove all patched changes
+  fork/dev apply           re-apply all patches (3-way)
+EOF
+}
+
+case "${1:-help}" in
+  save) cmd_save ;;
+  status) cmd_status ;;
+  patches) cmd_patches ;;
+  test) shift; cmd_test "$@" ;;
+  sync) shift; exec fork/scripts/sync-upstream.sh "$@" ;;
+  verify) cmd_verify ;;
+  audit) shift; exec fork/scripts/brand-audit.sh "$@" ;;
+  build) shift; cmd_build "${1:-wheel}" ;;
+  unapply) shift; cmd_unapply "${1:-}" ;;
+  apply) cmd_apply ;;
+  help|-h|--help) cmd_help ;;
+  *) echo "unknown command: $1" >&2; cmd_help >&2; exit 2 ;;
+esac

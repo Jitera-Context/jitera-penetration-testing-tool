@@ -1,0 +1,9 @@
+Jitera Pentest
+Copyright Jitera
+
+This product is a fork of Strix (https://github.com/usestrix/strix),
+Copyright the Strix authors, licensed under the Apache License, Version 2.0.
+See LICENSE for the license text.
+
+Files modified by Jitera are listed, with the reason for each change,
+in fork/patches/. Code added by Jitera lives in strix/jitera/ and tests/jitera/.

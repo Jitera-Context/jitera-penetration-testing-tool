@@ -1,0 +1,17 @@
+Title: Add strix/jitera/__main__.py
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/strix/jitera/__main__.py b/strix/jitera/__main__.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..dccb3617523dfcdde66f6b58542013c8a55cec49
+--- /dev/null
++++ b/strix/jitera/__main__.py
+@@ -0,0 +1,7 @@
++"""``python -m strix.jitera`` and the PyInstaller binary start here."""
++
++from strix.jitera.bootstrap import main
++
++
++if __name__ == "__main__":
++    main()

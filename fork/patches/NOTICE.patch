@@ -1,0 +1,19 @@
+Title: Add NOTICE
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/NOTICE b/NOTICE
+new file mode 100644
+index 0000000000000000000000000000000000000000..15a7eb03c1175ad580bf1a20acaa6a943c06cd32
+--- /dev/null
++++ b/NOTICE
+@@ -0,0 +1,9 @@
++Jitera Pentest
++Copyright Jitera
++
++This product is a fork of Strix (https://github.com/usestrix/strix),
++Copyright the Strix authors, licensed under the Apache License, Version 2.0.
++See LICENSE for the license text.
++
++Files modified by Jitera are listed, with the reason for each change,
++in fork/patches/. Code added by Jitera lives in strix/jitera/ and tests/jitera/.

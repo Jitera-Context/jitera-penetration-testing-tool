@@ -1,0 +1,22 @@
+Title: SARIF tool name and URL come from the brand profile
+Why: Code-scanning results should show our tool name.
+Upstream-PR: none
+
+diff --git a/strix/report/sarif.py b/strix/report/sarif.py
+index 821fffbc03480daa96f1dcc8916f48e7937674fe..3f114676b156ac09f862af7eef65871e30bd012f 100644
+--- a/strix/report/sarif.py
++++ b/strix/report/sarif.py
+@@ -62,8 +62,11 @@ logger = logging.getLogger(__name__)
+ 
+ SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
+ SARIF_VERSION = "2.1.0"
+-TOOL_NAME = "Strix"
+-TOOL_INFORMATION_URI = "https://strix.ai"
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
++TOOL_NAME = brand.current().name
++TOOL_INFORMATION_URI = brand.current().homepage
+ 
+ # Synthetic anchor for findings that have no safe code location. SARIF
+ # requires every result to carry at least one location, and GitHub

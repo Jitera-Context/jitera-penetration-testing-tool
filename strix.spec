@@ -244,7 +244,7 @@ excludes = [
 ]
 
 a = Analysis(
-    ['strix/interface/main.py'],
+    ['strix/jitera/__main__.py'],  # Jitera fork: start from our entry point
     pathex=[str(project_root)],
     binaries=binaries,
     datas=datas,
