@@ -1,0 +1,25 @@
+Title: Tests price models from LiteLLM's bundled list, not a live download
+Why: LiteLLM downloads its price list on import; that list changed and broke test_pricing on untouched upstream. A fixed list keeps the suite repeatable and offline.
+Upstream-PR: none
+
+diff --git a/tests/conftest.py b/tests/conftest.py
+index 946ab206e9b2f80fa38292e39746b8f90e4f1053..afcb4afbaaa9d4305f370b164ce76c80297406cf 100644
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -2,9 +2,16 @@
+ 
+ from __future__ import annotations
+ 
++import os
++
+ import pytest
+ 
+ 
++# Jitera fork: price models from the list LiteLLM ships with, not the copy it downloads
++# when imported. The downloaded list changes under the tests and broke test_pricing.
++os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
++
++
+ @pytest.fixture(autouse=True)
+ def _isolate_mcp_config(
+     monkeypatch: pytest.MonkeyPatch, tmp_path_factory: pytest.TempPathFactory

@@ -1,0 +1,16 @@
+Title: Pass the skills argument _start_child_runner now requires
+Why: Upstream made skills required (b17c0275) without updating this test, which fails on untouched upstream.
+Upstream-PR: none
+
+diff --git a/tests/test_budget_pause_policy.py b/tests/test_budget_pause_policy.py
+index c5ddab8a78c311e1cf22e25add9565b43772ca33..c4218b049e56e989d6fa064ea6c8cb164b09f537 100644
+--- a/tests/test_budget_pause_policy.py
++++ b/tests/test_budget_pause_policy.py
+@@ -212,6 +212,7 @@ class _Scan:
+             name=f"recon-{child_id}",
+             parent_id="root",
+             task="probe things",
++            skills=[],
+             initial_input=[],
+             hooks=self.hooks,
+         )

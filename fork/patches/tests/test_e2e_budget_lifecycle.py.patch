@@ -1,0 +1,24 @@
+Title: Pass the skills argument _start_child_runner now requires
+Why: Upstream made skills required (b17c0275) without updating this test, which fails on untouched upstream.
+Upstream-PR: none
+
+diff --git a/tests/test_e2e_budget_lifecycle.py b/tests/test_e2e_budget_lifecycle.py
+index 8725fec2d4e7501ad105d3f568bcd658384eda7e..3a7b38832f750f42e50d23e2088a08d90253785f 100644
+--- a/tests/test_e2e_budget_lifecycle.py
++++ b/tests/test_e2e_budget_lifecycle.py
+@@ -170,6 +170,7 @@ async def test_full_budget_lifecycle_reserve_then_cap(  # noqa: PLR0915
+                 name=f"recon-{child_id}",
+                 parent_id="root",
+                 task="probe things",
++                skills=[],
+                 initial_input=[],
+                 hooks=hooks,
+             )
+@@ -261,6 +262,7 @@ async def test_respawned_children_after_reserve_never_spend(
+             name="recon-child-a",
+             parent_id="root",
+             task="probe things",
++            skills=[],
+             initial_input=[],
+             hooks=hooks,
+         )

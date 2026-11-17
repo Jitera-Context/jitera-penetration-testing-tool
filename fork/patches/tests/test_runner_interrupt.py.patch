@@ -1,0 +1,16 @@
+Title: Give the fake settings the telemetry field the runner now reads
+Why: The runner reads settings.telemetry, so these tests crashed before checking anything, on untouched upstream too. Same one line upstream added later.
+Upstream-PR: https://github.com/usestrix/strix/pull/1577 (merged upstream after our checkpoint; the next sync drops this patch)
+
+diff --git a/tests/test_runner_interrupt.py b/tests/test_runner_interrupt.py
+index 7a47c6111b03a7e92b12d089f0eb2267cf641c05..10b4ddba07977ab36c8909c64fb918598fecde49 100644
+--- a/tests/test_runner_interrupt.py
++++ b/tests/test_runner_interrupt.py
+@@ -32,6 +32,7 @@ def _wire_runner(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> None:
+             extra_body=None,
+         ),
+         runtime=types.SimpleNamespace(max_context_images=3),
++        telemetry=types.SimpleNamespace(run_record_timings=False),
+     )
+     monkeypatch.setattr(runner, "load_settings", lambda: settings)
+     monkeypatch.setattr(runner, "configure_sdk_model_defaults", lambda _settings: None)

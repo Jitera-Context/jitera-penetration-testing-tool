@@ -47,7 +47,8 @@ flowchart LR
   just above the first use, then read `brand.current().name` and so on.
 - **Keep upstream's tests green without editing them.** Upstream tests run with
   the Strix brand profile; only `jitera-pentest` switches to ours. Our tests go
-  in `tests/jitera/`.
+  in `tests/jitera/`. A test that already fails on untouched upstream gets the
+  smallest fix, and its patch's `Why:` says so.
 - **Replace a whole file only when you must**, and list it in `fork/OWNED`.
 - **Rebuild generated files; never patch them.** The viewer bundle
   (`make viewer`) and `uv.lock` (`uv lock`, with a current uv).
