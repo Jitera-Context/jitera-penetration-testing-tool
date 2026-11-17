@@ -1,0 +1,25 @@
+Title: Report recognises how agents write up query-language injection
+Why: Upstream added the query_language_injection skill without its phrasings, so reports could claim the class was never tested. Upstream's own test_report_coverage fails on it.
+Upstream-PR: none
+
+diff --git a/strix/report/coverage.py b/strix/report/coverage.py
+index c519853accc64db9853040ebcbe1be00afb56c2b..3935be1999cd03c486a490affa51f40db68635e4 100644
+--- a/strix/report/coverage.py
++++ b/strix/report/coverage.py
+@@ -122,6 +122,16 @@ _SKILL_PHRASINGS: dict[str, tuple[str, ...]] = {
+         "rfi",
+     ),
+     "prototype_pollution": ("prototype pollution",),
++    "query_language_injection": (
++        "query language",
++        "jsonpath",
++        "jmespath",
++        "odata",
++        "lucene",
++        "ldap",
++        "cypher",
++        "xpath",
++    ),
+     "race_conditions": ("race condition", "toctou"),
+     "rce": ("rce", "remote code execution", "code execution", "command injection"),
+     "semantic_confusion": (

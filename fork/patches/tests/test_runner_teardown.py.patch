@@ -1,0 +1,16 @@
+Title: Give the fake settings the telemetry field the runner now reads
+Why: The runner reads settings.telemetry, so these tests crashed before checking anything, on untouched upstream too. Same one line upstream added later.
+Upstream-PR: https://github.com/usestrix/strix/pull/1577 (merged upstream after our checkpoint; the next sync drops this patch)
+
+diff --git a/tests/test_runner_teardown.py b/tests/test_runner_teardown.py
+index 511451bc1ddc2dd84c28536e4b2e66ab22948184..371c7e265628ba77346e6f7452771a07cb9647b3 100644
+--- a/tests/test_runner_teardown.py
++++ b/tests/test_runner_teardown.py
+@@ -56,6 +56,7 @@ def _settings() -> Any:
+             extra_body=None,
+         ),
+         runtime=types.SimpleNamespace(max_context_images=3),
++        telemetry=types.SimpleNamespace(run_record_timings=False),
+     )
+ 
+ 

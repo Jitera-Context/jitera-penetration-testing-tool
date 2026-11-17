@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
+import os
+
 import pytest
+
+
+# Jitera fork: price models from the list LiteLLM ships with, not the copy it downloads
+# when imported. The downloaded list changes under the tests and broke test_pricing.
+os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
 
 
 @pytest.fixture(autouse=True)

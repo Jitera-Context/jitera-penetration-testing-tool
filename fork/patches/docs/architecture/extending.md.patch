@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/docs/architecture/extending.md b/docs/architecture/extending.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..9ef57aa40d0d97295affb9610fac082bff5c6764
+index 0000000000000000000000000000000000000000..7c487e6b1c61551c6f97fcb861074cc0d7219a3b
 --- /dev/null
 +++ b/docs/architecture/extending.md
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,76 @@
 +# Extending
 +
 +How to add features so the fork stays easy to sync as it grows. The Claude
@@ -57,7 +57,8 @@ index 0000000000000000000000000000000000000000..9ef57aa40d0d97295affb9610fac082b
 +  just above the first use, then read `brand.current().name` and so on.
 +- **Keep upstream's tests green without editing them.** Upstream tests run with
 +  the Strix brand profile; only `jitera-pentest` switches to ours. Our tests go
-+  in `tests/jitera/`.
++  in `tests/jitera/`. A test that already fails on untouched upstream gets the
++  smallest fix, and its patch's `Why:` says so.
 +- **Replace a whole file only when you must**, and list it in `fork/OWNED`.
 +- **Rebuild generated files; never patch them.** The viewer bundle
 +  (`make viewer`) and `uv.lock` (`uv lock`, with a current uv).

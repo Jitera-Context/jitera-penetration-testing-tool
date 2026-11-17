@@ -1,0 +1,16 @@
+Title: Give the fake settings the telemetry field the runner now reads
+Why: The runner reads settings.telemetry, so these tests crashed before checking anything, on untouched upstream too. Same one line upstream added later.
+Upstream-PR: https://github.com/usestrix/strix/pull/1577 (merged upstream after our checkpoint; the next sync drops this patch)
+
+diff --git a/tests/test_runner_rate_limit.py b/tests/test_runner_rate_limit.py
+index 72de0750e4d5c148f08e051ed9f030fd82b41e24..b74ee770cacb3b715365abce7df2ba7db090cf1c 100644
+--- a/tests/test_runner_rate_limit.py
++++ b/tests/test_runner_rate_limit.py
+@@ -46,6 +46,7 @@ async def test_persistent_rate_limit_stops_gracefully(
+             extra_body=None,
+         ),
+         runtime=types.SimpleNamespace(max_context_images=3),
++        telemetry=types.SimpleNamespace(run_record_timings=False),
+     )
+     monkeypatch.setattr(runner, "load_settings", lambda: settings)
+     monkeypatch.setattr(runner, "configure_sdk_model_defaults", lambda _settings: None)
