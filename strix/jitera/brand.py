@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 @dataclass(frozen=True)
 class Brand:
     name: str  # product name shown to people
+    product_name: str  # full product name, for headings such as the CLI panel titles
     command: str  # CLI command
     env_prefix: str  # our settings prefix, copied to STRIX_* by the command
     homepage: str
@@ -80,6 +81,7 @@ def package_version() -> str:
 
 UPSTREAM = Brand(
     name="Strix",
+    product_name="Strix",
     command="strix",
     env_prefix="STRIX_",
     homepage="https://strix.ai",
@@ -95,6 +97,7 @@ UPSTREAM = Brand(
 
 JITERA = Brand(
     name="Jitera",
+    product_name="Jitera Pentest",
     command="jitera-pentest",  # `jitera` is the Jitera Gateway CLI
     env_prefix="JITERA_PENTEST_",
     homepage="https://jitera.com",

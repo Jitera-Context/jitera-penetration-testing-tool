@@ -1,9 +1,9 @@
-Title: End-of-scan Output line and the sandbox-image error name the brand's folders
-Why: They printed hard-coded strix_runs/ and ~/.strix paths.
+Title: Scan panels are titled with the product name, and paths name the brand's folders
+Why: The start, live-status and final-report panels were titled STRIX; the Output line and sandbox-image error printed hard-coded strix_runs/ and ~/.strix paths.
 Upstream-PR: none
 
 diff --git a/strix/interface/cli.py b/strix/interface/cli.py
-index a8992ce4980a2d8c7635d6eca0ef4ff1c90b0782..6b8bef1f3d7363d58b393def16a5e719def6ec5d 100644
+index a8992ce4980a2d8c7635d6eca0ef4ff1c90b0782..dbe5306748a3a7db02ff34f11f5f4a8da7ae854b 100644
 --- a/strix/interface/cli.py
 +++ b/strix/interface/cli.py
 @@ -29,11 +29,16 @@ from .utils import (
@@ -33,3 +33,30 @@ index a8992ce4980a2d8c7635d6eca0ef4ff1c90b0782..6b8bef1f3d7363d58b393def16a5e719
  
      note_text = Text()
      note_text.append("\n\n", style="dim")
+@@ -73,7 +78,7 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
+             results_text,
+             note_text,
+         ),
+-        title="[bold white]STRIX",
++        title=f"[bold white]{brand.current().product_name.upper()}",
+         title_align="left",
+         border_style="#22c55e",
+         padding=(1, 2),
+@@ -181,7 +186,7 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
+ 
+         return Panel(
+             status_text,
+-            title="[bold white]STRIX",
++            title=f"[bold white]{brand.current().product_name.upper()}",
+             title_align="left",
+             border_style="#22c55e",
+             padding=(1, 2),
+@@ -249,7 +254,7 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
+                 "\n\n",
+                 report_state.final_scan_result,
+             ),
+-            title="[bold white]STRIX",
++            title=f"[bold white]{brand.current().product_name.upper()}",
+             title_align="left",
+             border_style="#60a5fa",
+             padding=(1, 2),

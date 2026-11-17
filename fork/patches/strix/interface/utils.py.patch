@@ -1,9 +1,9 @@
-Title: Diff-scope git history error and temp staging folders name the brand
-Why: Said 'Strix requires full git history'; cloned repos and API specs went to strix_repos and strix_api_specs.
+Title: Diff-scope git history error, a setup panel title and temp staging folders name the brand
+Why: Said 'Strix requires full git history'; a setup error panel was titled STRIX; cloned repos and API specs went to strix_repos and strix_api_specs.
 Upstream-PR: none
 
 diff --git a/strix/interface/utils.py b/strix/interface/utils.py
-index 7ab55d8ee2993cb4f66ce40548e98ea7f6bfa21c..76507ad18de14ca5e3165111535cdd715c96d9db 100644
+index 7ab55d8ee2993cb4f66ce40548e98ea7f6bfa21c..f5e36a58586f7d60e60a950459893745d9eef225 100644
 --- a/strix/interface/utils.py
 +++ b/strix/interface/utils.py
 @@ -967,6 +967,9 @@ def _should_activate_auto_scope(
@@ -53,3 +53,12 @@ index 7ab55d8ee2993cb4f66ce40548e98ea7f6bfa21c..76507ad18de14ca5e3165111535cdd71
      temp_dir.mkdir(parents=True, exist_ok=True)
  
      if dest_name:
+@@ -1619,7 +1623,7 @@ def check_docker_connection() -> Any:
+ 
+         panel = Panel(
+             error_text,
+-            title="[bold white]STRIX",
++            title=f"[bold white]{brand.current().product_name.upper()}",
+             title_align="left",
+             border_style="red",
+             padding=(1, 2),

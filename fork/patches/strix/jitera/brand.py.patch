@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/brand.py b/strix/jitera/brand.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..40b163179b7784f6ff59949f2bb3555d9d29c998
+index 0000000000000000000000000000000000000000..f7ea2c6f1135c1487b79f7111e8bb31c676e3bd9
 --- /dev/null
 +++ b/strix/jitera/brand.py
-@@ -0,0 +1,156 @@
+@@ -0,0 +1,159 @@
 +"""Brand values: the only place product names, links and User-Agent text live.
 +
 +Upstream files read the active profile through ``current()``. The profile is
@@ -28,6 +28,7 @@ index 0000000000000000000000000000000000000000..40b163179b7784f6ff59949f2bb3555d
 +@dataclass(frozen=True)
 +class Brand:
 +    name: str  # product name shown to people
++    product_name: str  # full product name, for headings such as the CLI panel titles
 +    command: str  # CLI command
 +    env_prefix: str  # our settings prefix, copied to STRIX_* by the command
 +    homepage: str
@@ -90,6 +91,7 @@ index 0000000000000000000000000000000000000000..40b163179b7784f6ff59949f2bb3555d
 +
 +UPSTREAM = Brand(
 +    name="Strix",
++    product_name="Strix",
 +    command="strix",
 +    env_prefix="STRIX_",
 +    homepage="https://strix.ai",
@@ -105,6 +107,7 @@ index 0000000000000000000000000000000000000000..40b163179b7784f6ff59949f2bb3555d
 +
 +JITERA = Brand(
 +    name="Jitera",
++    product_name="Jitera Pentest",
 +    command="jitera-pentest",  # `jitera` is the Jitera Gateway CLI
 +    env_prefix="JITERA_PENTEST_",
 +    homepage="https://jitera.com",
