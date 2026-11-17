@@ -1,0 +1,45 @@
+Title: Setup error panels are titled with the product name
+Why: The missing-settings, Docker-not-installed and image-pull panels were titled STRIX.
+Upstream-PR: none
+
+diff --git a/strix/interface/environment.py b/strix/interface/environment.py
+index 522067df84a046379341f0e243dea57c9205b6b1..cb3aa376d4a4066511d857e2639728d0d3188e3e 100644
+--- a/strix/interface/environment.py
++++ b/strix/interface/environment.py
+@@ -31,6 +31,9 @@ def _missing_web_search_vars(integrations: IntegrationSettings) -> list[str]:
+     return ["EXA_API_KEY", "PERPLEXITY_API_KEY"]
+ 
+ 
++from strix.jitera import brand  # noqa: E402  (Jitera fork)
++
++
+ def validate_environment() -> None:
+     logger.info("Validating environment")
+     console = Console()
+@@ -145,7 +148,7 @@ def validate_environment() -> None:
+ 
+         panel = Panel(
+             error_text,
+-            title="[bold white]STRIX",
++            title=f"[bold white]{brand.current().product_name.upper()}",
+             title_align="left",
+             border_style="red",
+             padding=(1, 2),
+@@ -177,7 +180,7 @@ def check_docker_installed() -> None:
+ 
+         panel = Panel(
+             error_text,
+-            title="[bold white]STRIX",
++            title=f"[bold white]{brand.current().product_name.upper()}",
+             title_align="left",
+             border_style="red",
+             padding=(1, 2),
+@@ -225,7 +228,7 @@ def pull_docker_image() -> None:
+ 
+             panel = Panel(
+                 error_text,
+-                title="[bold white]STRIX",
++                title=f"[bold white]{brand.current().product_name.upper()}",
+                 title_align="left",
+                 border_style="red",
+                 padding=(1, 2),

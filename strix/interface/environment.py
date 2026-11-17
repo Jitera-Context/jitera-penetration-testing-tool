@@ -31,6 +31,9 @@ def _missing_web_search_vars(integrations: IntegrationSettings) -> list[str]:
     return ["EXA_API_KEY", "PERPLEXITY_API_KEY"]
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def validate_environment() -> None:
     logger.info("Validating environment")
     console = Console()
@@ -145,7 +148,7 @@ def validate_environment() -> None:
 
         panel = Panel(
             error_text,
-            title="[bold white]STRIX",
+            title=f"[bold white]{brand.current().product_name.upper()}",
             title_align="left",
             border_style="red",
             padding=(1, 2),
@@ -177,7 +180,7 @@ def check_docker_installed() -> None:
 
         panel = Panel(
             error_text,
-            title="[bold white]STRIX",
+            title=f"[bold white]{brand.current().product_name.upper()}",
             title_align="left",
             border_style="red",
             padding=(1, 2),
@@ -225,7 +228,7 @@ def pull_docker_image() -> None:
 
             panel = Panel(
                 error_text,
-                title="[bold white]STRIX",
+                title=f"[bold white]{brand.current().product_name.upper()}",
                 title_align="left",
                 border_style="red",
                 padding=(1, 2),

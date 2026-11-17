@@ -3,7 +3,7 @@ Why: Panels were titled STRIX and linked to strix.ai, Discord and Strix Cloud.
 Upstream-PR: none
 
 diff --git a/strix/interface/main.py b/strix/interface/main.py
-index 846a35da9878a299905a774247e6b537d07d81ce..29d53ee96f7992c2721eab87be775ac8f373d675 100644
+index 846a35da9878a299905a774247e6b537d07d81ce..fc3bb0e76402b1aa6c0d7d5b91ee6c6e2684461c 100644
 --- a/strix/interface/main.py
 +++ b/strix/interface/main.py
 @@ -108,6 +108,9 @@ def _subscription_error_hint(exc: BaseException) -> str | None:
@@ -21,7 +21,7 @@ index 846a35da9878a299905a774247e6b537d07d81ce..29d53ee96f7992c2721eab87be775ac8
                  Panel(
                      warn_text,
 -                    title="[bold white]STRIX",
-+                    title=f"[bold white]{brand.current().name.upper()}",
++                    title=f"[bold white]{brand.current().product_name.upper()}",
                      title_align="left",
                      border_style="yellow",
                      padding=(1, 2),
@@ -48,7 +48,7 @@ index 846a35da9878a299905a774247e6b537d07d81ce..29d53ee96f7992c2721eab87be775ac8
      panel = Panel(
          panel_content,
 -        title="[bold white]STRIX",
-+        title=f"[bold white]{brand.current().name.upper()}",
++        title=f"[bold white]{brand.current().product_name.upper()}",
          title_align="left",
          border_style=border_style,
          padding=(1, 2),
@@ -79,7 +79,7 @@ index 846a35da9878a299905a774247e6b537d07d81ce..29d53ee96f7992c2721eab87be775ac8
      panel = Panel(
          error_text,
 -        title="[bold white]STRIX",
-+        title=f"[bold white]{brand.current().name.upper()}",
++        title=f"[bold white]{brand.current().product_name.upper()}",
          title_align="left",
          border_style="red",
          padding=(1, 2),
@@ -88,7 +88,7 @@ index 846a35da9878a299905a774247e6b537d07d81ce..29d53ee96f7992c2721eab87be775ac8
      panel = Panel(
          error_text,
 -        title="[bold white]STRIX",
-+        title=f"[bold white]{brand.current().name.upper()}",
++        title=f"[bold white]{brand.current().product_name.upper()}",
          title_align="left",
          border_style=border_style,
          padding=(1, 2),

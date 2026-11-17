@@ -1,6 +1,16 @@
 from __future__ import annotations
 
+import ast
+import re
+from pathlib import Path
+
+import pytest
+
+from strix.interface import environment
 from strix.jitera import bootstrap, brand
+
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_upstream_profile_is_active_by_default() -> None:
@@ -58,3 +68,36 @@ def test_subcommand_help_points_at_our_command_without_cloud() -> None:
     assert (
         brand.rebrand_commands(text) == "Additional commands:\n  jitera-pentest view [RUN]  View\n"
     )
+
+
+@pytest.mark.parametrize(
+    ("profile", "title"), [("UPSTREAM", "STRIX"), ("JITERA", "JITERA PENTEST")]
+)
+def test_cli_panels_are_titled_with_the_product_name(
+    profile: str, title: str, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    brand.activate(getattr(brand, profile))
+    monkeypatch.setattr(environment.shutil, "which", lambda _name: None)
+    monkeypatch.setattr(environment, "report_error", lambda *_a, **_k: None)
+    with pytest.raises(SystemExit):
+        environment.check_docker_installed()
+    first_line = next(line for line in capsys.readouterr().out.splitlines() if line.strip())
+    assert f" {title} " in first_line
+
+
+def test_upstream_code_hardcodes_no_strix_heading() -> None:
+    """Catches a "STRIX" panel title that a sync brings in.
+
+    Fix a hit like the others: ``brand.current().product_name.upper()``.
+    """
+    heading = re.compile(r"\bSTRIX\b(?!_)")
+    hits = [
+        f"{path.relative_to(ROOT)}:{node.lineno}: {node.value!r}"
+        for path in sorted((ROOT / "strix").rglob("*.py"))
+        if "jitera" not in path.relative_to(ROOT).parts
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and heading.search(node.value)
+    ]
+    assert hits == []
