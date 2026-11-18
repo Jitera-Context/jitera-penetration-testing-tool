@@ -16,6 +16,9 @@ Read first:
 
 - `fork/dev verify` and `fork/dev test` pass. A failure is "pre-existing" only
   after you've shown it fails on untouched upstream at `fork/CHECKPOINT` too.
+- Every commit carries the patches for its code. A hook in `.claude/settings.json`
+  runs `fork/dev verify --staged` before each `git commit` and blocks a commit
+  that doesn't; fix it with `fork/dev save`, never by working around the hook.
 - Behavior changes (prompts, skills, tools, scan flow, runtime, LLM settings,
   scan traffic) and every upstream sync: `fork/dev eval` passes on a fresh scan.
 - Put real output in the PR (`.github/pull_request_template.md`), and say what

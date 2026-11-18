@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/CLAUDE.md b/CLAUDE.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..e8eb9f8eff5202cdf224501536392dcbb02c6380
+index 0000000000000000000000000000000000000000..d9e77a3c779fb0577f2e75f797e1aa1376d21ed2
 --- /dev/null
 +++ b/CLAUDE.md
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,47 @@
 +# jitera-pentest: instructions for coding agents
 +
 +You own this project's day-to-day development, and you prove every change.
@@ -26,6 +26,9 @@ index 0000000000000000000000000000000000000000..e8eb9f8eff5202cdf224501536392dcb
 +
 +- `fork/dev verify` and `fork/dev test` pass. A failure is "pre-existing" only
 +  after you've shown it fails on untouched upstream at `fork/CHECKPOINT` too.
++- Every commit carries the patches for its code. A hook in `.claude/settings.json`
++  runs `fork/dev verify --staged` before each `git commit` and blocks a commit
++  that doesn't; fix it with `fork/dev save`, never by working around the hook.
 +- Behavior changes (prompts, skills, tools, scan flow, runtime, LLM settings,
 +  scan traffic) and every upstream sync: `fork/dev eval` passes on a fresh scan.
 +- Put real output in the PR (`.github/pull_request_template.md`), and say what

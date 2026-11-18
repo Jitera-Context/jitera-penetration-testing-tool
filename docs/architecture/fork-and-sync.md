@@ -14,8 +14,9 @@ flow back to it.
   `fork/dev patches` lists them; when this was written, 30 were edits to
   upstream files and the rest were new files.
 - **`fork/dev save`** regenerates the patches from the code. Engineers commit
-  the code and its patches together, and CI's `fork/dev verify` fails a PR when
-  they don't match.
+  the code and its patches together. A Claude Code hook runs
+  `fork/dev verify --staged` before every `git commit` and blocks one whose
+  patches don't match its code, and CI's `fork/dev verify` fails such a PR.
 - **`fork/OWNED`** lists upstream files we've fully replaced (today:
   `README.md`). Sync keeps our version of those instead of re-applying a patch.
 - **`fork/` and `.claude/` are never patched.** They are the mechanism itself.
@@ -108,7 +109,8 @@ anything specific to Jitera.
 
 | Check | Catches |
 |---|---|
-| `fork/dev verify` (CI) | Code and patches out of step; a squashed sync PR |
+| `fork/dev verify --staged` (Claude Code hook, before each `git commit`) | A commit whose code and patches are out of step, or whose patch still has a TODO header |
+| `fork/dev verify` (CI, Fork workflow) | Code and patches out of step; a squashed sync PR |
 | `fork/dev test` | Lint, types, our tests and upstream's tests |
 | `fork/dev audit` | Strix brand or endpoints coming back |
 | `fork/dev eval` | Capability regressions (see the next document) |
