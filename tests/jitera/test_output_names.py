@@ -1,9 +1,13 @@
-"""What Jitera writes to disk (runs, logs, temp and settings folders) is named after Jitera."""
+"""What Jitera writes to disk (runs, logs, temp and settings folders) is named after Jitera.
+
+So are the loggers its scan log prints.
+"""
 
 from __future__ import annotations
 
 import ast
 import json
+import logging
 import os
 import re
 import stat
@@ -84,6 +88,40 @@ def test_scan_log_is_named_after_jitera(tmp_path: Path) -> None:
     brand.activate(brand.JITERA)
     setup_scan_logging(tmp_path)()
     assert sorted(p.name for p in tmp_path.iterdir()) == ["jitera_pentest.log"]
+
+
+def test_logger_names_follow_the_brand() -> None:
+    assert brand.JITERA.logger_name("strix") == "jitera_pentest"
+    assert brand.JITERA.logger_name("strix.report.state") == "jitera_pentest.report.state"
+    assert brand.JITERA.logger_name("strixy.thing") == "strixy.thing"
+    assert brand.JITERA.logger_name("openai.agents") == "openai.agents"
+    assert brand.UPSTREAM.logger_name("strix.report.state") == "strix.report.state"
+
+
+@pytest.mark.parametrize(
+    ("profile", "shown"),
+    [("UPSTREAM", "strix.report.state"), ("JITERA", "jitera_pentest.report.state")],
+)
+def test_scan_log_prints_loggers_by_the_brand(tmp_path: Path, profile: str, shown: str) -> None:
+    active = getattr(brand, profile)
+    brand.activate(active)
+    teardown = setup_scan_logging(tmp_path, debug=False)
+    try:
+        logging.getLogger("strix.report.state").info("Essential scan data saved")
+    finally:
+        teardown()
+    log = (tmp_path / active.log_file_name).read_text(encoding="utf-8")
+    assert f" {shown}: Essential scan data saved\n" in log
+    if active is brand.JITERA:
+        assert "strix" not in log
+
+
+def test_other_handlers_still_see_the_real_logger_name() -> None:
+    brand.activate(brand.JITERA)
+    record = logging.LogRecord("strix.core.runner", logging.INFO, __file__, 1, "up", None, None)
+    formatter = brand.LogFormatter("%(name)s: %(message)s")
+    assert formatter.format(record) == "jitera_pentest.core.runner: up"
+    assert record.name == "strix.core.runner"
 
 
 def test_temp_staging_is_named_after_jitera(

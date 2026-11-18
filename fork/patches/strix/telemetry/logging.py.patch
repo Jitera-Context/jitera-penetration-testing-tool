@@ -1,22 +1,26 @@
-Title: Scan log file is named after the brand (jitera_pentest.log)
-Why: Every run folder held strix.log.
+Title: Scan log is named after the brand (jitera_pentest.log), and so are its loggers
+Why: Every run folder held strix.log, and every line in it named its logger strix.<module> (strix.report.state).
 Upstream-PR: none
 
 diff --git a/strix/telemetry/logging.py b/strix/telemetry/logging.py
-index 40391cc14952590802352a4dce19e67095c35f82..9ce7d642fe09ee8c948e0b53e718f2d3dbd29415 100644
+index 40391cc14952590802352a4dce19e67095c35f82..f7c0d15294e308cf7c516d99239f7c264d1a619d 100644
 --- a/strix/telemetry/logging.py
 +++ b/strix/telemetry/logging.py
-@@ -158,6 +158,9 @@ def setup_console_logging(*, debug: bool | None = None) -> None:
-             tracked.addHandler(_stream_handler(_debug_enabled(debug)))
+@@ -135,9 +135,12 @@ def _debug_enabled(debug: bool | None) -> bool:
+     return (os.environ.get("STRIX_DEBUG") or "").strip().lower() in {"1", "true", "yes", "on"}
  
  
 +from strix.jitera import brand  # noqa: E402  (Jitera fork)
 +
 +
- def setup_scan_logging(run_dir: Path, *, debug: bool | None = None) -> Callable[[], None]:
-     """Attach scan-scoped handlers; return a teardown callable.
- 
-@@ -179,7 +182,7 @@ def setup_scan_logging(run_dir: Path, *, debug: bool | None = None) -> Callable[
+ def _stream_handler(debug: bool) -> logging.Handler:
+     handler = _CurrentStderrHandler(logging.DEBUG if debug else logging.ERROR)
+-    handler.setFormatter(logging.Formatter(_FORMAT, datefmt=_DATEFMT))
++    handler.setFormatter(brand.LogFormatter(_FORMAT, datefmt=_DATEFMT))
+     handler.addFilter(_StrixContextFilter())
+     handler.addFilter(_StdoutQuietFilter())
+     setattr(handler, _STREAM_TAG, True)
+@@ -179,11 +182,11 @@ def setup_scan_logging(run_dir: Path, *, debug: bool | None = None) -> Callable[
      debug = _debug_enabled(debug)
  
      run_dir.mkdir(parents=True, exist_ok=True)
@@ -25,3 +29,8 @@ index 40391cc14952590802352a4dce19e67095c35f82..9ce7d642fe09ee8c948e0b53e718f2d3
  
      file_handler = logging.FileHandler(log_path, mode="a", encoding="utf-8")
      file_handler.setLevel(logging.DEBUG)
+-    file_handler.setFormatter(logging.Formatter(_FORMAT, datefmt=_DATEFMT))
++    file_handler.setFormatter(brand.LogFormatter(_FORMAT, datefmt=_DATEFMT))
+     file_handler.addFilter(_StrixContextFilter())
+     setattr(file_handler, _HANDLER_TAG, True)
+ 
