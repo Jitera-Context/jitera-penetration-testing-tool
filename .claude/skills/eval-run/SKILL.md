@@ -28,7 +28,7 @@ covered. Details: `eval/README.md`.
 2. Run one of:
    - `fork/dev eval` (the baseline's target and settings)
    - `fork/dev eval --scan-mode quick --max-budget 5` (cheaper check)
-   - `fork/dev eval --from-run strix_runs/<run>` (score a finished run, no scan)
+   - `fork/dev eval --from-run jitera_pentest_runs/<run>` (score a finished run, no scan)
 3. Act on the exit code:
    - `0` pass.
    - `1` regression. Before calling it a capability regression, open the run's

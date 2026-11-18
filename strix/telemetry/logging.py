@@ -135,9 +135,12 @@ def _debug_enabled(debug: bool | None) -> bool:
     return (os.environ.get("STRIX_DEBUG") or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+from strix.jitera import brand  # noqa: E402  (Jitera fork)
+
+
 def _stream_handler(debug: bool) -> logging.Handler:
     handler = _CurrentStderrHandler(logging.DEBUG if debug else logging.ERROR)
-    handler.setFormatter(logging.Formatter(_FORMAT, datefmt=_DATEFMT))
+    handler.setFormatter(brand.LogFormatter(_FORMAT, datefmt=_DATEFMT))
     handler.addFilter(_StrixContextFilter())
     handler.addFilter(_StdoutQuietFilter())
     setattr(handler, _STREAM_TAG, True)
@@ -156,9 +159,6 @@ def setup_console_logging(*, debug: bool | None = None) -> None:
         tracked.propagate = False
         if not _has_stream_handler(tracked):
             tracked.addHandler(_stream_handler(_debug_enabled(debug)))
-
-
-from strix.jitera import brand  # noqa: E402  (Jitera fork)
 
 
 def setup_scan_logging(run_dir: Path, *, debug: bool | None = None) -> Callable[[], None]:
@@ -186,7 +186,7 @@ def setup_scan_logging(run_dir: Path, *, debug: bool | None = None) -> Callable[
 
     file_handler = logging.FileHandler(log_path, mode="a", encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(logging.Formatter(_FORMAT, datefmt=_DATEFMT))
+    file_handler.setFormatter(brand.LogFormatter(_FORMAT, datefmt=_DATEFMT))
     file_handler.addFilter(_StrixContextFilter())
     setattr(file_handler, _HANDLER_TAG, True)
 
