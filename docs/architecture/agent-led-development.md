@@ -78,4 +78,5 @@ Evidence is only useful when it's honest:
 | Today | Next |
 |---|---|
 | People check the evidence in the PR template | CI runs verify, tests and a quick eval on every agent PR, and blocks merges that fail (plans items 3 and 4) |
+| A Claude Code hook blocks a commit whose patches don't match its code (`fork/dev verify --staged`); CI runs lint, types, tests and `fork/dev verify` on every PR | Those checks are required to merge (plans item 3) |
 | Agents follow `CLAUDE.md` and the skills | The same rules for other coding agents, through `AGENTS.md` |
