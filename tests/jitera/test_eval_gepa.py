@@ -5,8 +5,10 @@ uv run --frozen --with gepa==0.1.4 pytest -q tests/jitera/test_eval_gepa.py
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from types import SimpleNamespace
+from typing import TYPE_CHECKING, Any
 
+import litellm
 import pytest
 
 
@@ -19,6 +21,7 @@ pytest.importorskip("gepa")
 from eval._lib import Baseline
 from eval.gepa import optimize
 from eval.gepa.adapter import COMPONENT, JiteraGEPAAdapter, feedback, make_tasks
+from strix.config import loader
 
 
 def test_adapter_scores_candidates_with_the_rollout() -> None:
@@ -42,6 +45,19 @@ def test_reflective_dataset_names_the_missed_categories() -> None:
     assert "sqli" not in text.split("Missed:")[1]
 
 
+def test_make_tasks_overrides_mode_budget_and_timeout() -> None:
+    baseline = Baseline.load("juice-shop")
+    task = make_tasks(baseline, "http://t", scan_mode="quick", max_budget_usd=3.0, timeout_s=600)[0]
+    assert task["scan_mode"] == "quick"
+    assert task["max_budget_usd"] == 3.0
+    assert task["timeout_s"] == 600
+    assert task["target"] == "http://t"
+    # Defaults still come from the baseline when nothing is overridden.
+    base = make_tasks(baseline)[0]
+    assert base["scan_mode"] == baseline.scan_mode
+    assert base["timeout_s"] is None
+
+
 def test_feedback_when_everything_is_covered() -> None:
     assert "every category" in feedback({"missed": [], "covered": ["sqli"]})
 
@@ -54,3 +70,34 @@ def test_dry_run_improves_on_the_seed(tmp_path: Path) -> None:
     seed_score, _ = optimize.stub_rollout(baseline)(optimize.SEED, {})
     best_score, _ = optimize.stub_rollout(baseline)(best, {})
     assert best_score > seed_score
+
+
+def _reflect_with(monkeypatch: pytest.MonkeyPatch, model: str) -> dict[str, Any]:
+    """Reflect once with the scans set to a local endpoint; return the litellm call."""
+    monkeypatch.setenv("STRIX_LLM", "openai/local-model")
+    monkeypatch.setenv("LLM_API_KEY", "test-key")
+    monkeypatch.setenv("LLM_API_BASE", "http://localhost:9/v1")
+    monkeypatch.setattr(loader, "_cached", None)
+    calls: list[dict[str, Any]] = []
+
+    def completion(**kwargs: Any) -> Any:
+        calls.append(kwargs)
+        message = SimpleNamespace(content="a better instruction")
+        return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+    monkeypatch.setattr(litellm, "completion", completion)
+    assert optimize.litellm_reflection(model)("improve this") == "a better instruction"
+    return calls[0]
+
+
+def test_reflection_uses_the_scans_key_and_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Without them, a gateway or self-hosted model fails after the first scan.
+    call = _reflect_with(monkeypatch, "openai/local-model")
+    assert call["api_key"] == "test-key"
+    assert call["api_base"] == "http://localhost:9/v1"
+
+
+def test_another_reflection_model_keeps_its_own_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    call = _reflect_with(monkeypatch, "anthropic/some-model")
+    assert "api_key" not in call
+    assert "api_base" not in call

@@ -18,11 +18,15 @@ the best. `gepa` is not a product dependency; `fork/dev gepa` adds it per run.
    scan at the baseline's `scan_mode` and up to `max_budget_usd`. GEPA checks
    its budget between iterations, so it can make a few more calls than
    `--max-metric-calls` (the dry run made 8 against a cap of 6). Give the user
-   the worst case, roughly (cap + 2) × budget, and wait for a yes.
+   the worst case, roughly (cap + 2) × budget, and wait for a yes. A model
+   LiteLLM can't price (a gateway or self-hosted model) records no cost, so the
+   budget can't stop a scan (up to 4 hours each) unless the user sets
+   `JITERA_PENTEST_LLM_INPUT_COST_PER_MTOK` and `..._OUTPUT_COST_PER_MTOK`.
 3. **Check the target is up.** `fork/dev eval --check` (no scan, no cost).
    Exit `3` means it's down: use a local Juice Shop (see `/eval-run`) and pass
    the same `--target` to every eval you run.
-4. **Real run.** With `JITERA_PENTEST_LLM` and `LLM_API_KEY` set (in `.env` or the shell):
+4. **Real run.** With `JITERA_PENTEST_LLM` and `LLM_API_KEY` set (in `.env` or the shell),
+   plus `LLM_API_BASE` for a gateway or self-hosted model (`openai/<model id>`):
    `fork/dev gepa --max-metric-calls 6`
    Options: `--target URL` (a local Juice Shop), `--reflection-model MODEL`,
    `--seed-file FILE` (start from an earlier result). The best instruction goes to `eval/gepa/optimized_instructions.txt`.

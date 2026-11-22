@@ -4,19 +4,22 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_eval.py b/tests/jitera/test_eval.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..c387d558be476440fc808bc5e4fca7100979cee7
+index 0000000000000000000000000000000000000000..01c79fae5cc527593d29ac40729ef221f450eb37
 --- /dev/null
 +++ b/tests/jitera/test_eval.py
-@@ -0,0 +1,117 @@
+@@ -0,0 +1,167 @@
 +"""Tests for the eval scorer and baseline. No live scan, no network, no gepa."""
 +
 +from __future__ import annotations
 +
++import json
++import subprocess
 +from typing import TYPE_CHECKING
 +
 +import eval._lib as lib
++from eval import harness
 +from eval._lib import Baseline
-+from eval.harness import build_command, find_run_dir
++from eval.harness import build_command, find_run_dir, run_scan
 +from eval.score import Category, parse_cwe, score_findings
 +
 +
@@ -113,6 +116,53 @@ index 0000000000000000000000000000000000000000..c387d558be476440fc808bc5e4fca710
 +    assert find_run_dir(root) is None
 +    (root / "jitera_pentest_runs" / "run-a").mkdir(parents=True)
 +    assert find_run_dir(root) == root / "jitera_pentest_runs" / "run-a"
++
++
++def test_findings_fall_back_to_sarif_when_json_is_missing(tmp_path: Path) -> None:
++    # A scan stopped at the timeout often has findings.sarif but no
++    # vulnerabilities.json; scoring must still work off the SARIF.
++    sarif = {
++        "runs": [
++            {
++                "tool": {
++                    "driver": {
++                        "rules": [
++                            {
++                                "id": "r1",
++                                "name": "SQL Injection",
++                                "properties": {"tags": ["CWE-89"]},
++                                "fullDescription": {"text": "sqli in login"},
++                            },
++                        ]
++                    }
++                },
++                "results": [{"ruleId": "r1", "message": {"text": "bypass"}}],
++            }
++        ]
++    }
++    (tmp_path / "findings.sarif").write_text(json.dumps(sarif), encoding="utf-8")
++    found = lib.load_findings(tmp_path)
++    assert found == [
++        {"title": "SQL Injection", "cwe": "CWE-89", "description": "bypass sqli in login"}
++    ]
++
++
++def test_a_timed_out_scan_is_still_scored_not_crashed(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    # The engine writes vulnerabilities.json continuously, so a scan stopped at
++    # the timeout has a real partial run. run_scan must return it, not raise —
++    # otherwise one slow scan kills a whole GEPA optimization.
++    (tmp_path / "jitera_pentest_runs" / "run-x").mkdir(parents=True)
++
++    def _timeout(*_args: object, **_kwargs: object) -> object:
++        raise subprocess.TimeoutExpired(cmd=["x"], timeout=1.0)
++
++    monkeypatch.setattr(harness.subprocess, "run", _timeout)
++    result = run_scan("http://t", "quick", 5.0, tmp_path, timeout_s=1.0)
++    assert result.run_dir == tmp_path / "jitera_pentest_runs" / "run-x"
++    assert result.exit_code is None
++    assert "scoring the partial run" in result.stderr
 +
 +
 +def test_runs_in_the_same_second_keep_separate_result_files(

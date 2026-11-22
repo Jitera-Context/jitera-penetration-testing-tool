@@ -4,17 +4,17 @@ Upstream-PR: none
 
 diff --git a/eval/gepa/optimize.py b/eval/gepa/optimize.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..92395f9369d1df6d8e6ad7018e3d085ba8583b57
+index 0000000000000000000000000000000000000000..b1df45e9373de544f2961546bbad8af191415c19
 --- /dev/null
 +++ b/eval/gepa/optimize.py
-@@ -0,0 +1,153 @@
+@@ -0,0 +1,217 @@
 +"""Optimize the agent's eval instructions with GEPA.
 +
 +    # Verify the loop with no scans and no LLM (deterministic stubs):
 +    uv run --frozen --with gepa==0.1.4 python -m eval.gepa.optimize --dry-run
 +
 +    # Real optimization (each metric call is a full scan — minutes to hours, $$):
-+    export STRIX_LLM=... LLM_API_KEY=...
++    export STRIX_LLM=... LLM_API_KEY=...   # plus LLM_API_BASE for a gateway or self-hosted model
 +    uv run --frozen --with gepa==0.1.4 python -m eval.gepa.optimize --max-metric-calls 8
 +
 +Writes the best instruction found to eval/gepa/optimized_instructions.txt.
@@ -36,15 +36,51 @@ index 0000000000000000000000000000000000000000..92395f9369d1df6d8e6ad7018e3d085b
 +
 +from eval._lib import EVAL_DIR, MISSING_MODEL_HELP, Baseline, configured_model, prepare_settings
 +from eval.gepa.adapter import COMPONENT, JiteraGEPAAdapter, Rollout, make_tasks, scan_rollout
++from strix.config import load_settings
 +
 +
 +ReflectionLM = Callable[[Any], str]
 +
++# The seed mirrors the real engine prompt the gateway sends (intro + depth +
++# keep-moving + rules), tightened with the fixes scan 1 pointed to: breadth
++# across every vulnerability class, file proven impact at once, converge within
++# budget, and time-box rabbit holes. GEPA refines this against category coverage.
++# Goal: find as many real security issues as possible and cover every aspect of
++# the site. Kept general — no target-specific answers, payloads or markers.
 +SEED = (
-+    "You are testing a web application for security vulnerabilities. Work "
-+    "methodically across the OWASP Top 10: map the attack surface, then probe "
-+    "authentication, access control, injection, and client-side flaws, and "
-+    "validate each issue with a proof of concept."
++    "Attempt to enter the system at the authorized target from an external "
++    "attacker's perspective, then expand access. Your goal is to find as many "
++    "real security issues as you can and cover every aspect of the site.\n\n"
++    "Work breadth-first. Map the whole attack surface — every page, endpoint, "
++    "parameter, header, cookie and role, authenticated and not — then test the "
++    "full range of vulnerability classes, not only the easy ones:\n"
++    "- Injection: SQL, NoSQL, command, template (SSTI) and log injection.\n"
++    "- Cross-site scripting: reflected, stored and DOM-based.\n"
++    "- Broken access control: object-level (IDOR), function-level, forced "
++    "browsing, missing authorization.\n"
++    "- Broken authentication and session: weak or default credentials, flawed "
++    "password reset, JWT and token forgery, 2FA bypass.\n"
++    "- Sensitive data and secret exposure: backups, logs, source maps, API keys, "
++    "confidential files and directories.\n"
++    "- Cryptographic issues: weak hashing or encryption, predictable tokens.\n"
++    "- Security misconfiguration: verbose errors, permissive CORS, missing "
++    "security headers, exposed admin or debug features.\n"
++    "- Improper input validation and business-logic abuse: type, length, format "
++    "and range bypasses, negative or manipulated values, workflow abuse.\n"
++    "- Insecure deserialization and unsafe parsing, including XXE.\n"
++    "- Vulnerable and outdated components with known issues.\n"
++    "- Server-side request forgery and open/unvalidated redirects.\n"
++    "- Missing anti-automation: absent rate limiting, brute-force and CAPTCHA "
++    "weaknesses.\n"
++    "- Weak logging and observability that would let an attack go unnoticed.\n\n"
++    "Cover the breadth before chaining any one finding deeper. The moment you "
++    "have evidence that proves impact, file it as a finding; never park a proven "
++    "issue as a follow-up. Record every surface you assess, including the ones "
++    "that come back clean, so the run can say what was covered.\n\n"
++    "Treat your budget and time as finite. Time-box any single sub-task that runs "
++    "long without progress — brute force, cracking, factoring — take the evidence "
++    "you have and move on. Reserve the last of your budget to file every proven "
++    "impact and resolve open items, and converge rather than expanding forever."
 +)
 +
 +DEFAULT_OUT = EVAL_DIR / "gepa" / "optimized_instructions.txt"
@@ -93,11 +129,19 @@ index 0000000000000000000000000000000000000000..92395f9369d1df6d8e6ad7018e3d085b
 +
 +
 +def litellm_reflection(model: str) -> ReflectionLM:
-+    """Real reflection LM: the configured model via litellm."""
++    """Real reflection LM: ``model`` via litellm.
++
++    When it is the scans' own model, it also uses their key and endpoint
++    (LLM_API_KEY, LLM_API_BASE), which litellm does not read on its own.
++    """
++    llm = load_settings().llm
++    route: dict[str, str] = {}
++    if model == (llm.model or "").strip():
++        route = {k: v for k, v in (("api_key", llm.api_key), ("api_base", llm.api_base)) if v}
 +
 +    def reflect(prompt: Any) -> str:
 +        messages = prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]
-+        response = litellm.completion(model=model, messages=messages)
++        response = litellm.completion(model=model, messages=messages, **route)
 +        return str(response.choices[0].message.content)
 +
 +    return reflect
@@ -113,11 +157,28 @@ index 0000000000000000000000000000000000000000..92395f9369d1df6d8e6ad7018e3d085b
 +    parser.add_argument("--reflection-model", default=configured_model() or "")
 +    parser.add_argument("--seed-file", type=Path, help="start from this instruction file")
 +    parser.add_argument("--out", type=Path, help=f"default: {DEFAULT_OUT}")
++    parser.add_argument(
++        "--scan-mode", help="override the baseline scan mode for each GEPA scan, e.g. quick"
++    )
++    parser.add_argument(
++        "--max-budget", type=float, help="override the per-scan USD budget for each GEPA scan"
++    )
++    parser.add_argument(
++        "--timeout-min",
++        type=float,
++        help="stop each scan after this many minutes and score the partial run",
++    )
 +    args = parser.parse_args(argv)
 +
 +    out: Path = args.out or (DRY_RUN_OUT if args.dry_run else DEFAULT_OUT)
 +    baseline = Baseline.load(args.baseline)
-+    tasks = make_tasks(baseline, args.target)
++    tasks = make_tasks(
++        baseline,
++        args.target,
++        scan_mode=args.scan_mode,
++        max_budget_usd=args.max_budget,
++        timeout_s=args.timeout_min * 60 if args.timeout_min else None,
++    )
 +    seed_text = args.seed_file.read_text() if args.seed_file else SEED
 +
 +    rollout: Rollout
@@ -129,9 +190,12 @@ index 0000000000000000000000000000000000000000..92395f9369d1df6d8e6ad7018e3d085b
 +        if not args.reflection_model:
 +            print(f"eval.gepa: {MISSING_MODEL_HELP}", file=sys.stderr)
 +            return 2
++        task0 = tasks[0]
++        cap = f", stopped at {args.timeout_min:.0f} min" if args.timeout_min else ""
 +        print(
 +            f"WARNING: each of up to {args.max_metric_calls} metric calls runs a full scan "
-+            f"({baseline.scan_mode} mode, up to ${baseline.max_budget_usd} each). Ctrl-C to abort.",
++            f"({task0['scan_mode']} mode, up to ${task0['max_budget_usd']} each{cap}). "
++            "Ctrl-C to abort.",
 +            file=sys.stderr,
 +        )
 +        rollout = scan_rollout(baseline)

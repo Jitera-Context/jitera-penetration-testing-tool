@@ -4,75 +4,92 @@ Upstream-PR: none
 
 diff --git a/eval/baseline/juice-shop.yaml b/eval/baseline/juice-shop.yaml
 new file mode 100644
-index 0000000000000000000000000000000000000000..407ba61321a858cf357ebe4c4e2f82237248c205
+index 0000000000000000000000000000000000000000..d83701cb51c2213d83301e1e1d6f32b09a0a3431
 --- /dev/null
 +++ b/eval/baseline/juice-shop.yaml
-@@ -0,0 +1,68 @@
+@@ -0,0 +1,85 @@
 +# Baseline for the OWASP Juice Shop eval.
 +#
 +# Juice Shop is a deliberately vulnerable training app published by OWASP for
-+# exactly this purpose. Each entry is a vulnerability CATEGORY we expect a good
-+# scan to surface, with the signals the scorer uses to map a finding onto it.
-+# This is public, category-level knowledge — not exploit payloads.
++# exactly this purpose. These are its 16 real challenge categories (from the
++# app's own /api/Challenges), with the signals the scorer uses to map a finding
++# onto each. Public, category-level knowledge — not exploit payloads.
 +#
-+# A run passes when it covers at least `min_categories` of these. That is the
-+# "consistent, X issues" gate: robust to normal LLM run-to-run variance, while
-+# still catching a regression where the agent stops finding whole classes.
++# GOAL (project north star): cover all 16/16 categories and have the scanner
++# solve 100 of the 118 challenges. Challenge solves are the true "issues found"
++# metric and are read straight from the app's scoreboard (/api/Challenges,
++# `solved`), not inferred here. `min_categories` below is only the regression
++# gate for `fork/dev eval`; the real target is tracked against the scoreboard.
 +
 +target: "https://demo.owasp-juice.shop"
-+min_categories: 6          # the gate: cover at least this many categories to pass
++min_categories: 8          # regression gate (half of 16); project goal is 16/16
 +scan_mode: "standard"      # quick | standard | deep
 +max_budget_usd: 15
 +
-+# Match rules per category: a finding maps to a category if its CWE is in `cwe`
-+# OR any string in `keywords` appears (case-insensitively) in its title,
-+# weakness, or description.
++# A finding maps to a category if its CWE is in `cwe` OR any `keywords` string
++# appears (case-insensitively) in its title, weakness, or description.
 +categories:
-+  - id: sqli
-+    title: "SQL Injection (incl. login bypass)"
-+    cwe: [89]
-+    keywords: ["sql injection", "sqli"]
++  - id: injection
++    title: "Injection (SQL / NoSQL / command / SSTI)"
++    cwe: [89, 77, 78, 90, 91, 94, 917, 943, 1336]
++    keywords: ["sql injection", "sqli", "nosql", "command injection", "template injection", "ssti", "code injection", "ldap injection", "xpath injection"]
 +  - id: xss
 +    title: "Cross-Site Scripting"
-+    cwe: [79]
-+    keywords: ["cross-site scripting", "xss"]
++    cwe: [79, 80]
++    keywords: ["cross-site scripting", "cross site scripting", "xss"]
 +  - id: broken-access-control
-+    title: "Broken Access Control / IDOR"
-+    cwe: [284, 285, 639, 862, 863]
-+    keywords: ["access control", "idor", "insecure direct object", "authorization", "privilege escalation"]
-+  - id: broken-auth
++    title: "Broken Access Control"
++    cwe: [284, 285, 639, 862, 863, 22]
++    keywords: ["access control", "idor", "insecure direct object", "authorization", "privilege escalation", "forced browsing", "directory traversal", "path traversal"]
++  - id: broken-authentication
 +    title: "Broken Authentication"
-+    cwe: [287, 307, 384, 640]
-+    keywords: ["authentication bypass", "broken authentication", "weak password", "brute force", "session fixation"]
++    cwe: [287, 307, 384, 620, 640]
++    keywords: ["authentication bypass", "broken authentication", "weak password", "credential", "jwt", "session fixation", "password reset", "2fa", "two-factor"]
 +  - id: sensitive-data-exposure
 +    title: "Sensitive Data Exposure"
-+    cwe: [200, 215, 538]
-+    keywords: ["sensitive data", "information disclosure", "data exposure", "exposed", "leak"]
++    cwe: [200, 215, 312, 359, 538]
++    keywords: ["sensitive data", "information disclosure", "data exposure", "exposed", "leak", "backup", "confidential", "secret"]
 +  - id: security-misconfiguration
 +    title: "Security Misconfiguration"
-+    cwe: [16, 933, 756]
-+    keywords: ["misconfiguration", "security header", "cors", "default credential", "directory listing"]
++    cwe: [16, 614, 756, 933]
++    keywords: ["misconfiguration", "security header", "cors", "default credential", "directory listing", "error handling", "deprecated", "verbose error"]
++  - id: cryptographic-issues
++    title: "Cryptographic Issues"
++    cwe: [310, 326, 327, 328, 916]
++    keywords: ["weak hash", "weak crypto", "insecure cipher", "cryptograph", "predictable token", "insecure randomness"]
 +  - id: vulnerable-components
 +    title: "Vulnerable / Outdated Components"
 +    cwe: [937, 1035, 1104]
-+    keywords: ["outdated", "vulnerable component", "known vulnerabilit", "dependency", "cve-"]
-+  - id: injection-other
-+    title: "Other Injection (NoSQL / command / SSTI)"
-+    cwe: [77, 78, 94, 943, 1336]
-+    keywords: ["nosql injection", "command injection", "template injection", "ssti", "code injection"]
++    keywords: ["outdated", "vulnerable component", "known vulnerabilit", "dependency", "cve-", "end of life"]
++  - id: improper-input-validation
++    title: "Improper Input Validation"
++    cwe: [20, 172, 434, 1287]
++    keywords: ["input validation", "improper validation", "type confusion", "null byte", "file upload", "malformed", "unexpected type"]
++  - id: insecure-deserialization
++    title: "Insecure Deserialization"
++    cwe: [502]
++    keywords: ["deserialization", "deserialisation", "serialization", "serialisation"]
 +  - id: xxe
 +    title: "XML External Entity (XXE)"
-+    cwe: [611]
-+    keywords: ["xxe", "xml external entity"]
-+  - id: ssrf
-+    title: "Server-Side Request Forgery"
-+    cwe: [918]
-+    keywords: ["ssrf", "server-side request forgery"]
-+  - id: unvalidated-redirect
-+    title: "Unvalidated Redirect / Open Redirect"
++    cwe: [611, 827]
++    keywords: ["xxe", "xml external entity", "xml entity"]
++  - id: unvalidated-redirects
++    title: "Unvalidated Redirects"
 +    cwe: [601]
-+    keywords: ["open redirect", "unvalidated redirect"]
-+  - id: crypto-issues
-+    title: "Cryptographic Issues"
-+    cwe: [310, 326, 327, 328, 916]
-+    keywords: ["weak hash", "weak crypto", "insecure cipher", "cryptograph"]
++    keywords: ["open redirect", "unvalidated redirect", "redirect"]
++  - id: broken-anti-automation
++    title: "Broken Anti-Automation"
++    cwe: [307, 799, 837]
++    keywords: ["rate limit", "anti automation", "anti-automation", "captcha", "brute force", "throttl", "lockout"]
++  - id: observability-failures
++    title: "Observability Failures"
++    cwe: [223, 532, 778]
++    keywords: ["logging", "monitoring", "observability", "metrics", "audit log", "insufficient logging"]
++  - id: security-through-obscurity
++    title: "Security through Obscurity"
++    cwe: [656]
++    keywords: ["security through obscurity", "obscurity", "hidden", "hardcoded", "obfuscation"]
++  - id: miscellaneous
++    title: "Miscellaneous"
++    cwe: [1021, 1336]
++    keywords: ["miscellaneous", "tutorial", "score board", "scoreboard", "easter egg", "deprecated interface", "clickjacking"]
