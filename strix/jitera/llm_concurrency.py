@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 import weakref
 from typing import TYPE_CHECKING
 
@@ -36,6 +37,8 @@ if TYPE_CHECKING:
     from openai.types.responses.response_prompt_param import ResponsePromptParam
 
 
+logger = logging.getLogger(__name__)
+
 # One semaphore per event loop: an asyncio.Semaphore binds to the loop that
 # first waits on it, and tests run many loops in one process.
 _SLOTS: weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, tuple[int, asyncio.Semaphore]] = (
@@ -46,9 +49,18 @@ _SLOTS: weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, tuple[int, asyncio.
 def _slots(limit: int) -> asyncio.Semaphore:
     loop = asyncio.get_running_loop()
     entry = _SLOTS.get(loop)
-    if entry is None or entry[0] != limit:
+    if entry is None:
         entry = (limit, asyncio.Semaphore(limit))
         _SLOTS[loop] = entry
+    elif entry[0] != limit:
+        # The cap is read once from settings, so it is constant for a loop.
+        # Replacing the live semaphore would drop the slots already held on it
+        # and blow the cap, so the first value wins; a differing value is a bug.
+        logger.warning(
+            "LLM concurrency cap is already %d for this event loop; ignoring new value %d",
+            entry[0],
+            limit,
+        )
     return entry[1]
 
 

@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/llm_concurrency.py b/strix/jitera/llm_concurrency.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..441476f08e6d1cc761db087eba5928debf078fac
+index 0000000000000000000000000000000000000000..f84c025062cb857c8a61c02e3d393d531709df9d
 --- /dev/null
 +++ b/strix/jitera/llm_concurrency.py
-@@ -0,0 +1,139 @@
+@@ -0,0 +1,151 @@
 +"""Cap how many model calls the engine has in flight at once.
 +
 +A self-hosted model that reads long prompts one at a time makes every agent
@@ -27,6 +27,7 @@ index 0000000000000000000000000000000000000000..441476f08e6d1cc761db087eba5928de
 +
 +import asyncio
 +import contextlib
++import logging
 +import weakref
 +from typing import TYPE_CHECKING
 +
@@ -46,6 +47,8 @@ index 0000000000000000000000000000000000000000..441476f08e6d1cc761db087eba5928de
 +    from openai.types.responses.response_prompt_param import ResponsePromptParam
 +
 +
++logger = logging.getLogger(__name__)
++
 +# One semaphore per event loop: an asyncio.Semaphore binds to the loop that
 +# first waits on it, and tests run many loops in one process.
 +_SLOTS: weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, tuple[int, asyncio.Semaphore]] = (
@@ -56,9 +59,18 @@ index 0000000000000000000000000000000000000000..441476f08e6d1cc761db087eba5928de
 +def _slots(limit: int) -> asyncio.Semaphore:
 +    loop = asyncio.get_running_loop()
 +    entry = _SLOTS.get(loop)
-+    if entry is None or entry[0] != limit:
++    if entry is None:
 +        entry = (limit, asyncio.Semaphore(limit))
 +        _SLOTS[loop] = entry
++    elif entry[0] != limit:
++        # The cap is read once from settings, so it is constant for a loop.
++        # Replacing the live semaphore would drop the slots already held on it
++        # and blow the cap, so the first value wins; a differing value is a bug.
++        logger.warning(
++            "LLM concurrency cap is already %d for this event loop; ignoring new value %d",
++            entry[0],
++            limit,
++        )
 +    return entry[1]
 +
 +

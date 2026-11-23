@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_llm_concurrency.py b/tests/jitera/test_llm_concurrency.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..1216ffb9de6167cded4fcab57babc66d6cda747a
+index 0000000000000000000000000000000000000000..b4dbe65f8550d3beaeba4c0b55e4a85f5cd78a3d
 --- /dev/null
 +++ b/tests/jitera/test_llm_concurrency.py
-@@ -0,0 +1,250 @@
+@@ -0,0 +1,264 @@
 +"""LLM_MAX_CONCURRENT_REQUESTS caps the model calls the engine has in flight.
 +
 +The end-to-end tests drive the real ``StrixProvider.get_model`` chain against a
@@ -258,3 +258,17 @@ index 0000000000000000000000000000000000000000..1216ffb9de6167cded4fcab57babc66d
 +    args, kwargs = _args()
 +    for _ in range(2):
 +        assert asyncio.run(model.get_response(*args, **kwargs)) == "response"
++
++
++async def test_a_differing_cap_on_the_same_loop_is_ignored_not_rebuilt() -> None:
++    # Review #3: rebuilding the semaphore on a changed limit would drop the slots
++    # already held and blow the cap. The first value for a loop must win.
++    inner = _FakeModel()
++    first = llm_concurrency.limit(inner, 2)
++    second = llm_concurrency.limit(inner, 5)  # different limit, same event loop
++    args, kwargs = _args()
++    await asyncio.gather(
++        *(model.get_response(*args, **kwargs) for model in [first, second] * 4)
++    )
++    assert inner.peak <= 2  # the cap held at the first value, not 5
++

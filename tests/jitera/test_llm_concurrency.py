@@ -248,3 +248,17 @@ def test_each_event_loop_gets_its_own_slots() -> None:
     args, kwargs = _args()
     for _ in range(2):
         assert asyncio.run(model.get_response(*args, **kwargs)) == "response"
+
+
+async def test_a_differing_cap_on_the_same_loop_is_ignored_not_rebuilt() -> None:
+    # Review #3: rebuilding the semaphore on a changed limit would drop the slots
+    # already held and blow the cap. The first value for a loop must win.
+    inner = _FakeModel()
+    first = llm_concurrency.limit(inner, 2)
+    second = llm_concurrency.limit(inner, 5)  # different limit, same event loop
+    args, kwargs = _args()
+    await asyncio.gather(
+        *(model.get_response(*args, **kwargs) for model in [first, second] * 4)
+    )
+    assert inner.peak <= 2  # the cap held at the first value, not 5
+
