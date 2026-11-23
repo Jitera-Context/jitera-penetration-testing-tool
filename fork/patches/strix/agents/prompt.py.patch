@@ -3,10 +3,27 @@ Why: The prompt rule below needs the value.
 Upstream-PR: none
 
 diff --git a/strix/agents/prompt.py b/strix/agents/prompt.py
-index 2eb45bf18189129320a62facfc17eb3c4954db1c..0f2b769e3698265160c34f8624e9dc37c5bb5504 100644
+index 2eb45bf18189129320a62facfc17eb3c4954db1c..d49753c0870dceeea136037e9ff0220da06fe232 100644
 --- a/strix/agents/prompt.py
 +++ b/strix/agents/prompt.py
-@@ -75,6 +75,9 @@ def _resolve_skills(
+@@ -54,6 +54,16 @@ def _resolve_skills(
+     ordered.append(f"scan_modes/{scan_mode}")
+     if is_diff_scoped:
+         ordered.append("scan_modes/diff")
++    # Jitera fork: thorough runs always load the coverage skills that wire in the
++    # Jitera tools (component SCA, static-exposure recon, payload oracle,
++    # deserialization surface). Scans exercise these classes but never reach for
++    # the tools on their own, so the guidance has to be in the always-on set, not
++    # left to load_skill. Thorough modes only, to keep quick/diff prompts lean.
++    if scan_mode in ("deep", "standard"):
++        ordered.append("vulnerabilities/vulnerable_components_blackbox")
++        ordered.append("vulnerabilities/static_exposure_recon")
++        ordered.append("vulnerabilities/payload_confirmation")
++        ordered.append("vulnerabilities/deserialization_surface")
+     ordered.append("tooling/agent_browser")
+     ordered.append("tooling/python")
+     ordered.append("analysis/counterevidence")
+@@ -75,6 +85,9 @@ def _resolve_skills(
      return deduped
  
  
@@ -16,7 +33,7 @@ index 2eb45bf18189129320a62facfc17eb3c4954db1c..0f2b769e3698265160c34f8624e9dc37
  def render_system_prompt(
      *,
      skills: list[str] | None = None,
-@@ -131,6 +134,7 @@ def render_system_prompt(
+@@ -131,6 +144,7 @@ def render_system_prompt(
          # Skills every agent of this kind loads come first, so siblings share them
          # as a cached prefix; the ones the caller asked for vary and go after.
          rendered = env.get_template("system_prompt.jinja").render(

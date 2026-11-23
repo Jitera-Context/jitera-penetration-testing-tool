@@ -1,0 +1,47 @@
+"""The Jitera coverage skills must auto-load on thorough scans.
+
+Scans exercise the hard vuln classes but never call the Jitera tools on their
+own, so the skills that wire the tools in belong in the always-on set that
+``_resolve_skills`` builds -- not left to on-demand ``load_skill``.
+"""
+
+from __future__ import annotations
+
+from strix.agents.prompt import _resolve_skills
+
+_COVERAGE = {
+    "vulnerabilities/vulnerable_components_blackbox",
+    "vulnerabilities/static_exposure_recon",
+    "vulnerabilities/payload_confirmation",
+    "vulnerabilities/deserialization_surface",
+}
+
+
+def test_deep_scan_autoloads_coverage_skills() -> None:
+    skills = set(_resolve_skills(requested=None, scan_mode="deep", is_root=True))
+    assert _COVERAGE <= skills
+
+
+def test_standard_scan_autoloads_coverage_skills() -> None:
+    skills = set(_resolve_skills(requested=None, scan_mode="standard", is_root=False))
+    assert _COVERAGE <= skills
+
+
+def test_quick_scan_stays_lean() -> None:
+    skills = set(_resolve_skills(requested=None, scan_mode="quick"))
+    assert not (_COVERAGE & skills)
+
+
+def test_coverage_skill_files_exist_and_load() -> None:
+    # Register the Jitera skill dir the way bootstrap does, then confirm every
+    # auto-loaded coverage skill resolves to a real file (catches a typo'd path).
+    from pathlib import Path
+
+    from strix.skills import load_skills, register_skill_dir
+
+    register_skill_dir(Path("strix/jitera/skills").resolve())
+    loaded = load_skills(sorted(_COVERAGE))
+    # var name is the last path segment
+    for name in _COVERAGE:
+        var = name.split("/")[-1]
+        assert var in loaded and loaded[var].strip(), f"coverage skill failed to load: {name}"
