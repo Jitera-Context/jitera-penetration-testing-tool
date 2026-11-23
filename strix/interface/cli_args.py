@@ -323,13 +323,16 @@ Examples:
         "--reasoning-effort",
         dest="reasoning_effort",
         metavar="LEVEL",
+        # Accept any case, like the STRIX_REASONING_EFFORT env var does.
+        type=str.lower,
         choices=_reasoning.CLI_CHOICES,
         default=None,
         help=(
             "Reasoning effort to send the model for this run: "
-            f"{', '.join(_reasoning.CLI_CHOICES)}. 'auto' picks the maximum. "
-            "Unlike the configured default, this is sent even for models the "
-            "pricing catalog does not list as reasoning-capable."
+            f"{', '.join(_reasoning.CLI_CHOICES)}. 'auto' is the maximum ('max'); "
+            "the model must accept the level you ask for. Unlike the configured "
+            "default, this is sent even for models the pricing catalog does not "
+            "list as reasoning-capable."
         ),
     )
 

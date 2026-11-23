@@ -31,9 +31,17 @@ def test_auto_resolves_to_the_maximum_level() -> None:
     assert (*reasoning.LEVELS, "auto") == reasoning.CLI_CHOICES
 
 
-def test_resolve_rejects_an_unknown_level() -> None:
-    with pytest.raises(ValueError, match="unknown reasoning effort"):
-        reasoning.resolve("ludicrous", "high")
+def test_resolve_falls_back_on_an_unknown_or_empty_value_without_crashing() -> None:
+    # A bad value never forces anything and never raises (guards non-CLI callers
+    # of the runner); it uses the configured setting instead.
+    assert reasoning.resolve("ludicrous", "high") == ("high", False)
+    assert reasoning.resolve("", "high") == ("high", False)
+    assert reasoning.resolve("   ", "medium") == ("medium", False)
+
+
+def test_resolve_is_case_insensitive() -> None:
+    assert reasoning.resolve("MAX", "high") == ("max", True)
+    assert reasoning.resolve("Auto", "low") == ("max", True)
 
 
 def test_unlisted_model_drops_the_effort_without_force() -> None:
@@ -69,6 +77,12 @@ def test_the_cli_arg_parses_and_defaults_to_unset(monkeypatch: pytest.MonkeyPatc
 
     monkeypatch.setattr("sys.argv", ["jitera-pentest", "-n", "--target", "http://x"])
     assert parse_arguments().reasoning_effort is None
+
+    # Case-insensitive, like the STRIX_REASONING_EFFORT env var.
+    monkeypatch.setattr(
+        "sys.argv", ["jitera-pentest", "-n", "--target", "http://x", "--reasoning-effort", "HIGH"]
+    )
+    assert parse_arguments().reasoning_effort == "high"
 
 
 def test_the_cli_arg_rejects_an_unknown_level(monkeypatch: pytest.MonkeyPatch) -> None:

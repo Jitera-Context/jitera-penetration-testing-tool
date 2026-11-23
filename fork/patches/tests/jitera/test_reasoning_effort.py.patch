@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_reasoning_effort.py b/tests/jitera/test_reasoning_effort.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..14721e78c52edd6e07118daa9059e0403aa20634
+index 0000000000000000000000000000000000000000..b46fbba82b527c9e5b896e8582cf9698af41df92
 --- /dev/null
 +++ b/tests/jitera/test_reasoning_effort.py
-@@ -0,0 +1,96 @@
+@@ -0,0 +1,110 @@
 +"""The ``--reasoning-effort`` run parameter sends the model's effort, even for
 +models LiteLLM's catalog does not know (our gateway aliases)."""
 +
@@ -41,9 +41,17 @@ index 0000000000000000000000000000000000000000..14721e78c52edd6e07118daa9059e040
 +    assert (*reasoning.LEVELS, "auto") == reasoning.CLI_CHOICES
 +
 +
-+def test_resolve_rejects_an_unknown_level() -> None:
-+    with pytest.raises(ValueError, match="unknown reasoning effort"):
-+        reasoning.resolve("ludicrous", "high")
++def test_resolve_falls_back_on_an_unknown_or_empty_value_without_crashing() -> None:
++    # A bad value never forces anything and never raises (guards non-CLI callers
++    # of the runner); it uses the configured setting instead.
++    assert reasoning.resolve("ludicrous", "high") == ("high", False)
++    assert reasoning.resolve("", "high") == ("high", False)
++    assert reasoning.resolve("   ", "medium") == ("medium", False)
++
++
++def test_resolve_is_case_insensitive() -> None:
++    assert reasoning.resolve("MAX", "high") == ("max", True)
++    assert reasoning.resolve("Auto", "low") == ("max", True)
 +
 +
 +def test_unlisted_model_drops_the_effort_without_force() -> None:
@@ -79,6 +87,12 @@ index 0000000000000000000000000000000000000000..14721e78c52edd6e07118daa9059e040
 +
 +    monkeypatch.setattr("sys.argv", ["jitera-pentest", "-n", "--target", "http://x"])
 +    assert parse_arguments().reasoning_effort is None
++
++    # Case-insensitive, like the STRIX_REASONING_EFFORT env var.
++    monkeypatch.setattr(
++        "sys.argv", ["jitera-pentest", "-n", "--target", "http://x", "--reasoning-effort", "HIGH"]
++    )
++    assert parse_arguments().reasoning_effort == "high"
 +
 +
 +def test_the_cli_arg_rejects_an_unknown_level(monkeypatch: pytest.MonkeyPatch) -> None:

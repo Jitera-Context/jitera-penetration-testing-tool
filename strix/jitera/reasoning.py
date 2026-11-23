@@ -17,11 +17,15 @@ upstream's effort scale, sent as a raw body field by ``_reasoning_settings``).
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
     from strix.config.settings import ReasoningEffort
+
+
+logger = logging.getLogger(__name__)
 
 
 # Upstream's effort scale (strix.config.settings.ReasoningEffort), lowest to
@@ -34,18 +38,25 @@ CLI_CHOICES: tuple[str, ...] = (*LEVELS, AUTO)
 def resolve(chosen: str | None, configured: ReasoningEffort) -> tuple[ReasoningEffort, bool]:
     """Return ``(effort, force)`` for a run.
 
-    ``chosen`` is the ``--reasoning-effort`` value or ``None``. When set it wins
-    and is force-sent (the catalog gate is bypassed), with ``auto`` resolved to
-    the maximum level. When ``None`` the configured setting is used and
-    upstream's catalog gating is left unchanged, so default behaviour and the
-    behaviour of models LiteLLM does know are untouched.
+    ``chosen`` is the ``--reasoning-effort`` value or ``None``/empty. When it is
+    a known level it wins and is force-sent (the catalog gate is bypassed), with
+    ``auto`` resolved to the maximum level. When it is unset, or any value that
+    is not a known level, the configured setting is used and upstream's catalog
+    gating is left unchanged — so a bad value never forces anything and never
+    crashes a run (argparse already rejects bad CLI input; this guards other
+    callers of the runner). Default behaviour and the behaviour of models
+    LiteLLM does know are untouched.
     """
-    if chosen is None:
+    level = (chosen or "").strip().lower()
+    if not level:
         return configured, False
-    level = chosen.strip().lower()
     if level == AUTO:
         level = LEVELS[-1]
     if level not in LEVELS:
-        # argparse ``choices`` already rejects anything else; be safe regardless.
-        raise ValueError(f"unknown reasoning effort: {chosen!r}")
+        logger.warning(
+            "ignoring unrecognized reasoning effort %r; using the configured %r",
+            chosen,
+            configured,
+        )
+        return configured, False
     return level, True  # type: ignore[return-value]

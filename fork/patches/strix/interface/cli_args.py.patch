@@ -3,7 +3,7 @@ Why: Help text used the strix command, the strix_runs and ~/.strix folders, and 
 Upstream-PR: none
 
 diff --git a/strix/interface/cli_args.py b/strix/interface/cli_args.py
-index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..0657201ab926201de1b76aff5bc9d00c39b5c5ce 100644
+index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..706bdfe147b905293e8255dd3f90352f1f5f2351 100644
 --- a/strix/interface/cli_args.py
 +++ b/strix/interface/cli_args.py
 @@ -18,6 +18,7 @@ from strix.interface.utils import (
@@ -100,14 +100,14 @@ index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..0657201ab926201de1b76aff5bc9d00c
    # Extra files placed in the sandbox workspace
 -  strix --target ./my-project --workspace-file ./wordlist.txt
 -  strix --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
-+  {profile.command} --target ./my-project --workspace-file ./wordlist.txt
-+  {profile.command} --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
- 
+-
 -Strix Cloud:
 -  strix cloud login
 -  strix cloud scans start --source . --yes --wait
 -  strix cloud                      # list every cloud resource
--
++  {profile.command} --target ./my-project --workspace-file ./wordlist.txt
++  {profile.command} --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
+ 
 -  Run a pentest in Strix Cloud     https://app.strix.ai
 -  Try Strix Enterprise             https://strix.ai/demo
 -        """,
@@ -156,7 +156,7 @@ index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..0657201ab926201de1b76aff5bc9d00c
      )
  
      parser.add_argument(
-@@ -298,6 +316,23 @@ Strix Cloud:
+@@ -298,6 +316,26 @@ Strix Cloud:
          ),
      )
  
@@ -167,20 +167,23 @@ index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..0657201ab926201de1b76aff5bc9d00c
 +        "--reasoning-effort",
 +        dest="reasoning_effort",
 +        metavar="LEVEL",
++        # Accept any case, like the STRIX_REASONING_EFFORT env var does.
++        type=str.lower,
 +        choices=_reasoning.CLI_CHOICES,
 +        default=None,
 +        help=(
 +            "Reasoning effort to send the model for this run: "
-+            f"{', '.join(_reasoning.CLI_CHOICES)}. 'auto' picks the maximum. "
-+            "Unlike the configured default, this is sent even for models the "
-+            "pricing catalog does not list as reasoning-capable."
++            f"{', '.join(_reasoning.CLI_CHOICES)}. 'auto' is the maximum ('max'); "
++            "the model must accept the level you ask for. Unlike the configured "
++            "default, this is sent even for models the pricing catalog does not "
++            "list as reasoning-capable."
 +        ),
 +    )
 +
      parser.add_argument(
          "-r",
          "--resume",
-@@ -306,7 +341,7 @@ Strix Cloud:
+@@ -306,7 +344,7 @@ Strix Cloud:
          const="",
          metavar="RUN_NAME",
          help=(

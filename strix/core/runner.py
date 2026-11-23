@@ -433,6 +433,16 @@ async def run_strix_scan(
         reasoning_effort, force_reasoning = jitera_reasoning.resolve(
             scan_config.get("reasoning_effort"), settings.llm.reasoning_effort
         )
+        if force_reasoning:
+            # Force-sending bypasses the catalog gate, so a model that does not
+            # accept this level fails every turn. Say so once, up front, rather
+            # than leaving a run to die with only per-request errors.
+            logger.info(
+                "reasoning effort %r is force-sent to %s for this run "
+                "(--reasoning-effort); the model must accept it or every turn will fail",
+                reasoning_effort,
+                resolved_model,
+            )
         model_settings = make_model_settings(
             reasoning_effort,
             model_name=resolved_model,
