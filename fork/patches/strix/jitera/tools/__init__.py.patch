@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/tools/__init__.py b/strix/jitera/tools/__init__.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..482b88fe515c95710676dd8a8183cf7373b6917a
+index 0000000000000000000000000000000000000000..a36238284bb8b7295e622e2ca8a15571edb1b1fb
 --- /dev/null
 +++ b/strix/jitera/tools/__init__.py
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,31 @@
 +"""Agent tools Jitera adds to every scan agent.
 +
 +Write a tool the way upstream does (see ``strix/tools/thinking/tool.py``):
@@ -36,5 +36,6 @@ index 0000000000000000000000000000000000000000..482b88fe515c95710676dd8a8183cf73
 +def get_tools() -> list[Tool]:
 +    """Return the tools to register. Import tool modules here, not at the top."""
 +    from strix.jitera.tools.component_scan import detect_vulnerable_components
++    from strix.jitera.tools.exposure_scan import scan_static_exposure
 +
-+    return [detect_vulnerable_components]
++    return [detect_vulnerable_components, scan_static_exposure]

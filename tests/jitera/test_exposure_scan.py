@@ -1,0 +1,87 @@
+"""Tests for the static-asset exposure scanner (secrets + hidden endpoints)."""
+
+from __future__ import annotations
+
+from strix.jitera.tools.exposure_scan import _redact, scan_exposure
+
+
+def test_redact_hides_middle() -> None:
+    assert _redact("short") == "<5 chars>"
+    r = _redact("AKIAABCDEFGHIJKLMNOP")
+    assert r.startswith("AKIA") and "...MNOP" in r and "chars" in r
+    assert "GHIJKL" not in r  # middle not leaked
+
+
+def test_detects_aws_and_google_keys() -> None:
+    content = (
+        "const a='AKIAABCDEFGHIJKLMNOP';"
+        "const g='AIzaSyA1234567890abcdefghijklmnopqrstuv';"
+    )
+    out = scan_exposure([{"url": "https://app/main.js", "content": content}])
+    types = {s["type"] for s in out["secrets"]}
+    assert "aws_access_key_id" in types
+    assert "google_api_key" in types
+    assert all(s["confidence"] == "high" for s in out["secrets"])
+    # raw secret never appears verbatim in output
+    assert "AKIAABCDEFGHIJKLMNOP" not in str(out["secrets"])
+
+
+def test_generic_assignment_is_low_confidence() -> None:
+    out = scan_exposure(
+        [{"url": "https://app/x.js", "content": "var password = 'hunter2pass'"}]
+    )
+    gen = [s for s in out["secrets"] if s["type"] == "generic_credential_assignment"]
+    assert gen and gen[0]["confidence"] == "low"
+
+
+def test_jwt_and_private_key() -> None:
+    jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abcDEF123456789"
+    out = scan_exposure([{"url": "https://app/a.js", "content": jwt}])
+    assert any(s["type"] == "jwt" for s in out["secrets"])
+    out2 = scan_exposure(
+        [{"url": "https://app/k", "content": "-----BEGIN RSA PRIVATE KEY-----\nMII..."}]
+    )
+    assert any(s["type"] == "private_key_block" for s in out2["secrets"])
+
+
+def test_extracts_internal_endpoints() -> None:
+    content = (
+        "fetch('/api/users/42');"
+        "const u='/rest/admin/application-configuration';"
+        "axios.get('/metrics');"
+    )
+    out = scan_exposure([{"url": "https://app/app.js", "content": content}])
+    paths = {e["path"] for e in out["endpoints"]}
+    assert "/api/users/42" in paths
+    assert "/rest/admin/application-configuration" in paths
+    assert "/metrics" in paths
+
+
+def test_endpoints_sorted_and_deduped() -> None:
+    assets = [
+        {"url": "https://app/a.js", "content": "fetch('/api/z')"},
+        {"url": "https://app/b.js", "content": "fetch('/api/z')"},  # dup
+        {"url": "https://app/c.js", "content": "fetch('/api/a')"},
+    ]
+    out = scan_exposure(assets)
+    paths = [e["path"] for e in out["endpoints"]]
+    assert paths == ["/api/a", "/api/z"]  # sorted, deduped
+
+
+def test_sensitive_comments() -> None:
+    content = "// TODO: remove debug backdoor before shipping\ncode();"
+    out = scan_exposure([{"url": "https://app/a.js", "content": content}])
+    assert out["sensitive_comments"]
+    assert "backdoor" in out["sensitive_comments"][0]["snippet"].lower()
+
+
+def test_clean_asset_is_quiet() -> None:
+    out = scan_exposure([{"url": "https://app/clean.js", "content": "function add(a,b){return a+b}"}])
+    assert out["success"] is True
+    assert out["secrets"] == []
+    assert out["endpoints"] == []
+
+
+def test_empty_or_bad_input() -> None:
+    assert scan_exposure([])["success"] is False
+    assert scan_exposure("nope")["success"] is False  # type: ignore[arg-type]

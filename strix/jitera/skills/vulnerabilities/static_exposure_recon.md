@@ -1,0 +1,42 @@
+---
+name: static-exposure-recon
+description: Read the served front-end for leaked secrets and unlinked-but-live endpoints with scan_static_exposure -- covers sensitive-data exposure and security through obscurity
+---
+
+# Static front-end exposure (secrets & hidden endpoints)
+
+Two classes are routinely missed because they need an exhaustive read of the
+JavaScript the app ships, not more requests:
+
+- **Sensitive data exposure** -- a key, token or credential hardcoded into a
+  bundle or source map.
+- **Security through obscurity** -- an endpoint that is never linked in the UI
+  but still works, discoverable only by reading the code.
+
+Do not eyeball the bundles. Use `scan_static_exposure` so the whole surface is
+grepped the same way every run.
+
+## Procedure
+
+1. **Gather served code.** The main HTML, every `<script src>` bundle, and any
+   reachable `*.js.map` / `/package.json` (fetch via the browser or
+   `repeat_request`).
+2. **Call `scan_static_exposure`** with `[{"url":..., "content":...}, ...]`. It
+   returns `secrets` (redacted previews + source_url), `endpoints`
+   (app-internal paths referenced in code) and `sensitive_comments`.
+3. **Confirm before filing** -- nothing it returns is proof on its own:
+   - **Secret**: re-fetch the `source_url` to read the full value, then show it
+     is live/valid (e.g. it authenticates) before filing a sensitive-data
+     report. A redacted preview alone is not a finding.
+   - **Endpoint**: request each path. One that responds but is absent from the
+     linked UI is a security-through-obscurity finding; chain it (an unlinked
+     admin/config/metrics route often exposes more).
+4. **Record coverage** for both classes with `record_coverage`, even when you
+   file nothing, so the run shows the front-end was actually mined.
+
+## Notes
+
+- `generic_credential_assignment` hits are low-confidence (any `password =`
+  literal) -- verify harder before trusting them.
+- An empty result is not proof the code is clean; it means these patterns did
+  not match.
