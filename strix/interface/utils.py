@@ -1623,7 +1623,7 @@ def check_docker_connection() -> Any:
 
         panel = Panel(
             error_text,
-            title="[bold white]STRIX",
+            title=f"[bold white]{brand.current().product_name.upper()}",
             title_align="left",
             border_style="red",
             padding=(1, 2),

@@ -10,6 +10,7 @@ upstream module loads.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
 from urllib.parse import urlparse
@@ -18,6 +19,7 @@ from urllib.parse import urlparse
 @dataclass(frozen=True)
 class Brand:
     name: str  # product name shown to people
+    product_name: str  # full product name, for headings such as the CLI panel titles
     command: str  # CLI command
     env_prefix: str  # our settings prefix, copied to STRIX_* by the command
     homepage: str
@@ -27,7 +29,7 @@ class Brand:
     links: tuple[str, ...]  # shown under the CLI's end-of-scan panel
     promo: tuple[tuple[str, str], ...]  # (label, url) upsell lines; empty hides them
     identify_scan_traffic: bool  # send our User-Agent to scan targets too
-    file_prefix: str  # names the folders and files a scan writes
+    file_prefix: str  # names the folders and files a scan writes, and the loggers in its log
     home_dir_name: str  # saved settings and sign-ins, under the home directory
 
     @property
@@ -43,6 +45,18 @@ class Brand:
     def temp_dir_name(self, kind: str) -> str:
         """Staging folder under the system temp dir, such as cloned repos."""
         return f"{self.file_prefix}_{kind}"
+
+    def logger_name(self, name: str) -> str:
+        """A logger's name as the scan log prints it.
+
+        Upstream's loggers are named after its modules (``strix.report.state``).
+        The ``strix`` root is printed as the file prefix instead
+        (``jitera_pentest.report.state``); other loggers keep their names.
+        """
+        root, dot, rest = name.partition(".")
+        if root != "strix":
+            return name
+        return f"{self.file_prefix}{dot}{rest}"
 
     @property
     def user_agent_token(self) -> str:
@@ -80,6 +94,7 @@ def package_version() -> str:
 
 UPSTREAM = Brand(
     name="Strix",
+    product_name="Strix",
     command="strix",
     env_prefix="STRIX_",
     homepage="https://strix.ai",
@@ -95,6 +110,7 @@ UPSTREAM = Brand(
 
 JITERA = Brand(
     name="Jitera",
+    product_name="Jitera Pentest",
     command="jitera-pentest",  # `jitera` is the Jitera Gateway CLI
     env_prefix="JITERA_PENTEST_",
     homepage="https://jitera.com",
@@ -117,6 +133,19 @@ def activate(profile: Brand) -> None:
 
 def current() -> Brand:
     return _state["active"]
+
+
+class LogFormatter(logging.Formatter):
+    """Prints each record's logger by the active profile's ``logger_name``.
+
+    It formats a copy of the record, so other handlers still see the real name.
+    """
+
+    def format(self, record: logging.LogRecord) -> str:
+        shown = current().logger_name(record.name)
+        if shown != record.name:
+            record = logging.makeLogRecord({**record.__dict__, "name": shown})
+        return super().format(record)
 
 
 def rebrand(text: str) -> str:

@@ -38,7 +38,11 @@ Prefer `strix/jitera/` plus upstream's hooks. Small edits to upstream files mean
 4. `fork/dev save`: writes, updates or removes patches and stages them.
    For an edited upstream file, replace the `Title:` / `Why:` TODO lines in its patch.
    New files get a header automatically.
-5. Commit the code and its patches together. CI runs `fork/dev verify`, which fails if they differ.
+5. Commit the code and its patches together. Before every `git commit`, a Claude Code hook
+   (`.claude/settings.json`) runs `fork/dev verify --staged` on what the commit records and
+   blocks it if they differ, or if a patch still has a TODO header. CI's Fork workflow runs
+   `fork/dev verify` on every PR. Fix a block with `fork/dev save` and `git add`; never work
+   around it. Leave out patches for code you aren't committing.
 6. You own the change: attach the proof (real `verify`, `test` and, for behavior
    changes, eval output) to the PR, and say what you didn't run. Ask before
    merging. See `docs/architecture/agent-led-development.md`.

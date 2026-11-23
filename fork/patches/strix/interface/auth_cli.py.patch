@@ -1,18 +1,42 @@
-Title: Sign-in success page shows the brand
-Why: The ChatGPT sign-in callback page named Strix and linked to strix.ai.
+Title: Sign-in panels and success page show the brand
+Why: The sign-in panels were titled STRIX, and the ChatGPT sign-in callback page named Strix and linked to strix.ai.
 Upstream-PR: none
 
 diff --git a/strix/interface/auth_cli.py b/strix/interface/auth_cli.py
-index 51e6b9fe9db46f0599cbae926b0d3e66f000b727..829ef293a6ac8cd6aca95e71aaf3b996e900c63b 100644
+index 51e6b9fe9db46f0599cbae926b0d3e66f000b727..7ea4bf999e6879ed8253786efdf492bf6b30ca04 100644
 --- a/strix/interface/auth_cli.py
 +++ b/strix/interface/auth_cli.py
-@@ -329,8 +329,12 @@ def _logo_img_tag() -> str:
-     return f'<img class="logo" src="data:image/png;base64,{encoded}" alt="" />'
+@@ -266,6 +266,9 @@ def _logout(console: Console) -> int:
+     return 0
  
  
 +from strix.jitera import brand  # noqa: E402  (Jitera fork)
 +
 +
+ def _fail(console: Console, exc: codex.CodexAuthError) -> int:
+     error_text = Text()
+     error_text.append("SIGN-IN FAILED", style="bold red")
+@@ -275,7 +278,7 @@ def _fail(console: Console, exc: codex.CodexAuthError) -> int:
+     console.print(
+         Panel(
+             error_text,
+-            title="[bold white]STRIX",
++            title=f"[bold white]{brand.current().product_name.upper()}",
+             title_align="left",
+             border_style="red",
+             padding=(1, 2),
+@@ -302,7 +305,7 @@ def _print_success(console: Console) -> None:
+     console.print(
+         Panel(
+             text,
+-            title="[bold white]STRIX",
++            title=f"[bold white]{brand.current().product_name.upper()}",
+             title_align="left",
+             border_style="#22c55e",
+             padding=(1, 2),
+@@ -330,7 +333,8 @@ def _logo_img_tag() -> str:
+ 
+ 
  def _render_callback_html() -> str:
 -    return _CALLBACK_HTML.replace("<!--LOGO-->", _logo_img_tag())
 +    logo = _logo_img_tag() if brand.current() is brand.UPSTREAM else ""

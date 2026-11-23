@@ -248,6 +248,27 @@ cmd_verify() {
   echo "verify: $(list_patches | grep -c . || true) patch(es) match the code, checkpoint $(git rev-parse --short "$base") is in history."
 }
 
+# verify --staged: check what `git commit` would record (the index), not the
+# working tree, so an unstaged edit or an unstaged patch can neither hide a
+# mismatch nor cause one. Runs verify in a throwaway checkout of the index.
+cmd_verify_staged() {
+  local tree commit tmp
+  tree="$(git write-tree 2>/dev/null)" || die "the index has unmerged paths: resolve them before committing."
+  # A throwaway commit: named for the tool, so it needs no git identity.
+  local id=(-c user.name="fork/dev" -c user.email="fork-dev@localhost")
+  if git rev-parse -q --verify HEAD >/dev/null; then
+    commit="$(git "${id[@]}" commit-tree "$tree" -p HEAD -m "fork/dev verify --staged")"
+  else
+    commit="$(git "${id[@]}" commit-tree "$tree" -m "fork/dev verify --staged")"
+  fi
+  tmp="$(mktemp -d)"
+  # shellcheck disable=SC2064  # expand $tmp now: it is local to this function
+  trap "git worktree remove --force '$tmp/index' >/dev/null 2>&1; rm -rf '$tmp'; git worktree prune" EXIT
+  git worktree add --quiet --detach "$tmp/index" "$commit" >/dev/null 2>&1 \
+    || die "could not check out the index to verify it."
+  (cd "$tmp/index" && fork/dev verify)
+}
+
 cmd_test() {
   local py=() f
   fork/scripts/brand-audit.sh
@@ -319,6 +340,8 @@ Upstream
 
 Checks and build
   fork/dev verify          CI guard: patches match the code, checkpoint in history
+  fork/dev verify --staged the same for what `git commit` would record (the index);
+                           Claude Code runs it before every commit (.claude/settings.json)
   fork/dev audit [--list]  report Strix brand left in network calls and visible text
   fork/dev build [binary]  verify, then build the wheel (default) or the binary
 
@@ -343,7 +366,12 @@ case "${1:-help}" in
   patches) cmd_patches ;;
   test) shift; cmd_test "$@" ;;
   sync) shift; exec fork/scripts/sync-upstream.sh "$@" ;;
-  verify) cmd_verify ;;
+  verify)
+    case "${2:-}" in
+      "") cmd_verify ;;
+      --staged) cmd_verify_staged ;;
+      *) die "unknown verify option: $2 (use --staged or nothing)" ;;
+    esac ;;
   audit) shift; exec fork/scripts/brand-audit.sh "$@" ;;
   build) shift; cmd_build "${1:-wheel}" ;;
   unapply) shift; cmd_unapply "${1:-}" ;;
