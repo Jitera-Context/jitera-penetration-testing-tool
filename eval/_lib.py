@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -59,16 +60,51 @@ class Baseline:
 
 
 def load_findings(run_dir: Path) -> list[dict[str, Any]]:
-    """Read ``vulnerabilities.json`` from a completed run directory."""
+    """Findings for scoring, from ``vulnerabilities.json`` or, if that is absent,
+    ``findings.sarif``.
+
+    The engine writes ``findings.sarif`` continuously but ``vulnerabilities.json``
+    only at certain points, so a scan stopped at a timeout often has the SARIF but
+    not the JSON. Falling back to the SARIF lets a partial run still be scored
+    instead of crashing the eval.
+    """
     path = run_dir / "vulnerabilities.json"
-    if not path.is_file():
-        msg = f"no vulnerabilities.json in {run_dir} (did the scan finish?)"
-        raise FileNotFoundError(msg)
-    data = json.loads(path.read_text())
-    if not isinstance(data, list):
-        msg = f"{path} is not a list of findings"
-        raise TypeError(msg)
-    return data
+    if path.is_file():
+        data = json.loads(path.read_text())
+        if not isinstance(data, list):
+            msg = f"{path} is not a list of findings"
+            raise TypeError(msg)
+        return data
+    sarif = run_dir / "findings.sarif"
+    if sarif.is_file():
+        return _findings_from_sarif(sarif)
+    msg = f"no vulnerabilities.json or findings.sarif in {run_dir} (did the scan start?)"
+    raise FileNotFoundError(msg)
+
+
+def _findings_from_sarif(path: Path) -> list[dict[str, Any]]:
+    """Extract scoreable findings (title, description, cwe) from a SARIF report."""
+    sarif = json.loads(path.read_text())
+    findings: list[dict[str, Any]] = []
+    for run in sarif.get("runs", []):
+        rules = {r.get("id"): r for r in run.get("tool", {}).get("driver", {}).get("rules", [])}
+        for res in run.get("results", []):
+            rule = rules.get(res.get("ruleId"), {})
+            tags = " ".join(
+                rule.get("properties", {}).get("tags", [])
+                + res.get("properties", {}).get("tags", [])
+            )
+            cwe = re.search(r"cwe-(\d+)", tags, re.IGNORECASE)
+            findings.append(
+                {
+                    "title": rule.get("name") or res.get("ruleId", ""),
+                    "cwe": f"CWE-{cwe.group(1)}" if cwe else None,
+                    "description": res.get("message", {}).get("text", "")
+                    + " "
+                    + rule.get("fullDescription", {}).get("text", ""),
+                }
+            )
+    return findings
 
 
 def utc_stamp() -> str:

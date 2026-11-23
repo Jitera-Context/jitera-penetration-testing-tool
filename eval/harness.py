@@ -73,7 +73,7 @@ def find_run_dir(workdir: Path) -> Path | None:
 @dataclass(frozen=True)
 class RunResult:
     run_dir: Path | None
-    exit_code: int
+    exit_code: int | None  # None when the scan was stopped at the timeout
     stdout: str
     stderr: str
 
@@ -86,17 +86,33 @@ def run_scan(
     instruction_file: str | None = None,
     timeout_s: float = 60 * 60 * 4,
 ) -> RunResult:
-    """Run one headless scan in ``workdir`` and return where it wrote results."""
+    """Run one headless scan in ``workdir`` and return where it wrote results.
+
+    A scan that overruns ``timeout_s`` is killed, but its run directory is still
+    returned and scored: the engine writes ``vulnerabilities.json`` continuously,
+    so the partial run is the real coverage so far, not a zero. The exit code is
+    then ``None``. This matters for GEPA, where a long scan would otherwise crash
+    the whole optimization instead of scoring what it found.
+    """
     workdir.mkdir(parents=True, exist_ok=True)
     cmd = build_command(target, scan_mode, max_budget_usd, instruction_file)
-    completed = subprocess.run(  # noqa: S603  (fixed argv, no shell)
-        cmd,
-        cwd=workdir,
-        capture_output=True,
-        text=True,
-        timeout=timeout_s,
-        check=False,
-    )
+    try:
+        completed = subprocess.run(  # noqa: S603  (fixed argv, no shell)
+            cmd,
+            cwd=workdir,
+            capture_output=True,
+            text=True,
+            timeout=timeout_s,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return RunResult(
+            run_dir=find_run_dir(workdir),
+            exit_code=None,
+            stdout=exc.stdout.decode() if isinstance(exc.stdout, bytes) else (exc.stdout or ""),
+            stderr=(exc.stderr.decode() if isinstance(exc.stderr, bytes) else (exc.stderr or ""))
+            + f"\n[eval] scan exceeded {timeout_s:.0f}s and was stopped; scoring the partial run.",
+        )
     return RunResult(
         run_dir=find_run_dir(workdir),
         exit_code=completed.returncode,

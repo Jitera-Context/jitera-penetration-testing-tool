@@ -92,6 +92,7 @@ def _scan_and_score(
     scan_mode: str,
     budget: float,
     instruction_file: str | None,
+    timeout_s: float | None = None,
 ) -> Outcome:
     """Run a fresh headless scan of the target, then score it."""
     if not configured_model():
@@ -109,6 +110,7 @@ def _scan_and_score(
             max_budget_usd=budget,
             workdir=Path(tmp),
             instruction_file=instruction_file,
+            **({"timeout_s": timeout_s} if timeout_s else {}),
         )
         if run.run_dir is None:
             print("eval: the scan produced no run directory", file=sys.stderr)
@@ -126,6 +128,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--scan-mode", help="override quick|standard|deep")
     parser.add_argument("--max-budget", type=float, help="override USD budget")
     parser.add_argument("--min-categories", type=int, help="override the pass gate")
+    parser.add_argument(
+        "--timeout-min", type=float, help="stop the scan after N minutes and score the partial run"
+    )
     parser.add_argument("--instruction-file", help="extra instructions for the agent")
     parser.add_argument("--json", action="store_true", help="print the result as JSON")
     parser.add_argument("--check", action="store_true", help="only check the target is up; no scan")
@@ -149,7 +154,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.from_run:
         outcome = _score_existing(args.from_run, baseline)
     else:
-        outcome = _scan_and_score(baseline, target, scan_mode, budget, args.instruction_file)
+        outcome = _scan_and_score(
+            baseline,
+            target,
+            scan_mode,
+            budget,
+            args.instruction_file,
+            timeout_s=args.timeout_min * 60 if args.timeout_min else None,
+        )
     if isinstance(outcome, int):
         return outcome
     score, source = outcome

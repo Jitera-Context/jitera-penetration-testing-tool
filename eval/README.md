@@ -49,7 +49,7 @@ To change what's expected, edit `baseline/juice-shop.yaml`: the target, `min_cat
 
 ## Optimize with GEPA
 
-[GEPA](https://pypi.org/project/gepa/) (reflective Pareto prompt evolution) improves the instruction block the agent receives. It scores each candidate with this eval, reflects on the categories it missed, proposes a revised instruction, and keeps the best. It optimizes a general, reusable instruction, never target-specific answers.
+[GEPA](https://pypi.org/project/gepa/) (reflective Pareto prompt evolution) improves the instruction block the agent receives: the text a user passes with `--instruction-file`, which reaches the agent's task as "Special instructions". The system prompt is not touched. It scores each candidate with this eval, reflects on the categories it missed, proposes a revised instruction, and keeps the best. It optimizes a general, reusable instruction, never target-specific answers.
 
 `gepa` is not a product dependency. Add it only for an optimization run:
 
@@ -70,7 +70,8 @@ the real run, then validating the result with the eval before adopting it.
 
 - The best instruction is written to `gepa/optimized_instructions.txt`. Try it with `run_eval --instruction-file eval/gepa/optimized_instructions.txt` before adopting it.
 - GEPA checks its budget between iterations, so it can make a few more calls than `--max-metric-calls` (the dry run made 8 against a cap of 6). Size the cap and the per-scan budget with that in mind.
-- The reflection model is `JITERA_PENTEST_LLM` from `.env` (or your shell), or `--reflection-model`.
+- The reflection model is `JITERA_PENTEST_LLM` from `.env` (or your shell), or `--reflection-model`. When it is the scans' model, reflection uses the scans' `LLM_API_KEY` and `LLM_API_BASE` too, so a gateway or self-hosted model works for both. Prefix such a model with `openai/`, for example `openai/<model id>` with `LLM_API_BASE=http://localhost:8090/v1`.
+- A model LiteLLM has no price for (most gateway and self-hosted models) records no cost, so `max_budget_usd` can't stop its scans: each runs until it finishes or hits the eval's 4-hour limit. Give it a price (US dollars per million tokens) and the cap works again: `JITERA_PENTEST_LLM_INPUT_COST_PER_MTOK` and `JITERA_PENTEST_LLM_OUTPUT_COST_PER_MTOK`.
 
 ## Files
 

@@ -1,0 +1,17 @@
+Title: Add eval/gepa/optimized_instructions.txt
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/eval/gepa/optimized_instructions.txt b/eval/gepa/optimized_instructions.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..a6e41db42e765d407feee3cc0965a222be4c47ff
+--- /dev/null
++++ b/eval/gepa/optimized_instructions.txt
+@@ -0,0 +1,7 @@
++Attempt to enter the system at the authorized target from an external attacker's perspective, then expand access. Your goal is to find as many real security issues as you can and cover every aspect of the site.
++
++Work breadth-first: map the whole attack surface — every page, endpoint, parameter, header and role, authenticated and not — and across it test the full range of vulnerability classes: injection (SQL, NoSQL, command, template), cross-site scripting, object- and function-level access control, authentication and session handling, SSRF, XXE, open redirect, insecure deserialization, sensitive-data and secret exposure, and security misconfiguration. Cover the breadth before chaining any one finding deeper.
++
++The moment you have evidence that proves impact, file it as a finding; never park a proven issue as a follow-up. Record every surface you assess, including the ones that come back clean, so the run can say what was covered.
++
++Treat your budget and time as finite. Time-box any single sub-task that runs long without progress — brute force, cracking, factoring — take the evidence you have and move on. Reserve the last of your budget to file every proven impact and resolve open items, and converge rather than expanding forever.

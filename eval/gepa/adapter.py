@@ -31,13 +31,25 @@ COMPONENT = "instructions"
 Rollout = Callable[[str, dict[str, Any]], "tuple[float, dict[str, Any]]"]
 
 
-def make_tasks(baseline: Baseline, target: str | None = None) -> list[dict[str, Any]]:
-    """The eval instances GEPA trains on. One per target for now."""
+def make_tasks(
+    baseline: Baseline,
+    target: str | None = None,
+    scan_mode: str | None = None,
+    max_budget_usd: float | None = None,
+    timeout_s: float | None = None,
+) -> list[dict[str, Any]]:
+    """The eval instances GEPA trains on. One per target for now.
+
+    ``scan_mode``/``max_budget_usd``/``timeout_s`` override the baseline so a
+    GEPA run can keep each scan short (e.g. ``quick`` mode, a tight per-scan
+    time cap) without touching the eval's scoring baseline.
+    """
     return [
         {
             "target": target or baseline.target,
-            "scan_mode": baseline.scan_mode,
-            "max_budget_usd": baseline.max_budget_usd,
+            "scan_mode": scan_mode or baseline.scan_mode,
+            "max_budget_usd": baseline.max_budget_usd if max_budget_usd is None else max_budget_usd,
+            "timeout_s": timeout_s,
             "baseline": baseline.name,
         }
     ]
@@ -56,16 +68,29 @@ def scan_rollout(baseline: Baseline) -> Rollout:
             tmp_path = Path(tmp)
             instr_file = tmp_path / "instructions.txt"
             instr_file.write_text(instructions)
+            kwargs: dict[str, Any] = {}
+            if task.get("timeout_s"):
+                kwargs["timeout_s"] = task["timeout_s"]
             run = run_scan(
                 target=task["target"],
                 scan_mode=task["scan_mode"],
                 max_budget_usd=task["max_budget_usd"],
                 workdir=tmp_path,
                 instruction_file=str(instr_file),
+                **kwargs,
             )
             if run.run_dir is None:
                 return 0.0, {"error": "no run dir", "covered": 0, "total": len(categories)}
-            score = score_findings(load_findings(run.run_dir), categories)
+            try:
+                findings = load_findings(run.run_dir)
+            except (OSError, ValueError, TypeError) as exc:
+                # A scan stopped at the timeout can leave a half-written file.
+                return 0.0, {
+                    "error": f"unreadable findings: {exc}",
+                    "covered": 0,
+                    "total": len(categories),
+                }
+            score = score_findings(findings, categories)
         return score.fraction, score.to_dict()
 
     return rollout
