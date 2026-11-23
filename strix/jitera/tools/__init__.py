@@ -26,7 +26,13 @@ if TYPE_CHECKING:
 def get_tools() -> list[Tool]:
     """Return the tools to register. Import tool modules here, not at the top."""
     from strix.jitera.tools.component_scan import detect_vulnerable_components
+    from strix.jitera.tools.deserialization_scan import detect_serialized_objects
     from strix.jitera.tools.exposure_scan import scan_static_exposure
     from strix.jitera.tools.payload_oracle import check_payload_fired
 
-    return [detect_vulnerable_components, scan_static_exposure, check_payload_fired]
+    return [
+        detect_vulnerable_components,
+        scan_static_exposure,
+        check_payload_fired,
+        detect_serialized_objects,
+    ]
