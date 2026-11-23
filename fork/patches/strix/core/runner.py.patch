@@ -1,12 +1,20 @@
-Title: Scan log lines name the brand
-Why: Logs said 'Strix scan ... done'.
+Title: Scan log lines name the brand; the run resolves the --reasoning-effort parameter
+Why: Logs said 'Strix scan ... done'. Also: the --reasoning-effort run parameter (scan_config) overrides the configured effort and force-sends it for catalog-unknown models (strix/jitera/reasoning.py).
 Upstream-PR: none
 
 diff --git a/strix/core/runner.py b/strix/core/runner.py
-index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..044cf39f027dbe54d8f8bf1060c32dd3360ee6e8 100644
+index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..556235f565f5ef550eee65c91283294c05a06bc3 100644
 --- a/strix/core/runner.py
 +++ b/strix/core/runner.py
-@@ -212,6 +212,9 @@ def _compose_root_instructions_override(
+@@ -50,6 +50,7 @@ from strix.core.inputs import (
+ )
+ from strix.core.paths import run_dir_for, runtime_state_dir
+ from strix.core.sessions import open_agent_session
++from strix.jitera import reasoning as jitera_reasoning  # Jitera fork
+ from strix.report.state import get_global_report_state
+ from strix.runtime import session_manager
+ from strix.telemetry import set_scan_phase
+@@ -212,6 +213,9 @@ def _compose_root_instructions_override(
      )
  
  
@@ -16,7 +24,7 @@ index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..044cf39f027dbe54d8f8bf1060c32dd3
  async def run_strix_scan(
      *,
      scan_config: dict[str, Any],
-@@ -290,8 +293,9 @@ async def run_strix_scan(
+@@ -290,8 +294,9 @@ async def run_strix_scan(
      is_resume = agents_path.exists()
  
      logger.info(
@@ -27,7 +35,31 @@ index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..044cf39f027dbe54d8f8bf1060c32dd3
          scan_id,
          image,
          max_turns,
-@@ -687,9 +691,10 @@ async def run_strix_scan(
+@@ -422,8 +427,14 @@ async def run_strix_scan(
+         is_diff_scoped = bool(isinstance(diff_scope, dict) and diff_scope.get("active"))
+         skills = list(scan_config.get("skills") or [])
+         root_task = build_root_task(scan_config)
++        # Jitera fork: the --reasoning-effort run parameter (scan_config), when
++        # set, overrides the configured effort and is sent even for models
++        # LiteLLM's catalog does not know. See strix/jitera/reasoning.py.
++        reasoning_effort, force_reasoning = jitera_reasoning.resolve(
++            scan_config.get("reasoning_effort"), settings.llm.reasoning_effort
++        )
+         model_settings = make_model_settings(
+-            settings.llm.reasoning_effort,
++            reasoning_effort,
+             model_name=resolved_model,
+             force_required_tool_choice=settings.llm.force_required_tool_choice,
+             parallel_tool_calls=settings.llm.parallel_tool_calls,
+@@ -431,6 +442,7 @@ async def run_strix_scan(
+             prompt_cache=settings.llm.prompt_cache,
+             extra_headers=settings.llm.extra_headers,
+             extra_body=settings.llm.extra_body,
++            force_reasoning=force_reasoning,
+         )
+         run_config = RunConfig(
+             model=resolved_model,
+@@ -687,9 +699,10 @@ async def run_strix_scan(
      except RateLimitError as exc:
          logger.warning(
              "Scan %s stopped: persistent rate limit from the LLM provider (%s). "
@@ -39,7 +71,7 @@ index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..044cf39f027dbe54d8f8bf1060c32dd3
              scan_id,
          )
          _note_exit_reason("rate_limited")
-@@ -704,7 +709,7 @@ async def run_strix_scan(
+@@ -704,7 +717,7 @@ async def run_strix_scan(
                  await coordinator.set_status(root_id, "running")
          raise
      except BaseException:
@@ -48,7 +80,7 @@ index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..044cf39f027dbe54d8f8bf1060c32dd3
          if root_id is not None:
              with contextlib.suppress(Exception):
                  await coordinator.set_status(root_id, "failed")
-@@ -727,5 +732,5 @@ async def run_strix_scan(
+@@ -727,5 +740,5 @@ async def run_strix_scan(
          if cleanup_on_exit:
              logger.info("Tearing down sandbox session for scan %s", scan_id)
              await session_manager.cleanup(scan_id)

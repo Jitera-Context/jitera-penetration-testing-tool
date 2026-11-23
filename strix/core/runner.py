@@ -50,6 +50,7 @@ from strix.core.inputs import (
 )
 from strix.core.paths import run_dir_for, runtime_state_dir
 from strix.core.sessions import open_agent_session
+from strix.jitera import reasoning as jitera_reasoning  # Jitera fork
 from strix.report.state import get_global_report_state
 from strix.runtime import session_manager
 from strix.telemetry import set_scan_phase
@@ -426,8 +427,14 @@ async def run_strix_scan(
         is_diff_scoped = bool(isinstance(diff_scope, dict) and diff_scope.get("active"))
         skills = list(scan_config.get("skills") or [])
         root_task = build_root_task(scan_config)
+        # Jitera fork: the --reasoning-effort run parameter (scan_config), when
+        # set, overrides the configured effort and is sent even for models
+        # LiteLLM's catalog does not know. See strix/jitera/reasoning.py.
+        reasoning_effort, force_reasoning = jitera_reasoning.resolve(
+            scan_config.get("reasoning_effort"), settings.llm.reasoning_effort
+        )
         model_settings = make_model_settings(
-            settings.llm.reasoning_effort,
+            reasoning_effort,
             model_name=resolved_model,
             force_required_tool_choice=settings.llm.force_required_tool_choice,
             parallel_tool_calls=settings.llm.parallel_tool_calls,
@@ -435,6 +442,7 @@ async def run_strix_scan(
             prompt_cache=settings.llm.prompt_cache,
             extra_headers=settings.llm.extra_headers,
             extra_body=settings.llm.extra_body,
+            force_reasoning=force_reasoning,
         )
         run_config = RunConfig(
             model=resolved_model,

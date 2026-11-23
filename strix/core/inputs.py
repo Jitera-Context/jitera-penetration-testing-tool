@@ -252,6 +252,7 @@ def make_model_settings(
     extra_headers: dict[str, str] | None = None,
     extra_body: dict[str, Any] | None = None,
     has_tools: bool = True,
+    force_reasoning: bool = False,
 ) -> ModelSettings:
     headers = _request_headers(model_name, extra_headers)
     model_settings = ModelSettings(
@@ -262,10 +263,13 @@ def make_model_settings(
         extra_headers=headers,
         extra_body=dict(extra_body) if extra_body else None,
     )
+    # Jitera fork: force_reasoning sends the effort even when LiteLLM's catalog
+    # has no entry for the model (our gateway aliases), as the --reasoning-effort
+    # run parameter asks. See strix/jitera/reasoning.py.
     if (
         reasoning_effort is not None
         and reasoning_effort != "none"
-        and model_supports_reasoning(model_name)
+        and (force_reasoning or model_supports_reasoning(model_name))
     ):
         model_settings = model_settings.resolve(
             _reasoning_settings(reasoning_effort, extra_body),
