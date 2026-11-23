@@ -257,8 +257,5 @@ async def test_a_differing_cap_on_the_same_loop_is_ignored_not_rebuilt() -> None
     first = llm_concurrency.limit(inner, 2)
     second = llm_concurrency.limit(inner, 5)  # different limit, same event loop
     args, kwargs = _args()
-    await asyncio.gather(
-        *(model.get_response(*args, **kwargs) for model in [first, second] * 4)
-    )
+    await asyncio.gather(*(model.get_response(*args, **kwargs) for model in [first, second] * 4))
     assert inner.peak <= 2  # the cap held at the first value, not 5
-
