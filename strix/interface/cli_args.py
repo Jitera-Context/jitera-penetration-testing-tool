@@ -18,6 +18,7 @@ from strix.interface.utils import (
     resolve_workspace_files,
     validate_config_file,
 )
+from strix.jitera import reasoning as _reasoning  # Jitera fork
 from strix.report.runs import list_run_summaries
 
 
@@ -312,6 +313,26 @@ Examples:
         help=(
             "Maximum turns per agent (> 0, default %(default)s). Each agent is force-stopped "
             "when it reaches this limit, with graduated wrap-up warnings as it is approached."
+        ),
+    )
+
+    # Jitera fork: send the model's reasoning effort for this run, even when
+    # LiteLLM's catalog does not know the model (our gateway aliases). Without
+    # it, the configured effort is dropped for such models. strix/jitera/reasoning.py.
+    parser.add_argument(
+        "--reasoning-effort",
+        dest="reasoning_effort",
+        metavar="LEVEL",
+        # Accept any case, like the STRIX_REASONING_EFFORT env var does.
+        type=str.lower,
+        choices=_reasoning.CLI_CHOICES,
+        default=None,
+        help=(
+            "Reasoning effort to send the model for this run: "
+            f"{', '.join(_reasoning.CLI_CHOICES)}. 'auto' is the maximum ('max'); "
+            "the model must accept the level you ask for. Unlike the configured "
+            "default, this is sent even for models the pricing catalog does not "
+            "list as reasoning-capable."
         ),
     )
 

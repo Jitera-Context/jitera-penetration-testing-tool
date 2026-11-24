@@ -1,12 +1,20 @@
-Title: --help and --version show our command, runs and settings folders, no Strix Cloud section
-Why: Help text used the strix command, the strix_runs and ~/.strix folders, and advertised Strix Cloud; --version printed 'strix <version>'.
+Title: --help/--version name our command and folders; adds the --reasoning-effort parameter
+Why: Help text used the strix command, the strix_runs and ~/.strix folders, and advertised Strix Cloud; --version printed 'strix <version>'. Also: adds the --reasoning-effort run parameter (strix/jitera/reasoning.py).
 Upstream-PR: none
 
 diff --git a/strix/interface/cli_args.py b/strix/interface/cli_args.py
-index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..a26d8a7251a73e1d9948d0e019df7dcede53cc89 100644
+index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..706bdfe147b905293e8255dd3f90352f1f5f2351 100644
 --- a/strix/interface/cli_args.py
 +++ b/strix/interface/cli_args.py
-@@ -56,69 +56,79 @@ def _positive_int(value: str) -> int:
+@@ -18,6 +18,7 @@ from strix.interface.utils import (
+     resolve_workspace_files,
+     validate_config_file,
+ )
++from strix.jitera import reasoning as _reasoning  # Jitera fork
+ from strix.report.runs import list_run_summaries
+ 
+ 
+@@ -56,69 +57,79 @@ def _positive_int(value: str) -> int:
      return parsed
  
  
@@ -92,14 +100,14 @@ index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..a26d8a7251a73e1d9948d0e019df7dce
    # Extra files placed in the sandbox workspace
 -  strix --target ./my-project --workspace-file ./wordlist.txt
 -  strix --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
-+  {profile.command} --target ./my-project --workspace-file ./wordlist.txt
-+  {profile.command} --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
- 
+-
 -Strix Cloud:
 -  strix cloud login
 -  strix cloud scans start --source . --yes --wait
 -  strix cloud                      # list every cloud resource
--
++  {profile.command} --target ./my-project --workspace-file ./wordlist.txt
++  {profile.command} --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
+ 
 -  Run a pentest in Strix Cloud     https://app.strix.ai
 -  Try Strix Enterprise             https://strix.ai/demo
 -        """,
@@ -115,7 +123,7 @@ index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..a26d8a7251a73e1d9948d0e019df7dce
      )
  
      parser.add_argument(
-@@ -176,7 +186,8 @@ Strix Cloud:
+@@ -176,7 +187,8 @@ Strix Cloud:
          help="Place a file from this machine into the sandbox workspace before the scan "
          "starts, for example a wordlist, an API specification, or notes. Repeat the option "
          "for more files. DEST is the path inside /workspace and defaults to the file name "
@@ -125,7 +133,7 @@ index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..a26d8a7251a73e1d9948d0e019df7dce
          "the file into the sandbox, outside every target directory. The agent can edit the "
          "copy. The file on this machine does not change.",
      )
-@@ -246,14 +257,20 @@ Strix Cloud:
+@@ -246,14 +258,20 @@ Strix Cloud:
      parser.add_argument(
          "--config",
          type=str,
@@ -148,7 +156,34 @@ index c9b6951be62e4ed88ec2ce52afe4e372efca4f50..a26d8a7251a73e1d9948d0e019df7dce
      )
  
      parser.add_argument(
-@@ -306,7 +323,7 @@ Strix Cloud:
+@@ -298,6 +316,26 @@ Strix Cloud:
+         ),
+     )
+ 
++    # Jitera fork: send the model's reasoning effort for this run, even when
++    # LiteLLM's catalog does not know the model (our gateway aliases). Without
++    # it, the configured effort is dropped for such models. strix/jitera/reasoning.py.
++    parser.add_argument(
++        "--reasoning-effort",
++        dest="reasoning_effort",
++        metavar="LEVEL",
++        # Accept any case, like the STRIX_REASONING_EFFORT env var does.
++        type=str.lower,
++        choices=_reasoning.CLI_CHOICES,
++        default=None,
++        help=(
++            "Reasoning effort to send the model for this run: "
++            f"{', '.join(_reasoning.CLI_CHOICES)}. 'auto' is the maximum ('max'); "
++            "the model must accept the level you ask for. Unlike the configured "
++            "default, this is sent even for models the pricing catalog does not "
++            "list as reasoning-capable."
++        ),
++    )
++
+     parser.add_argument(
+         "-r",
+         "--resume",
+@@ -306,7 +344,7 @@ Strix Cloud:
          const="",
          metavar="RUN_NAME",
          help=(

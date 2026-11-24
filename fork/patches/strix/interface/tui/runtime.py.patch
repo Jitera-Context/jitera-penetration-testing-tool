@@ -1,9 +1,9 @@
-Title: Missing-TUI error names the brand
-Why: Told users to reinstall Strix.
+Title: Missing-TUI error names the brand; the run carries the --reasoning-effort parameter
+Why: Told users to reinstall Strix. Also: carries --reasoning-effort into the interactive run's scan_config (strix/jitera/reasoning.py).
 Upstream-PR: none
 
 diff --git a/strix/interface/tui/runtime.py b/strix/interface/tui/runtime.py
-index 9688109b050f743c1144318f864f17226b4defef..6c5f0e08a9d5e4b8adad77659c18e05455f9508d 100644
+index 9688109b050f743c1144318f864f17226b4defef..61a2dd032f416eb0efa758e8e2b1cef06e7f6601 100644
 --- a/strix/interface/tui/runtime.py
 +++ b/strix/interface/tui/runtime.py
 @@ -66,6 +66,9 @@ def _open_output_sink() -> TextIO:
@@ -16,7 +16,16 @@ index 9688109b050f743c1144318f864f17226b4defef..6c5f0e08a9d5e4b8adad77659c18e054
  class GoTuiRuntime:
      def __init__(self, args: argparse.Namespace) -> None:
          self.args = args
-@@ -394,7 +397,8 @@ class GoTuiRuntime:
+@@ -106,6 +109,8 @@ class GoTuiRuntime:
+             "resume_instruction": self.args.user_explicit_instruction or "",
+             "workspace_mount": getattr(self.args, "workspace_mount", None) or "",
+             "workspace_subdir": getattr(self.args, "workspace_subdir", None) or "",
++            # Jitera fork: --reasoning-effort for this run (strix/jitera/reasoning.py).
++            "reasoning_effort": getattr(self.args, "reasoning_effort", None),
+         }
+         self.report_state = ReportState(self.scan_config["run_name"])
+         self.report_state.hydrate_from_run_dir()
+@@ -394,7 +399,8 @@ class GoTuiRuntime:
          if packaged.is_file():
              return [str(packaged)]
          raise RuntimeError(

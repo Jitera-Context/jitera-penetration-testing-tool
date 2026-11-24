@@ -1,9 +1,9 @@
-Title: Scan panels are titled with the product name, and paths name the brand's folders
-Why: The start, live-status and final-report panels were titled STRIX; the Output line and sandbox-image error printed hard-coded strix_runs/ and ~/.strix paths.
+Title: Scan panels/paths name the brand; the run carries the --reasoning-effort parameter
+Why: The start, live-status and final-report panels were titled STRIX; the Output line and sandbox-image error printed hard-coded strix_runs/ and ~/.strix paths. Also: carries --reasoning-effort into the non-interactive run's scan_config (strix/jitera/reasoning.py).
 Upstream-PR: none
 
 diff --git a/strix/interface/cli.py b/strix/interface/cli.py
-index a8992ce4980a2d8c7635d6eca0ef4ff1c90b0782..dbe5306748a3a7db02ff34f11f5f4a8da7ae854b 100644
+index a8992ce4980a2d8c7635d6eca0ef4ff1c90b0782..e7a8908b0159eced9858de39eed2e3cea7fc913c 100644
 --- a/strix/interface/cli.py
 +++ b/strix/interface/cli.py
 @@ -29,11 +29,16 @@ from .utils import (
@@ -42,7 +42,16 @@ index a8992ce4980a2d8c7635d6eca0ef4ff1c90b0782..dbe5306748a3a7db02ff34f11f5f4a8d
          title_align="left",
          border_style="#22c55e",
          padding=(1, 2),
-@@ -181,7 +186,7 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
+@@ -98,6 +103,8 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
+         "scope_mode": getattr(args, "scope_mode", "auto"),
+         "diff_base": getattr(args, "diff_base", None),
+         "resume_instruction": getattr(args, "user_explicit_instruction", None) or "",
++        # Jitera fork: --reasoning-effort for this run (strix/jitera/reasoning.py).
++        "reasoning_effort": getattr(args, "reasoning_effort", None),
+     }
+ 
+     report_state = ReportState(args.run_name)
+@@ -181,7 +188,7 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
  
          return Panel(
              status_text,
@@ -51,7 +60,7 @@ index a8992ce4980a2d8c7635d6eca0ef4ff1c90b0782..dbe5306748a3a7db02ff34f11f5f4a8d
              title_align="left",
              border_style="#22c55e",
              padding=(1, 2),
-@@ -249,7 +254,7 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
+@@ -249,7 +256,7 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
                  "\n\n",
                  report_state.final_scan_result,
              ),

@@ -103,6 +103,8 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
         "scope_mode": getattr(args, "scope_mode", "auto"),
         "diff_base": getattr(args, "diff_base", None),
         "resume_instruction": getattr(args, "user_explicit_instruction", None) or "",
+        # Jitera fork: --reasoning-effort for this run (strix/jitera/reasoning.py).
+        "reasoning_effort": getattr(args, "reasoning_effort", None),
     }
 
     report_state = ReportState(args.run_name)
