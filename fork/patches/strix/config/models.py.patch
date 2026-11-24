@@ -1,12 +1,39 @@
-Title: LLM attribution headers come from the brand profile
-Why: OpenRouter / Vercel AI Gateway should show our product, not Strix.
+Title: LLM attribution headers come from the brand profile; get_model applies the concurrency cap
+Why: OpenRouter / Vercel AI Gateway should show our product, not Strix. The cap (strix/jitera/llm_concurrency.py) wraps outside the turn guard so a call waiting for a slot runs no stream timeout.
 Upstream-PR: none
 
 diff --git a/strix/config/models.py b/strix/config/models.py
-index 102d132cfd0ef63772c88b2c2c750602f4136772..6a8097a7675d843c8a9bf2e9191b381cb3715bfc 100644
+index 102d132cfd0ef63772c88b2c2c750602f4136772..2690cf23f2a687c247085350980036a15138bf11 100644
 --- a/strix/config/models.py
 +++ b/strix/config/models.py
-@@ -884,9 +884,12 @@ def _openrouter_error_type(error: object) -> object:
+@@ -560,6 +560,9 @@ class _CredentialedLitellmProvider(ModelProvider):
+         )
+ 
+ 
++from strix.jitera import llm_concurrency  # noqa: E402  (Jitera fork)
++
++
+ class StrixProvider(MultiProvider):
+     """Route any non-OpenAI prefix through LiteLLM with the prefix preserved,
+     so users type ``deepseek/deepseek-chat`` rather than
+@@ -658,13 +661,15 @@ class StrixProvider(MultiProvider):
+                 # is done, so an idle gap is meaningless here; the request
+                 # timeout bounds it instead.
+                 idle_timeout = first_event_timeout = total_timeout = None
+-        return _TurnGuardModel(
++        guarded = _TurnGuardModel(
+             model,
+             max_tool_calls_per_turn=llm.max_tool_calls_per_turn,
+             stream_idle_timeout=idle_timeout,
+             first_event_timeout=first_event_timeout,
+             total_timeout=total_timeout,
+         )
++        # Outside the turn guard, so a call waiting for a slot runs no stream timeout.
++        return llm_concurrency.limit(guarded, llm.max_concurrent_requests)
+ 
+ 
+ def _routes_via_litellm(model: Model) -> bool:
+@@ -884,9 +889,12 @@ def _openrouter_error_type(error: object) -> object:
      return None
  
  

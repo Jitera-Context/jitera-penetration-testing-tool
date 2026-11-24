@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Literal
 
 from pydantic import AliasChoices, Field, field_validator
@@ -106,11 +107,30 @@ class LlmSettings(BaseSettings):
         ge=0,
         alias="LLM_MAX_TOOL_CALLS_PER_TURN",
     )
+    # Jitera fork: model calls in flight at once, 0 = no cap (strix/jitera/llm_concurrency.py).
+    max_concurrent_requests: int = Field(default=0, alias="LLM_MAX_CONCURRENT_REQUESTS")
 
     @field_validator("api_type", "reasoning_effort", mode="before")
     @classmethod
     def _normalize_case(cls, value: object) -> object:
         return _lowercase(value)
+
+    @field_validator("max_concurrent_requests", mode="before")
+    @classmethod
+    def _cap_or_no_cap(cls, value: object) -> int:
+        # Jitera fork: a cap that isn't a whole number >= 0 means no cap, never a failed start.
+        try:
+            cap = int(str(value).strip() or 0)
+        except ValueError:
+            cap = -1
+        if cap < 0:
+            logging.getLogger(__name__).warning(
+                "LLM_MAX_CONCURRENT_REQUESTS=%r is not a whole number >= 0: "
+                "model calls are not capped",
+                value,
+            )
+            return 0
+        return cap
 
 
 class DedupeSettings(BaseSettings):

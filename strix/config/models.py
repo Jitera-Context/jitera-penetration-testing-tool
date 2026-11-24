@@ -560,6 +560,9 @@ class _CredentialedLitellmProvider(ModelProvider):
         )
 
 
+from strix.jitera import llm_concurrency  # noqa: E402  (Jitera fork)
+
+
 class StrixProvider(MultiProvider):
     """Route any non-OpenAI prefix through LiteLLM with the prefix preserved,
     so users type ``deepseek/deepseek-chat`` rather than
@@ -658,13 +661,15 @@ class StrixProvider(MultiProvider):
                 # is done, so an idle gap is meaningless here; the request
                 # timeout bounds it instead.
                 idle_timeout = first_event_timeout = total_timeout = None
-        return _TurnGuardModel(
+        guarded = _TurnGuardModel(
             model,
             max_tool_calls_per_turn=llm.max_tool_calls_per_turn,
             stream_idle_timeout=idle_timeout,
             first_event_timeout=first_event_timeout,
             total_timeout=total_timeout,
         )
+        # Outside the turn guard, so a call waiting for a slot runs no stream timeout.
+        return llm_concurrency.limit(guarded, llm.max_concurrent_requests)
 
 
 def _routes_via_litellm(model: Model) -> bool:
