@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/reasoning.py b/strix/jitera/reasoning.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..8f0e7aaeae7526c48a8dc2cab6b89d303878506f
+index 0000000000000000000000000000000000000000..e8979850ee5d6f6c477f4e9041dbd2ac162f12f9
 --- /dev/null
 +++ b/strix/jitera/reasoning.py
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,92 @@
 +"""The ``--reasoning-effort`` run parameter: send the model's effort, even when
 +LiteLLM's catalog doesn't know the model.
 +
@@ -70,3 +70,33 @@ index 0000000000000000000000000000000000000000..8f0e7aaeae7526c48a8dc2cab6b89d30
 +        )
 +        return configured, False
 +    return level, True  # type: ignore[return-value]
++
++
++def force_for_unknown_model(model_name: str, effort: ReasoningEffort, *, enabled: bool) -> bool:
++    """Whether to force-send the configured ``effort`` to a catalog-unknown model.
++
++    The configured effort (default ``high``) is otherwise silently dropped for a
++    model LiteLLM's catalog has no entry for — our gateway aliases are exactly
++    that — because upstream only attaches an effort to models it knows support
++    reasoning. Confirmed on the GLM gateway: with no ``--reasoning-effort`` flag
++    the model ran with no effort and scans hung in reconnaissance; forcing the
++    configured ``high`` made recon converge.
++
++    This returns ``True`` only when ``enabled`` (the
++    ``STRIX_FORCE_REASONING_FOR_UNKNOWN`` setting), the effort is a real level,
++    and the model is **absent** from the catalog. A model the catalog *does*
++    know — including one it knows does not support reasoning — is left to
++    upstream's gating untouched, so this never sends an effort to a model known
++    to reject it.
++    """
++    if not enabled:
++        return False
++    level = (effort or "").strip().lower()
++    if level in ("", "none") or level not in LEVELS:
++        return False
++    try:
++        from strix.config.models import _catalog_entry
++
++        return _catalog_entry(model_name) is None
++    except Exception:  # noqa: BLE001 - never let this gate crash a run
++        return False
