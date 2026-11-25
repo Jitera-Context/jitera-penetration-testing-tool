@@ -10,7 +10,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from strix.agents.prompt import _resolve_skills
-from strix.skills import load_skills, register_skill_dir
 
 
 _COVERAGE = {
@@ -36,12 +35,12 @@ def test_quick_scan_stays_lean() -> None:
     assert not (_COVERAGE & skills)
 
 
-def test_coverage_skill_files_exist_and_load() -> None:
-    # Register the Jitera skill dir the way bootstrap does, then confirm every
-    # auto-loaded coverage skill resolves to a real file (catches a typo'd path).
-    register_skill_dir(Path("strix/jitera/skills").resolve())
-    loaded = load_skills(sorted(_COVERAGE))
-    # var name is the last path segment
+def test_coverage_skill_files_exist() -> None:
+    # Every auto-loaded coverage skill must resolve to a real, non-empty file
+    # (catches a typo'd path). Checked directly on disk so the test does not
+    # mutate the global skill search dirs (which would pollute other tests).
+    base = Path(__file__).resolve().parents[2] / "strix" / "jitera" / "skills"
     for name in _COVERAGE:
-        var = name.split("/")[-1]
-        assert var in loaded and loaded[var].strip(), f"coverage skill failed to load: {name}"
+        path = base / f"{name}.md"
+        assert path.is_file(), f"coverage skill file missing: {path}"
+        assert path.read_text(encoding="utf-8").strip(), f"coverage skill empty: {path}"
