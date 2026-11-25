@@ -64,6 +64,9 @@ def _resolve_skills(
         ordered.append("vulnerabilities/static_exposure_recon")
         ordered.append("vulnerabilities/payload_confirmation")
         ordered.append("vulnerabilities/deserialization_surface")
+        # File-on-confirm discipline: scans lose findings when validators confirm
+        # but never file, or the run is cut off with confirmed issues unreported.
+        ordered.append("analysis/filing_discipline")
     ordered.append("tooling/agent_browser")
     ordered.append("tooling/python")
     ordered.append("analysis/counterevidence")

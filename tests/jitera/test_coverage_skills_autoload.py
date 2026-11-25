@@ -17,6 +17,7 @@ _COVERAGE = {
     "vulnerabilities/static_exposure_recon",
     "vulnerabilities/payload_confirmation",
     "vulnerabilities/deserialization_surface",
+    "analysis/filing_discipline",
 }
 
 

@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_coverage_skills_autoload.py b/tests/jitera/test_coverage_skills_autoload.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..538b112eb2408bfda8feb5530a6f46af4446b17b
+index 0000000000000000000000000000000000000000..26aab649a158618aeafa6056813875a3fbedd4c4
 --- /dev/null
 +++ b/tests/jitera/test_coverage_skills_autoload.py
-@@ -0,0 +1,46 @@
+@@ -0,0 +1,47 @@
 +"""The Jitera coverage skills must auto-load on thorough scans.
 +
 +Scans exercise the hard vuln classes but never call the Jitera tools on their
@@ -27,6 +27,7 @@ index 0000000000000000000000000000000000000000..538b112eb2408bfda8feb5530a6f46af
 +    "vulnerabilities/static_exposure_recon",
 +    "vulnerabilities/payload_confirmation",
 +    "vulnerabilities/deserialization_surface",
++    "analysis/filing_discipline",
 +}
 +
 +

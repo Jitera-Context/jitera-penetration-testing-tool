@@ -1,0 +1,49 @@
+Title: Add strix/jitera/skills/analysis/filing_discipline.md
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/strix/jitera/skills/analysis/filing_discipline.md b/strix/jitera/skills/analysis/filing_discipline.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..550ca7ca88afb488ed90ffd946dc562baaf7780b
+--- /dev/null
++++ b/strix/jitera/skills/analysis/filing_discipline.md
+@@ -0,0 +1,39 @@
++---
++name: filing-discipline
++description: File every confirmed issue as you confirm it, not in a final batch; reserve budget to report so a long scan never ends with validated issues unfiled
++---
++
++# Filing discipline — confirmed means filed
++
++Scans here lose findings two ways: validators **confirm** an issue but never call
++the report tool, and the run ends (budget/time) with a queue of confirmed issues
++still unreported. Both waste the whole scan. Avoid them:
++
++## Rules
++
++1. **File the moment you confirm.** As soon as you have evidence that proves an
++   issue, call `create_vulnerability_report` (or `create_dependency_report` for a
++   known-CVE dependency) **immediately** — before moving to the next probe. Do
++   not collect confirmed issues to file "at the end": a run that is cut off loses
++   every unfiled one.
++2. **File every item a coverage tool returns.** `detect_vulnerable_components`
++   (each `vulnerable` entry → one `create_dependency_report`), `scan_static_exposure`
++   (each verified secret / live hidden endpoint), `check_payload_fired`
++   (`fired: true` → file), `detect_serialized_objects` (each confirmed, controllable
++   blob). One confirmed result = one filed report. Don't summarize them in a note.
++3. **A sub-agent must file its own findings before it finishes.** Do not hand a
++   confirmed issue back to the root as prose for the root to file — the root may
++   never get to it. `create_*` first, then `agent_finish`.
++4. **Reserve budget to report.** When your remaining budget runs low, stop
++   probing and spend what's left filing every confirmed-but-unfiled issue and
++   calling `record_coverage` for classes you assessed. Filing is the deliverable;
++   an unreported confirmation is worth nothing.
++5. **One issue, one report.** Distinct vulnerabilities are separate reports even
++   on the same endpoint (e.g. an IDOR and an info leak on `/api/x` are two). Do
++   not merge several issues into one finding — it undercounts the real result.
++
++## Before finish_scan
++
++Walk your confirmed/validated list and the coverage board: every confirmed issue
++has a filed report, every class you touched has a `record_coverage` entry. Only
++then `finish_scan`. If budget is gone, file first and skip further probing.

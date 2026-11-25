@@ -3,10 +3,10 @@ Why: The prompt rule below needs the value.
 Upstream-PR: none
 
 diff --git a/strix/agents/prompt.py b/strix/agents/prompt.py
-index 2eb45bf18189129320a62facfc17eb3c4954db1c..d49753c0870dceeea136037e9ff0220da06fe232 100644
+index 2eb45bf18189129320a62facfc17eb3c4954db1c..603057c21302bde7a460a95a970d0969a220f1f7 100644
 --- a/strix/agents/prompt.py
 +++ b/strix/agents/prompt.py
-@@ -54,6 +54,16 @@ def _resolve_skills(
+@@ -54,6 +54,19 @@ def _resolve_skills(
      ordered.append(f"scan_modes/{scan_mode}")
      if is_diff_scoped:
          ordered.append("scan_modes/diff")
@@ -20,10 +20,13 @@ index 2eb45bf18189129320a62facfc17eb3c4954db1c..d49753c0870dceeea136037e9ff0220d
 +        ordered.append("vulnerabilities/static_exposure_recon")
 +        ordered.append("vulnerabilities/payload_confirmation")
 +        ordered.append("vulnerabilities/deserialization_surface")
++        # File-on-confirm discipline: scans lose findings when validators confirm
++        # but never file, or the run is cut off with confirmed issues unreported.
++        ordered.append("analysis/filing_discipline")
      ordered.append("tooling/agent_browser")
      ordered.append("tooling/python")
      ordered.append("analysis/counterevidence")
-@@ -75,6 +85,9 @@ def _resolve_skills(
+@@ -75,6 +88,9 @@ def _resolve_skills(
      return deduped
  
  
@@ -33,7 +36,7 @@ index 2eb45bf18189129320a62facfc17eb3c4954db1c..d49753c0870dceeea136037e9ff0220d
  def render_system_prompt(
      *,
      skills: list[str] | None = None,
-@@ -131,6 +144,7 @@ def render_system_prompt(
+@@ -131,6 +147,7 @@ def render_system_prompt(
          # Skills every agent of this kind loads come first, so siblings share them
          # as a cached prefix; the ones the caller asked for vary and go after.
          rendered = env.get_template("system_prompt.jinja").render(
