@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/tools/exposure_scan.py b/strix/jitera/tools/exposure_scan.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..f5b3d058ba70de7927d531cbe1dbdb137a4d7295
+index 0000000000000000000000000000000000000000..aac894311902ee9f5dff46855d3a41ea1c08b10a
 --- /dev/null
 +++ b/strix/jitera/tools/exposure_scan.py
 @@ -0,0 +1,163 @@
@@ -84,7 +84,7 @@ index 0000000000000000000000000000000000000000..f5b3d058ba70de7927d531cbe1dbdb13
 +    return f"{v[:4]}...{v[-4:]} (<{len(v)} chars>)"
 +
 +
-+def scan_exposure(assets: list[dict[str, str]]) -> dict[str, Any]:
++def scan_exposure(assets: list[Any]) -> dict[str, Any]:
 +    """Pure logic of :func:`scan_static_exposure` (no I/O, easy to test)."""
 +    if not isinstance(assets, list) or not assets:
 +        return {"success": False, "error": "assets must be a non-empty list of {url, content}"}

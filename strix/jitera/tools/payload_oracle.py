@@ -77,7 +77,7 @@ def _xss_verdict(payload: str, body: str) -> dict[str, Any]:
     marker = next(
         (c for c in canaries if c.lower().startswith("xss") or "canary" in c.lower()), None
     )
-    canary_hit = bool(marker) and marker in body
+    canary_hit = marker is not None and marker in body
 
     fired = raw_full and has_markup
     encoded_only = enc_full or (canary_hit and not raw_full and has_markup)

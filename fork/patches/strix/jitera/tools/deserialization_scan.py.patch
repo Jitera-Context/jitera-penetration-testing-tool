@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/tools/deserialization_scan.py b/strix/jitera/tools/deserialization_scan.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..2187539ba732e6280269a24af21a7965f03353f8
+index 0000000000000000000000000000000000000000..00f6118cb4f1fa750d4a839e7866a6cdad95e85a
 --- /dev/null
 +++ b/strix/jitera/tools/deserialization_scan.py
 @@ -0,0 +1,160 @@
@@ -99,7 +99,7 @@ index 0000000000000000000000000000000000000000..2187539ba732e6280269a24af21a7965
 +]
 +
 +
-+def scan_serialized(fields: list[dict[str, str]]) -> dict[str, Any]:
++def scan_serialized(fields: list[Any]) -> dict[str, Any]:
 +    """Pure logic of :func:`detect_serialized_objects`.
 +
 +    ``fields`` is ``[{"location": "cookie:session", "value": "..."}, ...]`` --

@@ -89,7 +89,7 @@ _SIGNATURES: list[dict[str, Any]] = [
 ]
 
 
-def scan_serialized(fields: list[dict[str, str]]) -> dict[str, Any]:
+def scan_serialized(fields: list[Any]) -> dict[str, Any]:
     """Pure logic of :func:`detect_serialized_objects`.
 
     ``fields`` is ``[{"location": "cookie:session", "value": "..."}, ...]`` --

@@ -74,7 +74,7 @@ def _redact(value: str) -> str:
     return f"{v[:4]}...{v[-4:]} (<{len(v)} chars>)"
 
 
-def scan_exposure(assets: list[dict[str, str]]) -> dict[str, Any]:
+def scan_exposure(assets: list[Any]) -> dict[str, Any]:
     """Pure logic of :func:`scan_static_exposure` (no I/O, easy to test)."""
     if not isinstance(assets, list) or not assets:
         return {"success": False, "error": "assets must be a non-empty list of {url, content}"}

@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/tools/component_scan.py b/strix/jitera/tools/component_scan.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..e5d80afe76b98a9e84ab11b91f6c4c7ea46fa667
+index 0000000000000000000000000000000000000000..532764bd6137f0e00b210d283c40a69d37f52e0b
 --- /dev/null
 +++ b/strix/jitera/tools/component_scan.py
 @@ -0,0 +1,324 @@
@@ -254,7 +254,7 @@ index 0000000000000000000000000000000000000000..e5d80afe76b98a9e84ab11b91f6c4c7e
 +    ]
 +
 +
-+def scan_components(assets: list[dict[str, str]]) -> dict[str, Any]:
++def scan_components(assets: list[Any]) -> dict[str, Any]:
 +    """Pure logic of :func:`detect_vulnerable_components` (no I/O, easy to test).
 +
 +    Returns ``{"success": bool, ...}`` -- the tool wrapper just JSON-encodes it.

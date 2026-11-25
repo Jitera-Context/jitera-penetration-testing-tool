@@ -244,7 +244,7 @@ def _advisories_for(lib: str, version: str) -> list[dict[str, Any]]:
     ]
 
 
-def scan_components(assets: list[dict[str, str]]) -> dict[str, Any]:
+def scan_components(assets: list[Any]) -> dict[str, Any]:
     """Pure logic of :func:`detect_vulnerable_components` (no I/O, easy to test).
 
     Returns ``{"success": bool, ...}`` -- the tool wrapper just JSON-encodes it.
