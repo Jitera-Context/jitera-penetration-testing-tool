@@ -81,7 +81,7 @@ def force_for_unknown_model(model_name: str, effort: ReasoningEffort, *, enabled
     """
     if not enabled:
         return False
-    level = (effort or "").strip().lower()
+    level = str(effort).strip().lower()
     if level in ("", "none") or level not in LEVELS:
         return False
     try:

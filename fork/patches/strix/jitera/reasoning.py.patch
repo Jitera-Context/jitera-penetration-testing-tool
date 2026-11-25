@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/reasoning.py b/strix/jitera/reasoning.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..79a55f292a9143555a9f1563acbae7490af20ad9
+index 0000000000000000000000000000000000000000..1057c97be38ae3bb79c02a8094742f41bda86bed
 --- /dev/null
 +++ b/strix/jitera/reasoning.py
 @@ -0,0 +1,92 @@
@@ -91,7 +91,7 @@ index 0000000000000000000000000000000000000000..79a55f292a9143555a9f1563acbae749
 +    """
 +    if not enabled:
 +        return False
-+    level = (effort or "").strip().lower()
++    level = str(effort).strip().lower()
 +    if level in ("", "none") or level not in LEVELS:
 +        return False
 +    try:
