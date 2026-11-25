@@ -26,7 +26,10 @@ _SIGNATURES: list[dict[str, Any]] = [
         "format": "java",
         "pattern": re.compile(r"\brO0AB[A-Za-z0-9+/=]{8,}"),
         "marker": "base64 of Java serialization magic 0xACED0005 (rO0AB...)",
-        "payload_hint": "ysoserial gadget chain (CommonsCollections/URLDNS) base64; confirm with a DNS/HTTP OOB callback.",
+        "payload_hint": (
+            "ysoserial gadget chain (CommonsCollections/URLDNS) base64; "
+            "confirm with a DNS/HTTP OOB callback."
+        ),
     },
     {
         "format": "java_hex",
@@ -37,21 +40,26 @@ _SIGNATURES: list[dict[str, Any]] = [
     {
         "format": "php",
         "pattern": re.compile(r"""\bO:\d+:"[^"]+":\d+:\{"""),
-        "marker": "PHP serialized object (O:<len>:\"Class\":<n>:{...})",
-        "payload_hint": "craft a PHP object with a POP gadget (__wakeup/__destruct); confirm via its side effect.",
+        "marker": 'PHP serialized object (O:<len>:"Class":<n>:{...})',
+        "payload_hint": (
+            "craft a PHP object with a POP gadget (__wakeup/__destruct); "
+            "confirm via its side effect."
+        ),
     },
     {
         "format": "php_array",
         "pattern": re.compile(r"\ba:\d+:\{[si]:\d+"),
         "marker": "PHP serialized array (a:<n>:{...})",
-        "payload_hint": "if user-controlled, swap in a serialized object (O:...) to reach a POP gadget.",
+        "payload_hint": (
+            "if user-controlled, swap in a serialized object (O:...) to reach a POP gadget."
+        ),
     },
     {
         "format": "node_serialize",
         "pattern": re.compile(r"_\$\$ND_FUNC\$\$_"),
         "marker": "node-serialize function marker (_$$ND_FUNC$$_)",
         "payload_hint": (
-            'send {"rce":"_$$ND_FUNC$$_function(){require(\'child_process\').exec(\'<oob>\')}()"} '
+            "send {\"rce\":\"_$$ND_FUNC$$_function(){require('child_process').exec('<oob>')}()\"} "
             "-- immediately-invoked form triggers on unserialize(); confirm with an OOB callback."
         ),
     },
@@ -65,13 +73,18 @@ _SIGNATURES: list[dict[str, Any]] = [
         "format": "python_pickle",
         "pattern": re.compile(r"\bgA[A-Za-z0-9+/=]{10,}|\x80\x04\x95|\x80\x03"),
         "marker": "Python pickle opcodes (protocol 2-4 header, or base64 'gA...')",
-        "payload_hint": "pickle with __reduce__ running os.system('<oob>'); confirm with an OOB callback.",
+        "payload_hint": (
+            "pickle with __reduce__ running os.system('<oob>'); confirm with an OOB callback."
+        ),
     },
     {
         "format": "ruby_marshal",
         "pattern": re.compile(r"\x04\x08|\bBAh[A-Za-z0-9+/=]{8,}"),
         "marker": "Ruby Marshal header (0x0408, or base64 'BAh...')",
-        "payload_hint": "Marshal gadget chain (e.g. Gem/DeprecatedInstanceVariableProxy); confirm via side effect.",
+        "payload_hint": (
+            "Marshal gadget chain (e.g. Gem/DeprecatedInstanceVariableProxy); "
+            "confirm via side effect."
+        ),
     },
 ]
 

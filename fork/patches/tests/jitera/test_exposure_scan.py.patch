@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_exposure_scan.py b/tests/jitera/test_exposure_scan.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..8ceda1c703349a81af7a48834135950cf59eb6a1
+index 0000000000000000000000000000000000000000..1f3c90f0116a22e58e62dbd0b230bc0a1a10eb34
 --- /dev/null
 +++ b/tests/jitera/test_exposure_scan.py
-@@ -0,0 +1,87 @@
+@@ -0,0 +1,84 @@
 +"""Tests for the static-asset exposure scanner (secrets + hidden endpoints)."""
 +
 +from __future__ import annotations
@@ -23,10 +23,7 @@ index 0000000000000000000000000000000000000000..8ceda1c703349a81af7a48834135950c
 +
 +
 +def test_detects_aws_and_google_keys() -> None:
-+    content = (
-+        "const a='AKIAABCDEFGHIJKLMNOP';"
-+        "const g='AIzaSyA1234567890abcdefghijklmnopqrstuv';"
-+    )
++    content = "const a='AKIAABCDEFGHIJKLMNOP';const g='AIzaSyA1234567890abcdefghijklmnopqrstuv';"
 +    out = scan_exposure([{"url": "https://app/main.js", "content": content}])
 +    types = {s["type"] for s in out["secrets"]}
 +    assert "aws_access_key_id" in types
@@ -37,9 +34,7 @@ index 0000000000000000000000000000000000000000..8ceda1c703349a81af7a48834135950c
 +
 +
 +def test_generic_assignment_is_low_confidence() -> None:
-+    out = scan_exposure(
-+        [{"url": "https://app/x.js", "content": "var password = 'hunter2pass'"}]
-+    )
++    out = scan_exposure([{"url": "https://app/x.js", "content": "var password = 'hunter2pass'"}])
 +    gen = [s for s in out["secrets"] if s["type"] == "generic_credential_assignment"]
 +    assert gen and gen[0]["confidence"] == "low"
 +
@@ -86,7 +81,9 @@ index 0000000000000000000000000000000000000000..8ceda1c703349a81af7a48834135950c
 +
 +
 +def test_clean_asset_is_quiet() -> None:
-+    out = scan_exposure([{"url": "https://app/clean.js", "content": "function add(a,b){return a+b}"}])
++    out = scan_exposure(
++        [{"url": "https://app/clean.js", "content": "function add(a,b){return a+b}"}]
++    )
 +    assert out["success"] is True
 +    assert out["secrets"] == []
 +    assert out["endpoints"] == []

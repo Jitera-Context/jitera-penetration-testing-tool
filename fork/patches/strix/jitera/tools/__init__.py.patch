@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/tools/__init__.py b/strix/jitera/tools/__init__.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..e411dd91e0e7bd3050bd09397c99384b97305ad2
+index 0000000000000000000000000000000000000000..0603988aea9bd324e5df2e0618ab49e444c80ba2
 --- /dev/null
 +++ b/strix/jitera/tools/__init__.py
-@@ -0,0 +1,38 @@
+@@ -0,0 +1,40 @@
 +"""Agent tools Jitera adds to every scan agent.
 +
 +Write a tool the way upstream does (see ``strix/tools/thinking/tool.py``):
@@ -35,10 +35,12 @@ index 0000000000000000000000000000000000000000..e411dd91e0e7bd3050bd09397c99384b
 +
 +def get_tools() -> list[Tool]:
 +    """Return the tools to register. Import tool modules here, not at the top."""
-+    from strix.jitera.tools.component_scan import detect_vulnerable_components
-+    from strix.jitera.tools.deserialization_scan import detect_serialized_objects
-+    from strix.jitera.tools.exposure_scan import scan_static_exposure
-+    from strix.jitera.tools.payload_oracle import check_payload_fired
++    # Imported lazily (not at module top) so the agents SDK loads only when a
++    # scan actually builds its tools; the noqa keeps that deliberate choice.
++    from strix.jitera.tools.component_scan import detect_vulnerable_components  # noqa: PLC0415
++    from strix.jitera.tools.deserialization_scan import detect_serialized_objects  # noqa: PLC0415
++    from strix.jitera.tools.exposure_scan import scan_static_exposure  # noqa: PLC0415
++    from strix.jitera.tools.payload_oracle import check_payload_fired  # noqa: PLC0415
 +
 +    return [
 +        detect_vulnerable_components,

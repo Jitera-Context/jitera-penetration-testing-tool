@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_deserialization_scan.py b/tests/jitera/test_deserialization_scan.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..e7b6e101debe127182720ab6fa6ee39c31f269a9
+index 0000000000000000000000000000000000000000..06af135719be30d63db9717a1ae400ee2d9fd277
 --- /dev/null
 +++ b/tests/jitera/test_deserialization_scan.py
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,56 @@
 +"""Tests for the insecure-deserialization surface detector."""
 +
 +from __future__ import annotations
@@ -22,11 +22,13 @@ index 0000000000000000000000000000000000000000..e7b6e101debe127182720ab6fa6ee39c
 +    assert "java" in fmts
 +    hit = next(h for h in out["serialized_values"] if h["format"] == "java")
 +    assert hit["location"] == "cookie:session"
-+    assert "payload_hint" in hit and hit["payload_hint"]
++    assert hit.get("payload_hint")
 +
 +
 +def test_php_object() -> None:
-+    out = scan_serialized([{"location": "body:data", "value": 'O:4:"User":1:{s:4:"name";s:3:"bob";}'}])
++    out = scan_serialized(
++        [{"location": "body:data", "value": 'O:4:"User":1:{s:4:"name";s:3:"bob";}'}]
++    )
 +    assert any(h["format"] == "php" for h in out["serialized_values"])
 +
 +

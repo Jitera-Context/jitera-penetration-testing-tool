@@ -7,7 +7,11 @@ own, so the skills that wire the tools in belong in the always-on set that
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from strix.agents.prompt import _resolve_skills
+from strix.skills import load_skills, register_skill_dir
+
 
 _COVERAGE = {
     "vulnerabilities/vulnerable_components_blackbox",
@@ -19,12 +23,12 @@ _COVERAGE = {
 
 def test_deep_scan_autoloads_coverage_skills() -> None:
     skills = set(_resolve_skills(requested=None, scan_mode="deep", is_root=True))
-    assert _COVERAGE <= skills
+    assert skills >= _COVERAGE
 
 
 def test_standard_scan_autoloads_coverage_skills() -> None:
     skills = set(_resolve_skills(requested=None, scan_mode="standard", is_root=False))
-    assert _COVERAGE <= skills
+    assert skills >= _COVERAGE
 
 
 def test_quick_scan_stays_lean() -> None:
@@ -35,10 +39,6 @@ def test_quick_scan_stays_lean() -> None:
 def test_coverage_skill_files_exist_and_load() -> None:
     # Register the Jitera skill dir the way bootstrap does, then confirm every
     # auto-loaded coverage skill resolves to a real file (catches a typo'd path).
-    from pathlib import Path
-
-    from strix.skills import load_skills, register_skill_dir
-
     register_skill_dir(Path("strix/jitera/skills").resolve())
     loaded = load_skills(sorted(_COVERAGE))
     # var name is the last path segment

@@ -23,11 +23,28 @@ from agents import function_tool
 
 # known database error signatures -> engine (SQL injection, error-based)
 _SQL_ERRORS: list[tuple[str, re.Pattern[str]]] = [
-    ("mysql", re.compile(r"You have an error in your SQL syntax|MySQL server version|valid MySQL result|mysqli?_", re.I)),
-    ("postgres", re.compile(r"PostgreSQL.*ERROR|PG::\w+Error|pg_query\(\)|unterminated quoted string", re.I)),
-    ("sqlite", re.compile(r"SQLITE_ERROR|sqlite3?\.OperationalError|SQL logic error|unrecognized token", re.I)),
+    (
+        "mysql",
+        re.compile(
+            r"You have an error in your SQL syntax|MySQL server version|valid MySQL result|mysqli?_",  # noqa: E501
+            re.I,
+        ),
+    ),
+    (
+        "postgres",
+        re.compile(r"PostgreSQL.*ERROR|PG::\w+Error|pg_query\(\)|unterminated quoted string", re.I),
+    ),
+    (
+        "sqlite",
+        re.compile(
+            r"SQLITE_ERROR|sqlite3?\.OperationalError|SQL logic error|unrecognized token", re.I
+        ),
+    ),
     ("oracle", re.compile(r"ORA-\d{5}|Oracle error|quoted string not properly terminated", re.I)),
-    ("mssql", re.compile(r"Unclosed quotation mark|Microsoft SQL Server|System\.Data\.SqlClient", re.I)),
+    (
+        "mssql",
+        re.compile(r"Unclosed quotation mark|Microsoft SQL Server|System\.Data\.SqlClient", re.I),
+    ),
 ]
 
 # file-content markers that prove a file read landed (XXE / LFI / path traversal)
@@ -47,29 +64,40 @@ def _xss_verdict(payload: str, body: str) -> dict[str, Any]:
     same payload appears only HTML-entity-encoded, it is reflected but not
     exploitable (``encoded_only``).
     """
-    has_markup = bool(re.search(r"[<>]", payload) or re.search(r"on\w+\s*=", payload, re.I) or "javascript:" in payload.lower())
+    has_markup = bool(
+        re.search(r"[<>]", payload)
+        or re.search(r"on\w+\s*=", payload, re.I)
+        or "javascript:" in payload.lower()
+    )
     raw_full = payload in body
     enc_full = (not raw_full) and html.escape(payload, quote=True) in body
 
     # an alphanumeric canary, to still report "reflected" when neither form matches
     canaries = re.findall(r"[a-zA-Z0-9_]{6,}", payload)
-    marker = next((c for c in canaries if c.lower().startswith("xss") or "canary" in c.lower()), None)
+    marker = next(
+        (c for c in canaries if c.lower().startswith("xss") or "canary" in c.lower()), None
+    )
     canary_hit = bool(marker) and marker in body
 
     fired = raw_full and has_markup
     encoded_only = enc_full or (canary_hit and not raw_full and has_markup)
     reflected = raw_full or enc_full or canary_hit
     reason = (
-        "payload markup reflected unescaped in an executable context" if fired
-        else "reflected but HTML-encoded (not exploitable)" if encoded_only
-        else "payload reflected without its markup" if reflected
+        "payload markup reflected unescaped in an executable context"
+        if fired
+        else "reflected but HTML-encoded (not exploitable)"
+        if encoded_only
+        else "payload reflected without its markup"
+        if reflected
         else "payload not reflected"
     )
     return {
         "fired": bool(fired),
         "reflected": bool(reflected),
         "encoded_only": bool(encoded_only),
-        "evidence": payload if raw_full else (html.escape(payload, quote=True) if enc_full else (marker if canary_hit else None)),
+        "evidence": payload
+        if raw_full
+        else (html.escape(payload, quote=True) if enc_full else (marker if canary_hit else None)),
         "reason": reason,
     }
 
@@ -92,7 +120,8 @@ def _ssti_verdict(payload: str, body: str) -> dict[str, Any]:
         "fired": bool(evaluated),
         "evidence": product if evaluated else None,
         "reason": (
-            f"template evaluated {raw_expr} to {product}" if evaluated
+            f"template evaluated {raw_expr} to {product}"
+            if evaluated
             else "expression echoed verbatim or absent (not evaluated)"
         ),
     }
@@ -108,20 +137,28 @@ def _redirect_verdict(payload: str, body: str, headers: dict[str, str]) -> dict[
             break
     meta = re.search(r'http-equiv=["\']refresh["\'][^>]*url=([^"\'>\s]+)', body, re.I)
     target = loc or (meta.group(1) if meta else "")
-    fired = bool(host) and host in target and (target.startswith("http") or target.startswith("//"))
+    fired = bool(host) and host in target and target.startswith(("http", "//"))
     return {
         "fired": bool(fired),
         "evidence": target or None,
-        "reason": f"redirects off-site to {target}" if fired else "no off-site redirect to the payload host",
+        "reason": f"redirects off-site to {target}"
+        if fired
+        else "no off-site redirect to the payload host",
     }
 
 
-def _marker_verdict(body: str, markers: list[tuple[str, re.Pattern[str]]], kind: str) -> dict[str, Any]:
+def _marker_verdict(
+    body: str, markers: list[tuple[str, re.Pattern[str]]], kind: str
+) -> dict[str, Any]:
     for name, pat in markers:
         m = pat.search(body)
         if m:
-            return {"fired": True, "signature": name, "evidence": m.group(0)[:120],
-                    "reason": f"{kind}: matched {name}"}
+            return {
+                "fired": True,
+                "signature": name,
+                "evidence": m.group(0)[:120],
+                "reason": f"{kind}: matched {name}",
+            }
     return {"fired": False, "reason": f"no {kind} signature in response"}
 
 
@@ -139,7 +176,10 @@ def evaluate(
     cls = (vuln_class or "").strip().lower()
     body = response_body or ""
     if cls not in _CLASSES:
-        return {"success": False, "error": f"unknown vuln_class '{vuln_class}'; expected one of {sorted(_CLASSES)}"}
+        return {
+            "success": False,
+            "error": f"unknown vuln_class '{vuln_class}'; expected one of {sorted(_CLASSES)}",
+        }
 
     if cls == "xss":
         verdict = _xss_verdict(payload, body)

@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_payload_oracle.py b/tests/jitera/test_payload_oracle.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..1fa19941fa492e4a62616c90d420de62ed3abbf4
+index 0000000000000000000000000000000000000000..a3f313a5bc4b692bc59575c9dfa14cb4e019a76f
 --- /dev/null
 +++ b/tests/jitera/test_payload_oracle.py
-@@ -0,0 +1,115 @@
+@@ -0,0 +1,117 @@
 +"""Tests for the deterministic injection/XSS/XXE/SSTI payload oracle."""
 +
 +from __future__ import annotations
@@ -19,7 +19,9 @@ index 0000000000000000000000000000000000000000..1fa19941fa492e4a62616c90d420de62
 +
 +
 +def test_xss_fires_on_unescaped_reflection() -> None:
-+    out = evaluate("xss", "<script>xssCanary123</script>", "<div><script>xssCanary123</script></div>")
++    out = evaluate(
++        "xss", "<script>xssCanary123</script>", "<div><script>xssCanary123</script></div>"
++    )
 +    assert out["success"] and out["fired"] is True
 +    assert out["reflected"] is True
 +    assert out["encoded_only"] is False

@@ -62,7 +62,7 @@ _CALL_TARGET_PATTERN = re.compile(
 
 # comments that often leak intent/credentials
 _SENSITIVE_COMMENT = re.compile(
-    r"(?i)(?://|/\*|<!--)[^\n]{0,80}\b(todo|fixme|hack|backdoor|password|secret|do not ship|debug only)\b[^\n]{0,80}"
+    r"(?i)(?://|/\*|<!--)[^\n]{0,80}\b(todo|fixme|hack|backdoor|password|secret|do not ship|debug only)\b[^\n]{0,80}"  # noqa: E501
 )
 
 

@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_coverage_skills_autoload.py b/tests/jitera/test_coverage_skills_autoload.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..b8486be79a46a808c5eb25b731fda94f7fb846a4
+index 0000000000000000000000000000000000000000..0273bf605d9c6b6c7528c4601ca94cd7c70a06e3
 --- /dev/null
 +++ b/tests/jitera/test_coverage_skills_autoload.py
 @@ -0,0 +1,47 @@
@@ -17,7 +17,11 @@ index 0000000000000000000000000000000000000000..b8486be79a46a808c5eb25b731fda94f
 +
 +from __future__ import annotations
 +
++from pathlib import Path
++
 +from strix.agents.prompt import _resolve_skills
++from strix.skills import load_skills, register_skill_dir
++
 +
 +_COVERAGE = {
 +    "vulnerabilities/vulnerable_components_blackbox",
@@ -29,12 +33,12 @@ index 0000000000000000000000000000000000000000..b8486be79a46a808c5eb25b731fda94f
 +
 +def test_deep_scan_autoloads_coverage_skills() -> None:
 +    skills = set(_resolve_skills(requested=None, scan_mode="deep", is_root=True))
-+    assert _COVERAGE <= skills
++    assert skills >= _COVERAGE
 +
 +
 +def test_standard_scan_autoloads_coverage_skills() -> None:
 +    skills = set(_resolve_skills(requested=None, scan_mode="standard", is_root=False))
-+    assert _COVERAGE <= skills
++    assert skills >= _COVERAGE
 +
 +
 +def test_quick_scan_stays_lean() -> None:
@@ -45,10 +49,6 @@ index 0000000000000000000000000000000000000000..b8486be79a46a808c5eb25b731fda94f
 +def test_coverage_skill_files_exist_and_load() -> None:
 +    # Register the Jitera skill dir the way bootstrap does, then confirm every
 +    # auto-loaded coverage skill resolves to a real file (catches a typo'd path).
-+    from pathlib import Path
-+
-+    from strix.skills import load_skills, register_skill_dir
-+
 +    register_skill_dir(Path("strix/jitera/skills").resolve())
 +    loaded = load_skills(sorted(_COVERAGE))
 +    # var name is the last path segment

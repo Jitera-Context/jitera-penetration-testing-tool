@@ -108,46 +108,106 @@ _FINGERPRINTS: dict[str, list[re.Pattern[str]]] = {
 # is worse than a missed one.
 _ADVISORIES: dict[str, list[dict[str, Any]]] = {
     "jquery": [
-        {"ge": None, "lt": "3.5.0", "cve": "CVE-2020-11023", "cvss": 6.1,
-         "cwe": "CWE-79", "fixed": "3.5.0",
-         "summary": "XSS via <option> passed to DOM-manipulation methods (htmlPrefilter)."},
-        {"ge": None, "lt": "3.4.0", "cve": "CVE-2019-11358", "cvss": 6.1,
-         "cwe": "CWE-1321", "fixed": "3.4.0",
-         "summary": "Prototype pollution in jQuery.extend(true, ...)."},
-        {"ge": None, "lt": "1.9.0", "cve": "CVE-2012-6708", "cvss": 6.1,
-         "cwe": "CWE-79", "fixed": "1.9.0",
-         "summary": "Selector-interpreted-as-HTML XSS in $() location.hash sinks."},
+        {
+            "ge": None,
+            "lt": "3.5.0",
+            "cve": "CVE-2020-11023",
+            "cvss": 6.1,
+            "cwe": "CWE-79",
+            "fixed": "3.5.0",
+            "summary": "XSS via <option> passed to DOM-manipulation methods (htmlPrefilter).",
+        },
+        {
+            "ge": None,
+            "lt": "3.4.0",
+            "cve": "CVE-2019-11358",
+            "cvss": 6.1,
+            "cwe": "CWE-1321",
+            "fixed": "3.4.0",
+            "summary": "Prototype pollution in jQuery.extend(true, ...).",
+        },
+        {
+            "ge": None,
+            "lt": "1.9.0",
+            "cve": "CVE-2012-6708",
+            "cvss": 6.1,
+            "cwe": "CWE-79",
+            "fixed": "1.9.0",
+            "summary": "Selector-interpreted-as-HTML XSS in $() location.hash sinks.",
+        },
     ],
     "lodash": [
-        {"ge": None, "lt": "4.17.21", "cve": "CVE-2021-23337", "cvss": 7.2,
-         "cwe": "CWE-94", "fixed": "4.17.21",
-         "summary": "Command injection via lodash template()."},
-        {"ge": None, "lt": "4.17.12", "cve": "CVE-2019-10744", "cvss": 9.1,
-         "cwe": "CWE-1321", "fixed": "4.17.12",
-         "summary": "Prototype pollution in defaultsDeep/merge."},
+        {
+            "ge": None,
+            "lt": "4.17.21",
+            "cve": "CVE-2021-23337",
+            "cvss": 7.2,
+            "cwe": "CWE-94",
+            "fixed": "4.17.21",
+            "summary": "Command injection via lodash template().",
+        },
+        {
+            "ge": None,
+            "lt": "4.17.12",
+            "cve": "CVE-2019-10744",
+            "cvss": 9.1,
+            "cwe": "CWE-1321",
+            "fixed": "4.17.12",
+            "summary": "Prototype pollution in defaultsDeep/merge.",
+        },
     ],
     "angularjs": [
-        {"ge": None, "lt": "1.8.0", "cve": "CVE-2020-7676", "cvss": 6.1,
-         "cwe": "CWE-79", "fixed": "1.8.0",
-         "summary": "angular.element XSS via <option> / srcset sanitizer bypass."},
+        {
+            "ge": None,
+            "lt": "1.8.0",
+            "cve": "CVE-2020-7676",
+            "cvss": 6.1,
+            "cwe": "CWE-79",
+            "fixed": "1.8.0",
+            "summary": "angular.element XSS via <option> / srcset sanitizer bypass.",
+        },
     ],
     "bootstrap": [
-        {"ge": "4.0.0", "lt": "4.3.1", "cve": "CVE-2019-8331", "cvss": 6.1,
-         "cwe": "CWE-79", "fixed": "4.3.1",
-         "summary": "XSS in tooltip/popover data-template (4.x)."},
-        {"ge": None, "lt": "3.4.1", "cve": "CVE-2019-8331", "cvss": 6.1,
-         "cwe": "CWE-79", "fixed": "3.4.1",
-         "summary": "XSS in tooltip/popover data-template (3.x)."},
+        {
+            "ge": "4.0.0",
+            "lt": "4.3.1",
+            "cve": "CVE-2019-8331",
+            "cvss": 6.1,
+            "cwe": "CWE-79",
+            "fixed": "4.3.1",
+            "summary": "XSS in tooltip/popover data-template (4.x).",
+        },
+        {
+            "ge": None,
+            "lt": "3.4.1",
+            "cve": "CVE-2019-8331",
+            "cvss": 6.1,
+            "cwe": "CWE-79",
+            "fixed": "3.4.1",
+            "summary": "XSS in tooltip/popover data-template (3.x).",
+        },
     ],
     "moment": [
-        {"ge": None, "lt": "2.29.4", "cve": "CVE-2022-31129", "cvss": 7.5,
-         "cwe": "CWE-1333", "fixed": "2.29.4",
-         "summary": "ReDoS in moment parsing of long strings."},
+        {
+            "ge": None,
+            "lt": "2.29.4",
+            "cve": "CVE-2022-31129",
+            "cvss": 7.5,
+            "cwe": "CWE-1333",
+            "fixed": "2.29.4",
+            "summary": "ReDoS in moment parsing of long strings.",
+        },
     ],
     "handlebars": [
-        {"ge": None, "lt": "4.7.7", "cve": "CVE-2021-23369", "cvss": 9.8,
-         "cwe": "CWE-1321", "fixed": "4.7.7",
-         "summary": "RCE via prototype pollution when compiling untrusted templates."},
+        {
+            "ge": None,
+            "lt": "4.7.7",
+            "cve": "CVE-2021-23369",
+            "cvss": 9.8,
+            "cwe": "CWE-1321",
+            "fixed": "4.7.7",
+            "summary": "RCE via prototype pollution when compiling untrusted templates.",
+        },
     ],
 }
 
@@ -177,11 +237,11 @@ def _fingerprint(url: str, content: str) -> list[tuple[str, str, str]]:
 
 
 def _advisories_for(lib: str, version: str) -> list[dict[str, Any]]:
-    hits = []
-    for adv in _ADVISORIES.get(lib, []):
-        if _in_range(version, ge=adv.get("ge"), lt=adv.get("lt")):
-            hits.append(adv)
-    return hits
+    return [
+        adv
+        for adv in _ADVISORIES.get(lib, [])
+        if _in_range(version, ge=adv.get("ge"), lt=adv.get("lt"))
+    ]
 
 
 def scan_components(assets: list[dict[str, str]]) -> dict[str, Any]:

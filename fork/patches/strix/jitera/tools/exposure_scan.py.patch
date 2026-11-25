@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/tools/exposure_scan.py b/strix/jitera/tools/exposure_scan.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..32f63c7b8c7289624ccfef75702d1181a886b685
+index 0000000000000000000000000000000000000000..f5b3d058ba70de7927d531cbe1dbdb137a4d7295
 --- /dev/null
 +++ b/strix/jitera/tools/exposure_scan.py
 @@ -0,0 +1,163 @@
@@ -72,7 +72,7 @@ index 0000000000000000000000000000000000000000..32f63c7b8c7289624ccfef75702d1181
 +
 +# comments that often leak intent/credentials
 +_SENSITIVE_COMMENT = re.compile(
-+    r"(?i)(?://|/\*|<!--)[^\n]{0,80}\b(todo|fixme|hack|backdoor|password|secret|do not ship|debug only)\b[^\n]{0,80}"
++    r"(?i)(?://|/\*|<!--)[^\n]{0,80}\b(todo|fixme|hack|backdoor|password|secret|do not ship|debug only)\b[^\n]{0,80}"  # noqa: E501
 +)
 +
 +

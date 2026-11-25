@@ -9,7 +9,9 @@ from strix.jitera.tools.payload_oracle import evaluate
 
 
 def test_xss_fires_on_unescaped_reflection() -> None:
-    out = evaluate("xss", "<script>xssCanary123</script>", "<div><script>xssCanary123</script></div>")
+    out = evaluate(
+        "xss", "<script>xssCanary123</script>", "<div><script>xssCanary123</script></div>"
+    )
     assert out["success"] and out["fired"] is True
     assert out["reflected"] is True
     assert out["encoded_only"] is False

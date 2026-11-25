@@ -12,11 +12,13 @@ def test_java_base64() -> None:
     assert "java" in fmts
     hit = next(h for h in out["serialized_values"] if h["format"] == "java")
     assert hit["location"] == "cookie:session"
-    assert "payload_hint" in hit and hit["payload_hint"]
+    assert hit.get("payload_hint")
 
 
 def test_php_object() -> None:
-    out = scan_serialized([{"location": "body:data", "value": 'O:4:"User":1:{s:4:"name";s:3:"bob";}'}])
+    out = scan_serialized(
+        [{"location": "body:data", "value": 'O:4:"User":1:{s:4:"name";s:3:"bob";}'}]
+    )
     assert any(h["format"] == "php" for h in out["serialized_values"])
 
 

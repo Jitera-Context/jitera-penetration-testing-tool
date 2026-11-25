@@ -13,10 +13,7 @@ def test_redact_hides_middle() -> None:
 
 
 def test_detects_aws_and_google_keys() -> None:
-    content = (
-        "const a='AKIAABCDEFGHIJKLMNOP';"
-        "const g='AIzaSyA1234567890abcdefghijklmnopqrstuv';"
-    )
+    content = "const a='AKIAABCDEFGHIJKLMNOP';const g='AIzaSyA1234567890abcdefghijklmnopqrstuv';"
     out = scan_exposure([{"url": "https://app/main.js", "content": content}])
     types = {s["type"] for s in out["secrets"]}
     assert "aws_access_key_id" in types
@@ -27,9 +24,7 @@ def test_detects_aws_and_google_keys() -> None:
 
 
 def test_generic_assignment_is_low_confidence() -> None:
-    out = scan_exposure(
-        [{"url": "https://app/x.js", "content": "var password = 'hunter2pass'"}]
-    )
+    out = scan_exposure([{"url": "https://app/x.js", "content": "var password = 'hunter2pass'"}])
     gen = [s for s in out["secrets"] if s["type"] == "generic_credential_assignment"]
     assert gen and gen[0]["confidence"] == "low"
 
@@ -76,7 +71,9 @@ def test_sensitive_comments() -> None:
 
 
 def test_clean_asset_is_quiet() -> None:
-    out = scan_exposure([{"url": "https://app/clean.js", "content": "function add(a,b){return a+b}"}])
+    out = scan_exposure(
+        [{"url": "https://app/clean.js", "content": "function add(a,b){return a+b}"}]
+    )
     assert out["success"] is True
     assert out["secrets"] == []
     assert out["endpoints"] == []
