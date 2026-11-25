@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_coverage_skills_autoload.py b/tests/jitera/test_coverage_skills_autoload.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..0273bf605d9c6b6c7528c4601ca94cd7c70a06e3
+index 0000000000000000000000000000000000000000..538b112eb2408bfda8feb5530a6f46af4446b17b
 --- /dev/null
 +++ b/tests/jitera/test_coverage_skills_autoload.py
-@@ -0,0 +1,47 @@
+@@ -0,0 +1,46 @@
 +"""The Jitera coverage skills must auto-load on thorough scans.
 +
 +Scans exercise the hard vuln classes but never call the Jitera tools on their
@@ -20,7 +20,6 @@ index 0000000000000000000000000000000000000000..0273bf605d9c6b6c7528c4601ca94cd7
 +from pathlib import Path
 +
 +from strix.agents.prompt import _resolve_skills
-+from strix.skills import load_skills, register_skill_dir
 +
 +
 +_COVERAGE = {
@@ -46,12 +45,12 @@ index 0000000000000000000000000000000000000000..0273bf605d9c6b6c7528c4601ca94cd7
 +    assert not (_COVERAGE & skills)
 +
 +
-+def test_coverage_skill_files_exist_and_load() -> None:
-+    # Register the Jitera skill dir the way bootstrap does, then confirm every
-+    # auto-loaded coverage skill resolves to a real file (catches a typo'd path).
-+    register_skill_dir(Path("strix/jitera/skills").resolve())
-+    loaded = load_skills(sorted(_COVERAGE))
-+    # var name is the last path segment
++def test_coverage_skill_files_exist() -> None:
++    # Every auto-loaded coverage skill must resolve to a real, non-empty file
++    # (catches a typo'd path). Checked directly on disk so the test does not
++    # mutate the global skill search dirs (which would pollute other tests).
++    base = Path(__file__).resolve().parents[2] / "strix" / "jitera" / "skills"
 +    for name in _COVERAGE:
-+        var = name.split("/")[-1]
-+        assert var in loaded and loaded[var].strip(), f"coverage skill failed to load: {name}"
++        path = base / f"{name}.md"
++        assert path.is_file(), f"coverage skill file missing: {path}"
++        assert path.read_text(encoding="utf-8").strip(), f"coverage skill empty: {path}"
