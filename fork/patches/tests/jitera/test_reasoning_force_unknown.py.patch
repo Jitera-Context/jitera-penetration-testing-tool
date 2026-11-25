@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/tests/jitera/test_reasoning_force_unknown.py b/tests/jitera/test_reasoning_force_unknown.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..692470a1fc7c1dea2e3f65dc35ad73c430fecf56
+index 0000000000000000000000000000000000000000..4952565e4997f55c9aaef6c2769e8599ad5d743e
 --- /dev/null
 +++ b/tests/jitera/test_reasoning_force_unknown.py
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,59 @@
 +"""The configured reasoning effort must reach catalog-unknown gateway models.
 +
 +Upstream only attaches an effort to models its catalog knows support reasoning,
@@ -18,7 +18,8 @@ index 0000000000000000000000000000000000000000..692470a1fc7c1dea2e3f65dc35ad73c4
 +
 +from __future__ import annotations
 +
-+import strix.jitera.reasoning as reasoning
++from strix.config.settings import LlmSettings
++from strix.jitera import reasoning
 +from strix.jitera.bootstrap import ENV_DEFAULTS
 +
 +
@@ -33,7 +34,9 @@ index 0000000000000000000000000000000000000000..692470a1fc7c1dea2e3f65dc35ad73c4
 +
 +def test_known_model_not_forced(monkeypatch) -> None:
 +    # catalog knows the model -> leave upstream gating untouched
-+    monkeypatch.setattr("strix.config.models._catalog_entry", lambda _n: {"supports_reasoning": False})
++    monkeypatch.setattr(
++        "strix.config.models._catalog_entry", lambda _n: {"supports_reasoning": False}
++    )
 +    assert reasoning.force_for_unknown_model("gpt-known", "high", enabled=True) is False
 +
 +
@@ -62,7 +65,5 @@ index 0000000000000000000000000000000000000000..692470a1fc7c1dea2e3f65dc35ad73c4
 +
 +def test_upstream_setting_default_is_off() -> None:
 +    # the setting itself defaults off; only the fork's ENV_DEFAULTS turns it on
-+    from strix.config.settings import LlmSettings
-+
 +    fields = LlmSettings.model_fields
 +    assert fields["force_reasoning_for_unknown"].default is False

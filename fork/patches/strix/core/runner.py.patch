@@ -3,7 +3,7 @@ Why: Logs said 'Strix scan ... done'. Also: the --reasoning-effort run parameter
 Upstream-PR: none
 
 diff --git a/strix/core/runner.py b/strix/core/runner.py
-index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..ee1ec47449103d6c9c11518b3936da24918a9873 100644
+index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..fa8ac29ff5cd68d76122157974068fe2f11dcd1b 100644
 --- a/strix/core/runner.py
 +++ b/strix/core/runner.py
 @@ -50,6 +50,7 @@ from strix.core.inputs import (
@@ -35,7 +35,7 @@ index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..ee1ec47449103d6c9c11518b3936da24
          scan_id,
          image,
          max_turns,
-@@ -422,8 +427,31 @@ async def run_strix_scan(
+@@ -422,8 +427,33 @@ async def run_strix_scan(
          is_diff_scoped = bool(isinstance(diff_scope, dict) and diff_scope.get("active"))
          skills = list(scan_config.get("skills") or [])
          root_task = build_root_task(scan_config)
@@ -49,7 +49,9 @@ index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..ee1ec47449103d6c9c11518b3936da24
 +        # configured effort to a catalog-unknown model (our gateway alias) rather
 +        # than let upstream's gate silently drop it. See strix/jitera/reasoning.py.
 +        if not force_reasoning and jitera_reasoning.force_for_unknown_model(
-+            resolved_model, reasoning_effort, enabled=settings.llm.force_reasoning_for_unknown
++            resolved_model,
++            reasoning_effort,
++            enabled=getattr(settings.llm, "force_reasoning_for_unknown", False),
 +        ):
 +            force_reasoning = True
 +        if force_reasoning:
@@ -68,7 +70,7 @@ index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..ee1ec47449103d6c9c11518b3936da24
              model_name=resolved_model,
              force_required_tool_choice=settings.llm.force_required_tool_choice,
              parallel_tool_calls=settings.llm.parallel_tool_calls,
-@@ -431,6 +459,7 @@ async def run_strix_scan(
+@@ -431,6 +461,7 @@ async def run_strix_scan(
              prompt_cache=settings.llm.prompt_cache,
              extra_headers=settings.llm.extra_headers,
              extra_body=settings.llm.extra_body,
@@ -76,7 +78,7 @@ index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..ee1ec47449103d6c9c11518b3936da24
          )
          run_config = RunConfig(
              model=resolved_model,
-@@ -687,9 +716,10 @@ async def run_strix_scan(
+@@ -687,9 +718,10 @@ async def run_strix_scan(
      except RateLimitError as exc:
          logger.warning(
              "Scan %s stopped: persistent rate limit from the LLM provider (%s). "
@@ -88,7 +90,7 @@ index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..ee1ec47449103d6c9c11518b3936da24
              scan_id,
          )
          _note_exit_reason("rate_limited")
-@@ -704,7 +734,7 @@ async def run_strix_scan(
+@@ -704,7 +736,7 @@ async def run_strix_scan(
                  await coordinator.set_status(root_id, "running")
          raise
      except BaseException:
@@ -97,7 +99,7 @@ index 42d2c3e5eeb50b61808622cb8467eb2b50efa40b..ee1ec47449103d6c9c11518b3936da24
          if root_id is not None:
              with contextlib.suppress(Exception):
                  await coordinator.set_status(root_id, "failed")
-@@ -727,5 +757,5 @@ async def run_strix_scan(
+@@ -727,5 +759,5 @@ async def run_strix_scan(
          if cleanup_on_exit:
              logger.info("Tearing down sandbox session for scan %s", scan_id)
              await session_manager.cleanup(scan_id)

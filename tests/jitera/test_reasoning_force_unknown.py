@@ -8,7 +8,8 @@ the configured effort to catalog-unknown models by default
 
 from __future__ import annotations
 
-import strix.jitera.reasoning as reasoning
+from strix.config.settings import LlmSettings
+from strix.jitera import reasoning
 from strix.jitera.bootstrap import ENV_DEFAULTS
 
 
@@ -23,7 +24,9 @@ def test_unknown_model_forces_configured_effort(monkeypatch) -> None:
 
 def test_known_model_not_forced(monkeypatch) -> None:
     # catalog knows the model -> leave upstream gating untouched
-    monkeypatch.setattr("strix.config.models._catalog_entry", lambda _n: {"supports_reasoning": False})
+    monkeypatch.setattr(
+        "strix.config.models._catalog_entry", lambda _n: {"supports_reasoning": False}
+    )
     assert reasoning.force_for_unknown_model("gpt-known", "high", enabled=True) is False
 
 
@@ -52,7 +55,5 @@ def test_fork_enables_it_by_default() -> None:
 
 def test_upstream_setting_default_is_off() -> None:
     # the setting itself defaults off; only the fork's ENV_DEFAULTS turns it on
-    from strix.config.settings import LlmSettings
-
     fields = LlmSettings.model_fields
     assert fields["force_reasoning_for_unknown"].default is False

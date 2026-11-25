@@ -4,7 +4,7 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/reasoning.py b/strix/jitera/reasoning.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..e8979850ee5d6f6c477f4e9041dbd2ac162f12f9
+index 0000000000000000000000000000000000000000..79a55f292a9143555a9f1563acbae7490af20ad9
 --- /dev/null
 +++ b/strix/jitera/reasoning.py
 @@ -0,0 +1,92 @@
@@ -95,7 +95,7 @@ index 0000000000000000000000000000000000000000..e8979850ee5d6f6c477f4e9041dbd2ac
 +    if level in ("", "none") or level not in LEVELS:
 +        return False
 +    try:
-+        from strix.config.models import _catalog_entry
++        from strix.config.models import _catalog_entry  # noqa: PLC0415  (lazy: avoid import cycle)
 +
 +        return _catalog_entry(model_name) is None
 +    except Exception:  # noqa: BLE001 - never let this gate crash a run

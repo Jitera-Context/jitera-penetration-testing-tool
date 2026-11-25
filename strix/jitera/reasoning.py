@@ -85,7 +85,7 @@ def force_for_unknown_model(model_name: str, effort: ReasoningEffort, *, enabled
     if level in ("", "none") or level not in LEVELS:
         return False
     try:
-        from strix.config.models import _catalog_entry
+        from strix.config.models import _catalog_entry  # noqa: PLC0415  (lazy: avoid import cycle)
 
         return _catalog_entry(model_name) is None
     except Exception:  # noqa: BLE001 - never let this gate crash a run
