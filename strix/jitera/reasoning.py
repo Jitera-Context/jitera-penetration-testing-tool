@@ -60,3 +60,33 @@ def resolve(chosen: str | None, configured: ReasoningEffort) -> tuple[ReasoningE
         )
         return configured, False
     return level, True  # type: ignore[return-value]
+
+
+def force_for_unknown_model(model_name: str, effort: ReasoningEffort, *, enabled: bool) -> bool:
+    """Whether to force-send the configured ``effort`` to a catalog-unknown model.
+
+    The configured effort (default ``high``) is otherwise silently dropped for a
+    model LiteLLM's catalog has no entry for — our gateway aliases are exactly
+    that — because upstream only attaches an effort to models it knows support
+    reasoning. Confirmed on the GLM gateway: with no ``--reasoning-effort`` flag
+    the model ran with no effort and scans hung in reconnaissance; forcing the
+    configured ``high`` made recon converge.
+
+    This returns ``True`` only when ``enabled`` (the
+    ``STRIX_FORCE_REASONING_FOR_UNKNOWN`` setting), the effort is a real level,
+    and the model is **absent** from the catalog. A model the catalog *does*
+    know — including one it knows does not support reasoning — is left to
+    upstream's gating untouched, so this never sends an effort to a model known
+    to reject it.
+    """
+    if not enabled:
+        return False
+    level = str(effort).strip().lower()
+    if level in ("", "none") or level not in LEVELS:
+        return False
+    try:
+        from strix.config.models import _catalog_entry  # noqa: PLC0415  (lazy: avoid import cycle)
+
+        return _catalog_entry(model_name) is None
+    except Exception:  # noqa: BLE001 - never let this gate crash a run
+        return False

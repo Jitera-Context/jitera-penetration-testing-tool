@@ -62,6 +62,9 @@ class LlmSettings(BaseSettings):
         repr=False,
     )
     reasoning_effort: ReasoningEffort = Field(default="high", alias="STRIX_REASONING_EFFORT")
+    force_reasoning_for_unknown: bool = Field(
+        default=False, alias="STRIX_FORCE_REASONING_FOR_UNKNOWN"
+    )
     input_cost_per_mtok: float | None = Field(
         default=None, ge=0, allow_inf_nan=False, alias="STRIX_LLM_INPUT_COST_PER_MTOK"
     )

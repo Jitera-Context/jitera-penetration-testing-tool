@@ -4,10 +4,10 @@ Upstream-PR: none
 
 diff --git a/strix/jitera/bootstrap.py b/strix/jitera/bootstrap.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..13bc0ebebca731bc2a6e8c8f4b46984d2904d1af
+index 0000000000000000000000000000000000000000..c3dc9be2dbb96b15a09f4f0b79ed29b297033a44
 --- /dev/null
 +++ b/strix/jitera/bootstrap.py
-@@ -0,0 +1,163 @@
+@@ -0,0 +1,167 @@
 +"""Entry point of the ``jitera-pentest`` command.
 +
 +Order matters: activate the Jitera brand and environment defaults first, then
@@ -41,6 +41,10 @@ index 0000000000000000000000000000000000000000..13bc0ebebca731bc2a6e8c8f4b46984d
 +ENV_DEFAULTS: dict[str, str] = {
 +    "STRIX_TELEMETRY": "0",  # no usage data to the upstream vendor
 +    "STRIX_NO_UPDATE_CHECK": "1",  # until our own release channel exists
++    # Our gateway models are opaque aliases LiteLLM's catalog does not know, so
++    # the configured reasoning effort (default "high") was silently dropped and
++    # scans hung in reconnaissance. Send it to catalog-unknown models by default.
++    "STRIX_FORCE_REASONING_FOR_UNKNOWN": "true",
 +}
 +
 +# Upstream features that lead to the upstream vendor's services.

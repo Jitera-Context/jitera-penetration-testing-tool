@@ -433,6 +433,15 @@ async def run_strix_scan(
         reasoning_effort, force_reasoning = jitera_reasoning.resolve(
             scan_config.get("reasoning_effort"), settings.llm.reasoning_effort
         )
+        # Jitera fork: without an explicit --reasoning-effort, still send the
+        # configured effort to a catalog-unknown model (our gateway alias) rather
+        # than let upstream's gate silently drop it. See strix/jitera/reasoning.py.
+        if not force_reasoning and jitera_reasoning.force_for_unknown_model(
+            resolved_model,
+            reasoning_effort,
+            enabled=getattr(settings.llm, "force_reasoning_for_unknown", False),
+        ):
+            force_reasoning = True
         if force_reasoning:
             # Force-sending bypasses the catalog gate, so a model that does not
             # accept this level fails every turn. Say so once, up front, rather

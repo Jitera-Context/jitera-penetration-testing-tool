@@ -3,7 +3,7 @@ Why: A self-hosted model that reads one long prompt at a time stalls 10-20 agent
 Upstream-PR: none
 
 diff --git a/strix/config/settings.py b/strix/config/settings.py
-index f7068c96f0ef7b0919bd522e2475cbe3c34614c6..816421a111e1fed5b8374dedc3212a2f07c0fa85 100644
+index f7068c96f0ef7b0919bd522e2475cbe3c34614c6..6c60e2a0cd8b93073be1c5ba4b061ff5f785b038 100644
 --- a/strix/config/settings.py
 +++ b/strix/config/settings.py
 @@ -2,6 +2,7 @@
@@ -14,7 +14,17 @@ index f7068c96f0ef7b0919bd522e2475cbe3c34614c6..816421a111e1fed5b8374dedc3212a2f
  from typing import Any, Literal
  
  from pydantic import AliasChoices, Field, field_validator
-@@ -106,12 +107,31 @@ class LlmSettings(BaseSettings):
+@@ -61,6 +62,9 @@ class LlmSettings(BaseSettings):
+         repr=False,
+     )
+     reasoning_effort: ReasoningEffort = Field(default="high", alias="STRIX_REASONING_EFFORT")
++    force_reasoning_for_unknown: bool = Field(
++        default=False, alias="STRIX_FORCE_REASONING_FOR_UNKNOWN"
++    )
+     input_cost_per_mtok: float | None = Field(
+         default=None, ge=0, allow_inf_nan=False, alias="STRIX_LLM_INPUT_COST_PER_MTOK"
+     )
+@@ -106,12 +110,31 @@ class LlmSettings(BaseSettings):
          ge=0,
          alias="LLM_MAX_TOOL_CALLS_PER_TURN",
      )

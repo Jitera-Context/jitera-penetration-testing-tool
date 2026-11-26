@@ -31,6 +31,10 @@ SKILLS_DIR = Path(__file__).resolve().parent / "skills"
 ENV_DEFAULTS: dict[str, str] = {
     "STRIX_TELEMETRY": "0",  # no usage data to the upstream vendor
     "STRIX_NO_UPDATE_CHECK": "1",  # until our own release channel exists
+    # Our gateway models are opaque aliases LiteLLM's catalog does not know, so
+    # the configured reasoning effort (default "high") was silently dropped and
+    # scans hung in reconnaissance. Send it to catalog-unknown models by default.
+    "STRIX_FORCE_REASONING_FOR_UNKNOWN": "true",
 }
 
 # Upstream features that lead to the upstream vendor's services.
