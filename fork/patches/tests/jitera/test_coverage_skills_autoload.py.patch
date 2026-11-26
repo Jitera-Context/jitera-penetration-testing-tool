@@ -1,0 +1,57 @@
+Title: Add tests/jitera/test_coverage_skills_autoload.py
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/tests/jitera/test_coverage_skills_autoload.py b/tests/jitera/test_coverage_skills_autoload.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..26aab649a158618aeafa6056813875a3fbedd4c4
+--- /dev/null
++++ b/tests/jitera/test_coverage_skills_autoload.py
+@@ -0,0 +1,47 @@
++"""The Jitera coverage skills must auto-load on thorough scans.
++
++Scans exercise the hard vuln classes but never call the Jitera tools on their
++own, so the skills that wire the tools in belong in the always-on set that
++``_resolve_skills`` builds -- not left to on-demand ``load_skill``.
++"""
++
++from __future__ import annotations
++
++from pathlib import Path
++
++from strix.agents.prompt import _resolve_skills
++
++
++_COVERAGE = {
++    "vulnerabilities/vulnerable_components_blackbox",
++    "vulnerabilities/static_exposure_recon",
++    "vulnerabilities/payload_confirmation",
++    "vulnerabilities/deserialization_surface",
++    "analysis/filing_discipline",
++}
++
++
++def test_deep_scan_autoloads_coverage_skills() -> None:
++    skills = set(_resolve_skills(requested=None, scan_mode="deep", is_root=True))
++    assert skills >= _COVERAGE
++
++
++def test_standard_scan_autoloads_coverage_skills() -> None:
++    skills = set(_resolve_skills(requested=None, scan_mode="standard", is_root=False))
++    assert skills >= _COVERAGE
++
++
++def test_quick_scan_stays_lean() -> None:
++    skills = set(_resolve_skills(requested=None, scan_mode="quick"))
++    assert not (_COVERAGE & skills)
++
++
++def test_coverage_skill_files_exist() -> None:
++    # Every auto-loaded coverage skill must resolve to a real, non-empty file
++    # (catches a typo'd path). Checked directly on disk so the test does not
++    # mutate the global skill search dirs (which would pollute other tests).
++    base = Path(__file__).resolve().parents[2] / "strix" / "jitera" / "skills"
++    for name in _COVERAGE:
++        path = base / f"{name}.md"
++        assert path.is_file(), f"coverage skill file missing: {path}"
++        assert path.read_text(encoding="utf-8").strip(), f"coverage skill empty: {path}"

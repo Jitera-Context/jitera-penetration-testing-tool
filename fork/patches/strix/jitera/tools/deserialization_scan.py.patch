@@ -1,0 +1,170 @@
+Title: Add strix/jitera/tools/deserialization_scan.py
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/strix/jitera/tools/deserialization_scan.py b/strix/jitera/tools/deserialization_scan.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..00f6118cb4f1fa750d4a839e7866a6cdad95e85a
+--- /dev/null
++++ b/strix/jitera/tools/deserialization_scan.py
+@@ -0,0 +1,160 @@
++"""``detect_serialized_objects`` -- find insecure-deserialization attack surface.
++
++Insecure deserialization is almost never attempted in scans because the agent
++has to first *recognise* that a value is a serialized object (a base64 Java
++stream, a PHP ``O:`` string, a node-serialize function blob, a pickle, a .NET
++``AAEAAAD`` blob) and then know the format-specific payload that proves it. This
++tool does the recognition deterministically: give it the values a request/
++response carries (body, cookies, params, headers) and it flags every serialized
++blob with its format, where it was found, and the known gadget/payload shape to
++try next. The agent then sends the payload with its own tools and confirms with
++an out-of-band or timing signal.
++"""
++
++from __future__ import annotations
++
++import json
++import re
++from typing import Any
++
++from agents import function_tool
++
++
++# format -> (detector, how to recognise it, the payload shape to try)
++_SIGNATURES: list[dict[str, Any]] = [
++    {
++        "format": "java",
++        "pattern": re.compile(r"\brO0AB[A-Za-z0-9+/=]{8,}"),
++        "marker": "base64 of Java serialization magic 0xACED0005 (rO0AB...)",
++        "payload_hint": (
++            "ysoserial gadget chain (CommonsCollections/URLDNS) base64; "
++            "confirm with a DNS/HTTP OOB callback."
++        ),
++    },
++    {
++        "format": "java_hex",
++        "pattern": re.compile(r"\xac\xed\x00\x05"),
++        "marker": "raw Java serialization magic bytes 0xACED0005",
++        "payload_hint": "ysoserial gadget chain raw bytes; confirm with an OOB callback.",
++    },
++    {
++        "format": "php",
++        "pattern": re.compile(r"""\bO:\d+:"[^"]+":\d+:\{"""),
++        "marker": 'PHP serialized object (O:<len>:"Class":<n>:{...})',
++        "payload_hint": (
++            "craft a PHP object with a POP gadget (__wakeup/__destruct); "
++            "confirm via its side effect."
++        ),
++    },
++    {
++        "format": "php_array",
++        "pattern": re.compile(r"\ba:\d+:\{[si]:\d+"),
++        "marker": "PHP serialized array (a:<n>:{...})",
++        "payload_hint": (
++            "if user-controlled, swap in a serialized object (O:...) to reach a POP gadget."
++        ),
++    },
++    {
++        "format": "node_serialize",
++        "pattern": re.compile(r"_\$\$ND_FUNC\$\$_"),
++        "marker": "node-serialize function marker (_$$ND_FUNC$$_)",
++        "payload_hint": (
++            "send {\"rce\":\"_$$ND_FUNC$$_function(){require('child_process').exec('<oob>')}()\"} "
++            "-- immediately-invoked form triggers on unserialize(); confirm with an OOB callback."
++        ),
++    },
++    {
++        "format": "dotnet",
++        "pattern": re.compile(r"\bAAEAAAD/{0,2}[A-Za-z0-9+/=]{16,}"),
++        "marker": "base64 .NET BinaryFormatter stream (AAEAAAD...)",
++        "payload_hint": "ysoserial.net TypeConfuseDelegate gadget; confirm with an OOB callback.",
++    },
++    {
++        "format": "python_pickle",
++        "pattern": re.compile(r"\bgA[A-Za-z0-9+/=]{10,}|\x80\x04\x95|\x80\x03"),
++        "marker": "Python pickle opcodes (protocol 2-4 header, or base64 'gA...')",
++        "payload_hint": (
++            "pickle with __reduce__ running os.system('<oob>'); confirm with an OOB callback."
++        ),
++    },
++    {
++        "format": "ruby_marshal",
++        "pattern": re.compile(r"\x04\x08|\bBAh[A-Za-z0-9+/=]{8,}"),
++        "marker": "Ruby Marshal header (0x0408, or base64 'BAh...')",
++        "payload_hint": (
++            "Marshal gadget chain (e.g. Gem/DeprecatedInstanceVariableProxy); "
++            "confirm via side effect."
++        ),
++    },
++]
++
++
++def scan_serialized(fields: list[Any]) -> dict[str, Any]:
++    """Pure logic of :func:`detect_serialized_objects`.
++
++    ``fields`` is ``[{"location": "cookie:session", "value": "..."}, ...]`` --
++    one entry per value the request/response carries that could hold a
++    serialized object.
++    """
++    if not isinstance(fields, list) or not fields:
++        return {"success": False, "error": "fields must be a non-empty list of {location, value}"}
++
++    hits: list[dict[str, Any]] = []
++    seen: set[tuple[str, str]] = set()
++    for item in fields:
++        if not isinstance(item, dict):
++            continue
++        loc = str(item.get("location", "") or "")
++        val = str(item.get("value", "") or "")
++        if not val:
++            continue
++        for sig in _SIGNATURES:
++            if sig["pattern"].search(val):
++                key = (loc, sig["format"])
++                if key in seen:
++                    continue
++                seen.add(key)
++                hits.append(
++                    {
++                        "location": loc,
++                        "format": sig["format"],
++                        "why": sig["marker"],
++                        "payload_hint": sig["payload_hint"],
++                    }
++                )
++
++    return {
++        "success": True,
++        "serialized_values": hits,
++        "note": (
++            "Each hit is attack surface, not a confirmed finding. If the value is "
++            "user-controllable, send the format's payload_hint with your own tools "
++            "and confirm impact with an out-of-band callback or a timing delay "
++            "before filing an insecure-deserialization report. No hits means these "
++            "signatures did not match, not that deserialization is absent."
++        ),
++    }
++
++
++@function_tool(timeout=20, strict_mode=False)
++async def detect_serialized_objects(fields: list[dict[str, str]]) -> str:
++    """Spot serialized-object blobs that are insecure-deserialization surface.
++
++    Deserialization bugs start by noticing a value is a serialized object.
++    Feed this the values a request or response carries -- cookies, body
++    fields, query/path params, custom headers, hidden form inputs -- as
++    ``[{"location": "cookie:session", "value": "<raw value>"}, ...]``. It
++    flags each blob it recognises (Java, PHP, node-serialize, .NET, Python
++    pickle, Ruby Marshal) with the ``format``, why it matched, and the
++    ``payload_hint`` to try next.
++
++    A hit is attack surface, not a finding: if the value is user-controlled,
++    send the hinted payload with your HTTP tools and confirm with an
++    out-of-band callback or a timing delay before filing. No hits means the
++    signatures did not match, not that the class is absent.
++
++    Args:
++        fields: ``[{"location": ..., "value": ...}, ...]`` -- the values to
++            inspect, each tagged with where it came from.
++    """
++    return json.dumps(scan_serialized(fields))

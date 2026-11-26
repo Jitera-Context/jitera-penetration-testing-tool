@@ -1,0 +1,39 @@
+---
+name: deserialization-surface
+description: Find insecure-deserialization attack surface with detect_serialized_objects -- recognise serialized blobs in cookies/body/params and get the per-format payload to try
+---
+
+# Insecure deserialization (finding the surface)
+
+This class is almost never attempted because step one -- noticing a value is a
+serialized object -- is easy to miss. Do it with `detect_serialized_objects`
+instead of by eye.
+
+## Procedure
+
+1. **Collect candidate values.** For each request/response of interest, gather
+   every value that could carry an object: cookies, body fields (JSON values,
+   form fields), query and path params, custom headers, hidden inputs. Tag each
+   with where it came from.
+2. **Call `detect_serialized_objects`** with
+   `[{"location": "cookie:session", "value": "..."}, ...]`. It flags Java
+   (`rO0AB` / `0xACED`), PHP (`O:`/`a:`), node-serialize (`_$$ND_FUNC$$_`),
+   .NET (`AAEAAAD`), Python pickle and Ruby Marshal blobs, each with a
+   `payload_hint`.
+3. **Confirm before filing.** A hit is surface, not proof:
+   - Check the value is actually **user-controllable** (you can change it and the
+     server deserializes your version).
+   - Send the format's `payload_hint` with your HTTP tools and prove impact with
+     an **out-of-band callback** (DNS/HTTP to a host you control) or a **timing
+     delay** -- deserialization RCE is usually blind.
+   - File with `create_vulnerability_report`, PoC = the request + the OOB/timing
+     evidence.
+4. **Record coverage** for this class with `record_coverage` even if nothing is
+   controllable, so the run shows the surface was assessed.
+
+## Notes
+
+- node-serialize: the immediately-invoked `function(){...}()` form fires on
+  `unserialize()`; a non-invoked function does not.
+- No hits does not mean the app is safe -- it means these signatures did not
+  match the values you passed.

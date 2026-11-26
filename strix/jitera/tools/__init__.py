@@ -25,4 +25,16 @@ if TYPE_CHECKING:
 
 def get_tools() -> list[Tool]:
     """Return the tools to register. Import tool modules here, not at the top."""
-    return []
+    # Imported lazily (not at module top) so the agents SDK loads only when a
+    # scan actually builds its tools; the noqa keeps that deliberate choice.
+    from strix.jitera.tools.component_scan import detect_vulnerable_components  # noqa: PLC0415
+    from strix.jitera.tools.deserialization_scan import detect_serialized_objects  # noqa: PLC0415
+    from strix.jitera.tools.exposure_scan import scan_static_exposure  # noqa: PLC0415
+    from strix.jitera.tools.payload_oracle import check_payload_fired  # noqa: PLC0415
+
+    return [
+        detect_vulnerable_components,
+        scan_static_exposure,
+        check_payload_fired,
+        detect_serialized_objects,
+    ]

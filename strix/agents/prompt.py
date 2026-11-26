@@ -54,6 +54,19 @@ def _resolve_skills(
     ordered.append(f"scan_modes/{scan_mode}")
     if is_diff_scoped:
         ordered.append("scan_modes/diff")
+    # Jitera fork: thorough runs always load the coverage skills that wire in the
+    # Jitera tools (component SCA, static-exposure recon, payload oracle,
+    # deserialization surface). Scans exercise these classes but never reach for
+    # the tools on their own, so the guidance has to be in the always-on set, not
+    # left to load_skill. Thorough modes only, to keep quick/diff prompts lean.
+    if scan_mode in ("deep", "standard"):
+        ordered.append("vulnerabilities/vulnerable_components_blackbox")
+        ordered.append("vulnerabilities/static_exposure_recon")
+        ordered.append("vulnerabilities/payload_confirmation")
+        ordered.append("vulnerabilities/deserialization_surface")
+        # File-on-confirm discipline: scans lose findings when validators confirm
+        # but never file, or the run is cut off with confirmed issues unreported.
+        ordered.append("analysis/filing_discipline")
     ordered.append("tooling/agent_browser")
     ordered.append("tooling/python")
     ordered.append("analysis/counterevidence")
