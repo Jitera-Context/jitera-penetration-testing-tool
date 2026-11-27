@@ -1,0 +1,154 @@
+"""Deep-mode closure discipline — keep a deep scan from finishing too soon.
+
+Observed on the gateway models: a deep scan ended ~30% under its wall-clock
+budget (85 min of a 120 min cap, ~20M tokens unspent) because the root agent
+reconciled its coverage board, saw every risk class accounted for, and called
+``finish_scan`` — *even with gaps still flagged "unexamined"*. Upstream Strix
+has no such board, never self-declares "complete", and rides the clock, so it
+kept probing and solved more. The fork's own closure discipline (the coverage
+board + ``filing_discipline`` skill) had become an early-exit signal.
+
+This guard turns ``finish_scan`` into a *guarded* action in deep mode. It
+refuses a finish that would leave flagged gaps or unresolved surfaces behind,
+and forces a minimum number of deepening rounds, so a reconciled board means
+"go deeper", not "stop". It never blocks forever: a real budget/reserve stop,
+or a hard round cap, always lets the final report get written.
+
+Scope: deep mode only. ``standard``/``quick`` are meant to converge quickly;
+``deep`` is the "exhaustive, run as long as it takes" mode the guard protects.
+"""
+
+from __future__ import annotations
+
+import threading
+from typing import Any
+
+from strix.jitera import brand
+
+
+_DEEP = "deep"
+
+# Turn back at least this many finish attempts even when the board looks clean,
+# so a deep scan keeps probing past the first tidy state instead of stopping at
+# it. Each turn-back drives another hunter wave.
+MIN_DEEPENING_ROUNDS = 2
+
+# Never turn back more than this. The customer-facing report must always get
+# written, and the model must not livelock calling finish_scan.
+MAX_BLOCKED_ROUNDS = 6
+
+
+_counts_lock = threading.Lock()
+_blocked_rounds: dict[str, int] = {}
+
+
+def reset_finish_guard(run_id: str) -> None:
+    """Forget a run's turn-back count (new scan, or test isolation)."""
+    with _counts_lock:
+        _blocked_rounds.pop(run_id, None)
+
+
+def _bump(run_id: str) -> int:
+    with _counts_lock:
+        count = _blocked_rounds.get(run_id, 0) + 1
+        _blocked_rounds[run_id] = count
+        return count
+
+
+def _gap_details(coverage_summary: dict[str, Any]) -> list[str]:
+    return [str(g) for g in (coverage_summary.get("coverage_gaps") or [])]
+
+
+def _unresolved_surfaces(coverage_summary: dict[str, Any]) -> list[str]:
+    out: list[str] = []
+    for surface in coverage_summary.get("unresolved_surfaces") or []:
+        if isinstance(surface, dict):
+            name = surface.get("surface") or surface.get("risk_area") or ""
+            out.append(str(name))
+        else:
+            out.append(str(surface))
+    return out
+
+
+def premature_finish_block(
+    *,
+    scan_mode: str,
+    coverage_summary: dict[str, Any],
+    run_id: str,
+    budget_exhausted: bool,
+) -> dict[str, Any] | None:
+    """Decide whether a deep scan's ``finish_scan`` is premature.
+
+    Returns ``None`` to allow the finish. Returns a result dict (with
+    ``scan_completed`` False) to refuse it: the caller returns that verbatim as
+    the ``finish_scan`` result, so the agent loop keeps running and the root is
+    told to dispatch more work instead of ending the scan.
+
+    A finish is allowed when the scan is not deep, when the budget/reserve is
+    genuinely spent, once a clean board has survived ``MIN_DEEPENING_ROUNDS``
+    turn-backs, or after ``MAX_BLOCKED_ROUNDS`` (the safety valve). It is
+    refused while any risk class is flagged unexamined, while any surface is
+    left ``needs_follow_up``, or until the minimum deepening rounds are met.
+
+    Only the Jitera profile is guarded. Upstream Strix behaviour (and upstream's
+    own tests, which run under the UPSTREAM profile) is left exactly as it was.
+    """
+    if brand.current() is not brand.JITERA:
+        return None
+    if (scan_mode or _DEEP).strip().lower() != _DEEP:
+        return None
+    if budget_exhausted:
+        # Real budget/reserve stop: let the report out, don't keep probing.
+        return None
+
+    gaps = _gap_details(coverage_summary)
+    unresolved = _unresolved_surfaces(coverage_summary)
+    board_clean = not gaps and not unresolved
+
+    rounds = _bump(run_id)
+    if rounds > MAX_BLOCKED_ROUNDS:
+        return None  # safety valve: never livelock; always let the report out
+    if board_clean and rounds > MIN_DEEPENING_ROUNDS:
+        return None  # deepened enough and nothing flagged -> allow finish
+
+    reasons: list[str] = []
+    if gaps:
+        reasons.append(
+            f"{len(gaps)} risk class(es) are flagged UNEXAMINED and must not be "
+            "published as clean: " + "; ".join(gaps)
+        )
+    if unresolved:
+        reasons.append(
+            f"{len(unresolved)} surface(s) are still needs_follow_up: "
+            + ", ".join(s for s in unresolved if s)
+        )
+    if board_clean:
+        reasons.append(
+            "the coverage board is reconciled, but this is a DEEP scan with budget "
+            "remaining — a tidy board is not a reason to stop"
+        )
+
+    directive = (
+        "finish_scan REFUSED (deep-mode guard): a deep scan must not stop while "
+        "work or budget remains. Do NOT call finish_scan again yet. Dispatch "
+        "another wave of hunters and go deeper:\n"
+        "- Close every flagged gap and needs_follow_up surface: examine it, or "
+        "record_coverage with a real outcome and evidence.\n"
+        "- Re-probe surfaces you closed as no_issue_found using new techniques, "
+        "variant payloads, encodings, and auth/role contexts.\n"
+        "- Chain confirmed findings into higher-impact, end-to-end attacks.\n"
+        "- Enumerate and exercise inputs, roles, and flows you have not tried.\n"
+        "Keep filing on confirm so nothing is lost. Only call finish_scan again "
+        "once the gaps are closed and you have genuinely exhausted new avenues "
+        "for the remaining budget."
+    )
+    return {
+        "success": False,
+        "scan_completed": False,
+        "deep_mode_guard": True,
+        "blocked_round": rounds,
+        "error": "Scan is not finished: a deep scan may not end while gaps or budget remain.",
+        "action_required": directive,
+        "open_gaps": gaps,
+        "unresolved_surfaces": unresolved,
+    }

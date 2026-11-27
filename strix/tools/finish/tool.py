@@ -23,6 +23,7 @@ def _do_finish(
     technical_analysis: str,
     recommendations: str,
     agent_graph: dict[str, Any],
+    budget_exhausted: bool = False,
 ) -> dict[str, Any]:
     if parent_id is not None:
         return {
@@ -57,6 +58,24 @@ def _do_finish(
                 "message": "Scan completed (not persisted)",
                 "warning": "Results could not be persisted - report state unavailable",
             }
+        coverage_summary = _coverage_summary(agent_graph)
+        # Jitera fork: a deep scan must not stop too soon. Check before we
+        # persist the final report, so a held-back finish leaves no premature
+        # customer-facing deliverable behind.
+        from strix.jitera.persistence import premature_finish_block
+
+        held_back = premature_finish_block(
+            scan_mode=str(report_state.run_record.get("scan_mode") or "deep"),
+            coverage_summary=coverage_summary,
+            run_id=report_state.run_id,
+            budget_exhausted=budget_exhausted,
+        )
+        if held_back is not None:
+            logger.info(
+                "finish_scan held back by deep-mode guard (round %s)",
+                held_back.get("blocked_round"),
+            )
+            return held_back
         report_state.update_scan_final_fields(
             executive_summary=executive_summary.strip(),
             methodology=methodology.strip(),
@@ -64,7 +83,6 @@ def _do_finish(
             recommendations=recommendations.strip(),
         )
         vuln_count = len(report_state.vulnerability_reports)
-        coverage_summary = _coverage_summary(agent_graph)
     except (ImportError, AttributeError) as e:
         logger.exception("finish_scan persistence failed")
         return {"success": False, "error": f"Failed to complete scan: {e!s}"}
@@ -342,6 +360,8 @@ async def finish_scan(
         technical_analysis=technical_analysis,
         recommendations=recommendations,
         agent_graph=await coordinator.snapshot() if coordinator is not None else {},
+        budget_exhausted=coordinator is not None
+        and (coordinator.budget_stopped or coordinator.reserve_stopped),
     )
     if (
         result.get("success")
