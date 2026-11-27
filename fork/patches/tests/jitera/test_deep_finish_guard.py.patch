@@ -1,0 +1,221 @@
+Title: Add tests/jitera/test_deep_finish_guard.py
+Why: Jitera code with no upstream version
+Upstream-PR: none
+
+diff --git a/tests/jitera/test_deep_finish_guard.py b/tests/jitera/test_deep_finish_guard.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..b3e8a713293f2ab5ce3f9bc6cee8e74494b1690d
+--- /dev/null
++++ b/tests/jitera/test_deep_finish_guard.py
+@@ -0,0 +1,211 @@
++"""A deep scan must not finish too soon.
++
++Regression for the eval where the Jitera engine self-declared "complete" and
++called finish_scan at 85 of 120 minutes — with three risk classes still flagged
++unexamined — while upstream Strix rode the clock and solved more. In deep mode
++finish_scan is now a guarded action: refused while gaps/unresolved surfaces
++remain, and for the first few attempts even on a clean board, but never in a way
++that can stop the final report from being written.
++"""
++
++from __future__ import annotations
++
++from typing import TYPE_CHECKING, Any
++
++import pytest
++
++from strix.jitera import brand
++from strix.jitera.persistence import (
++    MAX_BLOCKED_ROUNDS,
++    MIN_DEEPENING_ROUNDS,
++    premature_finish_block,
++    reset_finish_guard,
++)
++from strix.report.state import ReportState, set_global_report_state
++from strix.tools.coverage.tools import hydrate_coverage_from_disk
++from strix.tools.finish.tool import _do_finish
++
++
++if TYPE_CHECKING:
++    from collections.abc import Iterator
++    from pathlib import Path
++
++
++_GAPS: dict[str, Any] = {
++    "coverage_gaps": [
++        "Agent(s) Exposure Hunter were assigned the 'static_exposure_recon' skill, "
++        "but no coverage entry records this class being assessed."
++    ]
++}
++_UNRESOLVED: dict[str, Any] = {
++    "unresolved_surfaces": [{"surface": "POST /rest/user/login", "risk_area": "auth"}]
++}
++_CLEAN: dict[str, Any] = {"coverage_recorded": 41}
++
++_FIELDS: dict[str, Any] = {
++    "executive_summary": "Summary.",
++    "methodology": "Method.",
++    "technical_analysis": "Analysis.",
++    "recommendations": "Fix it.",
++}
++
++
++@pytest.fixture
++def jitera() -> Iterator[None]:
++    brand.activate(brand.JITERA)
++    yield
++    # tests/jitera/conftest.py restores UPSTREAM after every test
++
++
++@pytest.fixture(autouse=True)
++def _fresh_guard() -> Iterator[None]:
++    for run_id in ("run-a", "run-b", "test-run"):
++        reset_finish_guard(run_id)
++    yield
++    for run_id in ("run-a", "run-b", "test-run"):
++        reset_finish_guard(run_id)
++
++
++def _block(
++    summary: dict[str, Any],
++    *,
++    mode: str = "deep",
++    run_id: str = "run-a",
++    exhausted: bool = False,
++) -> dict[str, Any] | None:
++    return premature_finish_block(
++        scan_mode=mode, coverage_summary=summary, run_id=run_id, budget_exhausted=exhausted
++    )
++
++
++# --- the decision -----------------------------------------------------------
++
++
++@pytest.mark.usefixtures("jitera")
++def test_deep_scan_with_unexamined_gaps_is_refused() -> None:
++    result = _block(_GAPS)
++
++    assert result is not None
++    assert result["scan_completed"] is False
++    assert result["success"] is False
++    assert result["deep_mode_guard"] is True
++    assert result["open_gaps"] == _GAPS["coverage_gaps"]
++    assert "Do NOT call finish_scan again yet" in str(result["action_required"])
++
++
++@pytest.mark.usefixtures("jitera")
++def test_deep_scan_with_needs_follow_up_surfaces_is_refused() -> None:
++    result = _block(_UNRESOLVED)
++
++    assert result is not None
++    assert result["unresolved_surfaces"] == ["POST /rest/user/login"]
++
++
++@pytest.mark.usefixtures("jitera")
++def test_clean_board_still_forces_deepening_rounds_then_allows() -> None:
++    # The exact failure: a reconciled board is not a reason to stop.
++    for round_no in range(1, MIN_DEEPENING_ROUNDS + 1):
++        result = _block(_CLEAN)
++        assert result is not None, f"round {round_no} should be turned back"
++        assert result["blocked_round"] == round_no
++    assert _block(_CLEAN) is None
++
++
++@pytest.mark.usefixtures("jitera")
++def test_gaps_keep_the_scan_open_past_the_minimum_rounds() -> None:
++    for _ in range(MIN_DEEPENING_ROUNDS + 2):
++        assert _block(_GAPS) is not None
++
++
++@pytest.mark.usefixtures("jitera")
++def test_safety_valve_always_lets_the_report_out() -> None:
++    # Gaps that never close must not livelock the scan.
++    for _ in range(MAX_BLOCKED_ROUNDS):
++        assert _block(_GAPS) is not None
++    assert _block(_GAPS) is None
++
++
++@pytest.mark.usefixtures("jitera")
++def test_real_budget_stop_allows_finish_immediately() -> None:
++    assert _block(_GAPS, exhausted=True) is None
++
++
++@pytest.mark.usefixtures("jitera")
++@pytest.mark.parametrize("mode", ["standard", "quick", "diff"])
++def test_only_deep_mode_is_guarded(mode: str) -> None:
++    assert _block(_GAPS, mode=mode) is None
++
++
++@pytest.mark.usefixtures("jitera")
++def test_rounds_are_counted_per_run() -> None:
++    for _ in range(MIN_DEEPENING_ROUNDS):
++        _block(_CLEAN, run_id="run-a")
++    assert _block(_CLEAN, run_id="run-a") is None
++    assert _block(_CLEAN, run_id="run-b") is not None  # run-b starts fresh
++
++
++def test_upstream_profile_is_untouched() -> None:
++    assert brand.current() is brand.UPSTREAM
++    assert _block(_GAPS) is None
++
++
++# --- wired through finish_scan's worker -------------------------------------
++
++
++@pytest.fixture
++def deep_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[ReportState]:
++    monkeypatch.chdir(tmp_path)
++    hydrate_coverage_from_disk(tmp_path)  # empty ledger -> clean board, no gaps
++    state = ReportState(run_name="test-run")
++    state.run_record["scan_mode"] = "deep"
++    set_global_report_state(state)
++    yield state
++    set_global_report_state(None)
++
++
++def _finish(**overrides: object) -> dict[str, object]:
++    kwargs: dict[str, object] = {"parent_id": None, "agent_graph": {}, **_FIELDS, **overrides}
++    return _do_finish(**kwargs)  # type: ignore[arg-type]
++
++
++@pytest.mark.usefixtures("jitera")
++def test_held_back_finish_persists_no_final_report(deep_state: ReportState) -> None:
++    result = _finish()
++
++    assert result["scan_completed"] is False
++    assert result["deep_mode_guard"] is True
++    # The premature deliverable must not be written (it would read "completed").
++    assert deep_state.scan_results is None
++
++
++@pytest.mark.usefixtures("jitera")
++def test_finish_goes_through_after_deepening(deep_state: ReportState) -> None:
++    for _ in range(MIN_DEEPENING_ROUNDS):
++        assert _finish()["scan_completed"] is False
++
++    result = _finish()
++
++    assert result["scan_completed"] is True
++    assert result["success"] is True
++    assert deep_state.scan_results is not None
++    assert deep_state.scan_results["executive_summary"] == "Summary."
++
++
++@pytest.mark.usefixtures("jitera", "deep_state")
++def test_budget_exhausted_finishes_on_the_first_call() -> None:
++    result = _finish(budget_exhausted=True)
++
++    assert result["scan_completed"] is True
++
++
++@pytest.mark.usefixtures("jitera")
++def test_standard_scan_finishes_on_the_first_call(deep_state: ReportState) -> None:
++    deep_state.run_record["scan_mode"] = "standard"
++
++    assert _finish()["scan_completed"] is True
++
++
++@pytest.mark.usefixtures("deep_state")
++def test_upstream_finish_is_unchanged() -> None:
++    assert brand.current() is brand.UPSTREAM
++    assert _finish()["scan_completed"] is True
