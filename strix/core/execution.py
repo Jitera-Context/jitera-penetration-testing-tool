@@ -775,6 +775,10 @@ async def _run_cycle(  # noqa: PLR0912, PLR0915
     image_strips = 0
     compactions = 0
     model_retries = 0
+    # Jitera fork: ride out a model-endpoint outage instead of failing the agent.
+    from strix.jitera.resilience import OutageRider
+
+    outage = OutageRider(agent_id)
     request_log.set_retry_attempt(0)
     while True:
         stream: Any = None
@@ -903,6 +907,22 @@ async def _run_cycle(  # noqa: PLR0912, PLR0915
                 )
                 await asyncio.sleep(delay)
                 request_log.set_retry_attempt(model_retries)
+                if session is not None:
+                    input_data = []
+                continue
+            if (outage_delay := outage.next_delay(exc)) is not None:
+                logger.warning(
+                    "model endpoint outage for %s; replaying turn in %.0fs "
+                    "(outage retry %d, %.0fs of %.0fs patience used): %r",
+                    agent_id,
+                    outage_delay,
+                    outage.attempts,
+                    outage.elapsed_s,
+                    outage.patience_s,
+                    exc,
+                )
+                await asyncio.sleep(outage_delay)
+                request_log.set_retry_attempt(model_retries + outage.attempts)
                 if session is not None:
                     input_data = []
                 continue
