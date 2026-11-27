@@ -1,0 +1,42 @@
+Title: an agent rides out a model-endpoint outage (and a mid-run 401) instead of failing
+Why: a ~5-minute staging endpoint stall ending in one 401 killed a two-hour eval scan at 34 min; upstream replays a transient error only 5 times over ~1 min and never a 401. The Jitera-profile rider (strix/jitera/resilience.py) keeps replaying outage-shaped failures for up to 15 minutes per incident
+Upstream-PR: none
+
+diff --git a/strix/core/execution.py b/strix/core/execution.py
+index 6ee732e5909ed16a8c9bd94b2f1e8c2e523bb302..c771946cbe554c8c80efdf1293268bf0eee22821 100644
+--- a/strix/core/execution.py
++++ b/strix/core/execution.py
+@@ -775,6 +775,10 @@ async def _run_cycle(  # noqa: PLR0912, PLR0915
+     image_strips = 0
+     compactions = 0
+     model_retries = 0
++    # Jitera fork: ride out a model-endpoint outage instead of failing the agent.
++    from strix.jitera.resilience import OutageRider
++
++    outage = OutageRider(agent_id)
+     request_log.set_retry_attempt(0)
+     while True:
+         stream: Any = None
+@@ -906,6 +910,22 @@ async def _run_cycle(  # noqa: PLR0912, PLR0915
+                 if session is not None:
+                     input_data = []
+                 continue
++            if (outage_delay := outage.next_delay(exc)) is not None:
++                logger.warning(
++                    "model endpoint outage for %s; replaying turn in %.0fs "
++                    "(outage retry %d, %.0fs of %.0fs patience used): %r",
++                    agent_id,
++                    outage_delay,
++                    outage.attempts,
++                    outage.elapsed_s,
++                    outage.patience_s,
++                    exc,
++                )
++                await asyncio.sleep(outage_delay)
++                request_log.set_retry_attempt(model_retries + outage.attempts)
++                if session is not None:
++                    input_data = []
++                continue
+             if session is not None:
+                 await _salvage_stream_to_session(session, pre_run_items, stream, agent_id)
+             if isinstance(exc, ProviderRefusalError):

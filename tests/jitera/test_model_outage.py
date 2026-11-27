@@ -1,0 +1,317 @@
+"""A model-endpoint outage must not end the scan.
+
+Regression for gateway eval run 45947209797: the staging endpoint hung every
+call for about 290 s (504), then answered the root agent with ``401 Invalid API
+key``. The root failed on that one reply and the scan died 34 minutes into a
+two-hour run. Under the Jitera profile an agent now rides out an outage, a
+mid-run 401 included, for up to ``OUTAGE_PATIENCE_S``.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any, cast
+
+import httpx
+import pytest
+from agents import RunConfig, Runner
+from openai import (
+    APIConnectionError,
+    APIStatusError,
+    APITimeoutError,
+    AuthenticationError,
+    BadRequestError,
+)
+
+from strix.core import execution
+from strix.core.agents import AgentCoordinator
+from strix.jitera import brand, resilience
+from strix.jitera.resilience import OUTAGE_PATIENCE_S, OutageRider, is_outage_error
+from strix.llm import request_log
+from strix.llm.request_log import LlmRequestEvent
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+
+def _request() -> httpx.Request:
+    return httpx.Request("POST", "https://controller-staging.example/v1/chat/completions")
+
+
+def _status(code: int) -> APIStatusError:
+    return APIStatusError(
+        f"status {code}", response=httpx.Response(code, request=_request()), body=None
+    )
+
+
+def _invalid_key() -> AuthenticationError:
+    return AuthenticationError(
+        "Error code: 401 - {'error': 'Invalid API key'}",
+        response=httpx.Response(401, request=_request()),
+        body={"error": "Invalid API key"},
+    )
+
+
+def _succeed(agent_id: str) -> None:
+    """A successful model call, delivered through the real request-log sinks."""
+    now = datetime.now(UTC)
+    request_log.emit(
+        LlmRequestEvent(
+            call_id="c",
+            route="openai",
+            provider="openai",
+            model="m",
+            api_host="controller-staging.example",
+            streaming=True,
+            outcome="success",
+            status_code=200,
+            provider_request_id=None,
+            response_id=None,
+            error_type=None,
+            error_message=None,
+            started_at=now,
+            finished_at=now,
+            duration_ms=1,
+            agent_id=agent_id,
+        )
+    )
+
+
+class _Clock:
+    def __init__(self) -> None:
+        self.t = 1000.0
+
+    def __call__(self) -> float:
+        return self.t
+
+
+@pytest.fixture(autouse=True)
+def clock(monkeypatch: pytest.MonkeyPatch) -> Iterator[_Clock]:
+    resilience.reset()
+    fake = _Clock()
+    monkeypatch.setattr(resilience, "_now", fake)
+    yield fake
+    resilience.reset()
+
+
+@pytest.fixture
+def jitera() -> Iterator[None]:
+    brand.activate(brand.JITERA)
+    yield
+    # tests/jitera/conftest.py restores UPSTREAM after every test
+
+
+# --- what counts as an outage ----------------------------------------------
+
+
+@pytest.mark.parametrize("code", [408, 425, 429, 500, 502, 503, 504, 524, 529])
+def test_endpoint_failures_are_outages(code: int) -> None:
+    assert is_outage_error(_status(code)) is True
+
+
+def test_dropped_connections_and_timeouts_are_outages() -> None:
+    assert is_outage_error(APITimeoutError(_request())) is True
+    assert is_outage_error(APIConnectionError(request=_request())) is True
+    assert is_outage_error(TimeoutError("model stream hit stream_idle_timeout (300s)")) is True
+
+
+@pytest.mark.parametrize("code", [400, 402, 403, 404, 422])
+def test_request_errors_and_refusals_are_not_outages(code: int) -> None:
+    assert is_outage_error(_status(code)) is False
+    assert is_outage_error(ValueError("nope")) is False
+
+
+@pytest.mark.usefixtures("jitera")
+def test_401_counts_only_after_the_key_has_worked() -> None:
+    OutageRider("root")  # installs the success sink, as the run cycle does
+    assert is_outage_error(_invalid_key()) is False  # never worked: misconfiguration
+
+    _succeed("hunter-1")
+
+    assert is_outage_error(_invalid_key()) is True  # worked a minute ago: endpoint failing
+
+
+# --- riding it out ----------------------------------------------------------
+
+
+@pytest.mark.usefixtures("jitera")
+def test_first_call_401_still_fails_fast() -> None:
+    assert OutageRider("root").next_delay(_invalid_key()) is None
+
+
+@pytest.mark.usefixtures("jitera")
+def test_the_eval_incident_is_ridden_out() -> None:
+    rider = OutageRider("root")
+    _succeed("root")
+
+    assert rider.next_delay(_invalid_key()) == 5.0
+
+
+@pytest.mark.usefixtures("jitera")
+def test_backoff_grows_and_caps(clock: _Clock) -> None:
+    rider = OutageRider("root")
+    delays = []
+    for _ in range(7):
+        delay = rider.next_delay(_status(504))
+        assert delay is not None
+        delays.append(delay)
+        clock.t += delay
+    assert delays == [5.0, 10.0, 20.0, 40.0, 60.0, 60.0, 60.0]
+
+
+@pytest.mark.usefixtures("jitera")
+def test_gives_up_once_patience_is_spent(clock: _Clock) -> None:
+    rider = OutageRider("root")
+    assert rider.next_delay(_status(503)) is not None
+    clock.t += OUTAGE_PATIENCE_S - 1
+    assert rider.next_delay(_status(503)) is not None
+    clock.t += 1
+    assert rider.next_delay(_status(503)) is None
+
+
+@pytest.mark.usefixtures("jitera")
+def test_a_recovery_gives_the_next_outage_full_patience(clock: _Clock) -> None:
+    rider = OutageRider("root")
+    rider.next_delay(_status(504))
+    clock.t += OUTAGE_PATIENCE_S - 10  # a long first outage, nearly out of patience
+    rider.next_delay(_status(504))
+
+    clock.t += 5
+    _succeed("root")  # the endpoint came back for this agent
+    clock.t += 3600  # an hour later, a separate blip
+
+    assert rider.next_delay(_status(502)) == 5.0
+    assert rider.elapsed_s == 0.0
+
+
+@pytest.mark.usefixtures("jitera")
+def test_another_agents_success_does_not_reset_this_agents_clock(clock: _Clock) -> None:
+    rider = OutageRider("root")
+    rider.next_delay(_status(500))
+    clock.t += OUTAGE_PATIENCE_S
+    _succeed("hunter-1")
+
+    assert rider.next_delay(_status(500)) is None
+
+
+@pytest.mark.usefixtures("jitera")
+def test_request_errors_are_left_to_upstream() -> None:
+    _succeed("root")
+    rider = OutageRider("root")
+
+    assert rider.next_delay(_status(400)) is None
+    assert rider.next_delay(_status(403)) is None
+
+
+def test_upstream_profile_is_untouched() -> None:
+    assert brand.current() is brand.UPSTREAM
+    rider = OutageRider("root")
+
+    assert rider.next_delay(_status(504)) is None
+    assert resilience._on_request not in request_log._sinks
+
+
+# --- wired through the agent run cycle -------------------------------------
+
+
+class _FakeStream:
+    def __init__(self, exc: BaseException | None = None) -> None:
+        self._exc = exc
+        self.run_loop_exception: BaseException | None = None
+
+    async def stream_events(self) -> Any:
+        if self._exc is not None:
+            raise self._exc
+        events: list[Any] = []
+        for event in events:
+            yield event
+
+
+async def _run_cycle(
+    monkeypatch: pytest.MonkeyPatch,
+    streams: list[_FakeStream],
+    *,
+    minutes_per_attempt: float = 0.0,
+    clock: _Clock | None = None,
+) -> tuple[Any, int]:
+    monkeypatch.setattr(execution, "_TRANSIENT_MODEL_RETRY_BASE_DELAY_S", 0.0)
+    monkeypatch.setattr(execution, "_TRANSIENT_MODEL_RETRY_MAX_DELAY_S", 0.0)
+    monkeypatch.setattr(resilience, "_BASE_DELAY_S", 0.0)
+    monkeypatch.setattr(resilience, "_MAX_DELAY_S", 0.0)
+    calls = {"n": 0}
+
+    def _fake_run_streamed(*_args: Any, **_kwargs: Any) -> _FakeStream:
+        stream = streams[calls["n"]]
+        calls["n"] += 1
+        if clock is not None:
+            clock.t += minutes_per_attempt * 60
+        return stream
+
+    monkeypatch.setattr(Runner, "run_streamed", _fake_run_streamed)
+    coordinator = AgentCoordinator()
+    await coordinator.register("root", "strix", parent_id=None)
+    result = await execution._run_cycle(
+        object(),
+        coordinator,
+        "root",
+        input_data="task",
+        run_config=cast("RunConfig", object()),
+        context={},
+        max_turns=5,
+        session=None,
+        interactive=False,
+        event_sink=None,
+        hooks=None,
+    )
+    return result, calls["n"]
+
+
+@pytest.mark.usefixtures("jitera")
+async def test_root_survives_a_mid_run_401(monkeypatch: pytest.MonkeyPatch) -> None:
+    OutageRider("root")
+    _succeed("root")  # the root's earlier turns went through with this key
+    streams = [_FakeStream(exc=_invalid_key()), _FakeStream()]
+
+    result, attempts = await _run_cycle(monkeypatch, streams)
+
+    assert result is streams[1]
+    assert attempts == 2
+
+
+@pytest.mark.usefixtures("jitera")
+async def test_root_survives_an_outage_longer_than_upstreams_five_retries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    streams = [_FakeStream(exc=_status(504)) for _ in range(9)] + [_FakeStream()]
+
+    result, attempts = await _run_cycle(monkeypatch, streams)
+
+    assert result is streams[-1]
+    assert attempts == 10
+
+
+@pytest.mark.usefixtures("jitera")
+async def test_a_bad_key_still_fails_the_scan(monkeypatch: pytest.MonkeyPatch) -> None:
+    with pytest.raises(AuthenticationError):
+        await _run_cycle(monkeypatch, [_FakeStream(exc=_invalid_key()), _FakeStream()])
+
+
+@pytest.mark.usefixtures("jitera")
+async def test_an_endless_outage_still_ends(monkeypatch: pytest.MonkeyPatch, clock: _Clock) -> None:
+    # Each attempt hangs five minutes before its 504, as in the eval.
+    streams = [_FakeStream(exc=_status(504)) for _ in range(20)]
+
+    with pytest.raises(APIStatusError):
+        await _run_cycle(monkeypatch, streams, minutes_per_attempt=5, clock=clock)
+
+
+async def test_upstream_run_cycle_still_fails_on_401(monkeypatch: pytest.MonkeyPatch) -> None:
+    _succeed("root")
+    with pytest.raises(AuthenticationError):
+        await _run_cycle(monkeypatch, [_FakeStream(exc=_invalid_key()), _FakeStream()])
+
+
+def test_bad_request_is_not_an_outage() -> None:
+    bad = BadRequestError("bad", response=httpx.Response(400, request=_request()), body=None)
+    assert is_outage_error(bad) is False
